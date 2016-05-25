@@ -1,0 +1,6 @@
+Using some code from Thomas BOUTROUE - Qt QML Tricks
+    http://gitlab.unique-conception.org/qt-qml-tricks/
+Settings Icon (Sliders) by Marek Polakovic
+QML JSONListModel by:
+    Copyright (c) 2007 Stefan Goessner (goessner.net)
+    Copyright (c) 2012 Romain Pokrzywka (KDAB) (romain@kdab.com)

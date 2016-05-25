@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fonts/Quicksand_Dash.otf</file>
+        <file>fonts/Quicksand-Bold.otf</file>
+        <file>fonts/Quicksand-BoldItalic.otf</file>
+        <file>fonts/Quicksand-Italic.otf</file>
+        <file>fonts/Quicksand-Light.otf</file>
+        <file>fonts/Quicksand-LightItalic.otf</file>
+        <file>fonts/Quicksand-Regular.otf</file>
+        <file>fonts/breeze-icons.ttf</file>
+        <file>fonts/BPmono.ttf</file>
+        <file>fonts/BPmonoBold.ttf</file>
+        <file>fonts/BPmonoItalics.ttf</file>
+    </qresource>
+</RCC>

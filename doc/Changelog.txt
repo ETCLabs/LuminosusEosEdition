@@ -1,0 +1,11 @@
+
+	Luminosus Change Log
+
+
+	Version 0.0.1.1.0.4	- 25 May 2016
+
+	* MIDI default channel settings will now be saved project-independent
+
+	* added author to 'About' area
+
+	* added example project file (midi_example.lpr)

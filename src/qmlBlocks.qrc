@@ -1,0 +1,34 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Blocks/AudioLevelBlock.qml</file>
+        <file>qml/Blocks/BpmBlock.qml</file>
+        <file>qml/Blocks/ButtonBlock.qml</file>
+        <file>qml/Blocks/ColorwheelBlock.qml</file>
+        <file>qml/Blocks/ControlsTestBlock.qml</file>
+        <file>qml/Blocks/DebugBlock.qml</file>
+        <file>qml/Blocks/DecayBlock.qml</file>
+        <file>qml/Blocks/DelayBlock.qml</file>
+        <file>qml/Blocks/DimmerBlock.qml</file>
+        <file>qml/Blocks/EosChanBlock.qml</file>
+        <file>qml/Blocks/EosCueBlock.qml</file>
+        <file>qml/Blocks/EosKeyBlock.qml</file>
+        <file>qml/Blocks/HoldMaxBlock.qml</file>
+        <file>qml/Blocks/MidiControlInBlock.qml</file>
+        <file>qml/Blocks/MidiControlOutBlock.qml</file>
+        <file>qml/Blocks/MidiMonitorBlock.qml</file>
+        <file>qml/Blocks/MidiNoteInBlock.qml</file>
+        <file>qml/Blocks/MidiNoteInRangeBlock.qml</file>
+        <file>qml/Blocks/MidiNoteOutBlock.qml</file>
+        <file>qml/Blocks/MidiProgramInBlock.qml</file>
+        <file>qml/Blocks/MidiProgramOutBlock.qml</file>
+        <file>qml/Blocks/OscInBlock.qml</file>
+        <file>qml/Blocks/OscMonitorBlock.qml</file>
+        <file>qml/Blocks/OscOutBlock.qml</file>
+        <file>qml/Blocks/RandomValueBlock.qml</file>
+        <file>qml/Blocks/ScriptBlock.qml</file>
+        <file>qml/Blocks/SliderBlock.qml</file>
+        <file>qml/Blocks/SwitchBlock.qml</file>
+        <file>qml/Blocks/ThresholdBlock.qml</file>
+        <file>qml/Blocks/NotesBlock.qml</file>
+    </qresource>
+</RCC>
