@@ -5,8 +5,8 @@ It is designed for touch interaction and runs on Windows, Mac, Android and iOS.
 
 ## Project State
 
-This project is in __pre-alpha__ / proof-of-concept state.
-A more complete version will be released __end of September__.
+This project is in __pre-alpha / proof-of-concept state__.
+A more complete version will be released __end of September 2016__.
 
 ## About this ETCLabs Project
 Luminosus (ETC Eos Edition) is open-source software designed to interact with Electronic Theatre Controls products. This is not official ETC software.
