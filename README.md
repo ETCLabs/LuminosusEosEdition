@@ -8,11 +8,6 @@ It is designed for touch interaction and runs on Windows, Mac, Android and iOS.
 This project is in __pre-alpha / proof-of-concept state__.
 A more complete version will be released __end of September 2016__.
 
-## Open Example File
-
-There is an example project file in the 'doc' folder named [midi_example.lpr](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/midi_example.lpr).
-Copy it to "C:/Users/<Username>/AppData/Roaming/luminosus/projects/" and it should be visible in the software in the projects tab in the right drawer.
-
 ## About this ETCLabs Project
 Luminosus (ETC Eos Edition) is open-source software designed to interact with Electronic Theatre Controls products. This is not official ETC software.
 ETC Support is not familiar with this software and will not be able to assist if issues arise.
@@ -24,6 +19,11 @@ We also welcome pull requests for bug fixes and feature additions.
 The current release for Windows and Mac is available here: [Download](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/releases)
 
 The manual can be found here: [Manual](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/Manual_en.pdf)
+
+## Open Example File
+
+There is an example project file in the 'doc' folder named [midi_example.lpr](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/midi_example.lpr).
+Copy it to "C:/Users/<Username>/AppData/Roaming/luminosus/projects/" and it should be visible in the software in the projects tab in the right drawer.
 
 # Screenshot
 
