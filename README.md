@@ -23,7 +23,7 @@ The manual can be found here: [Manual](https://github.com/ElectronicTheatreContr
 ## Open Example File
 
 There is an example project file in the 'doc' folder named [midi_example.lpr](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/midi_example.lpr).
-Copy it to "C:/Users/<Username>/AppData/Roaming/luminosus/projects/" and it should be visible in the software in the projects tab in the right drawer.
+Copy it to "C:/Users/YourUsername/AppData/Roaming/luminosus/projects/" and it should be visible in the software in the projects tab in the right drawer.
 
 # Screenshot
 
