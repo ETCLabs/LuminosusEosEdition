@@ -8,8 +8,8 @@
                 "useDefaultChannel": true
             },
             "name": "MIDI Program In",
-            "posX": 639,
-            "posY": 140,
+            "posX": 638.46156188016903,
+            "posY": 139.2307743377236,
             "uid": "14641671729500"
         },
         {
@@ -20,8 +20,8 @@
                 "useDefaultChannel": true
             },
             "name": "MIDI Program In",
-            "posX": 642,
-            "posY": 226,
+            "posX": 641.53848506995291,
+            "posY": 225.3846236516741,
             "uid": "14641671733478"
         },
         {
@@ -31,8 +31,8 @@
                 "cueNumber": 2
             },
             "name": "Eos Cue",
-            "posX": 432,
-            "posY": 226,
+            "posX": 431.53847736719854,
+            "posY": 225.3846236516741,
             "uid": "14641672117464"
         },
         {
@@ -42,8 +42,8 @@
                 "cueNumber": 1
             },
             "name": "Eos Cue",
-            "posX": 432,
-            "posY": 140,
+            "posX": 431.53847736719854,
+            "posY": 139.2307743377236,
             "uid": "14641672126281"
         },
         {
@@ -52,20 +52,20 @@
                 "text": "Map MIDI program 1 and 2 \nto Cue 1 and 2 in Cue List 1:"
             },
             "name": "Notes",
-            "posX": 129,
-            "posY": 177,
+            "posX": 128.46154317347978,
+            "posY": 176.92308341257694,
             "uid": "14641672301491"
         },
         {
-            "focused": false,
+            "focused": true,
             "internalState": {
                 "channel": 1,
                 "target": 3,
                 "useDefaultChannel": true
             },
             "name": "MIDI Control In",
-            "posX": 589,
-            "posY": 373,
+            "posX": 588.4615600461799,
+            "posY": 372.30770596385759,
             "uid": "14641672705827"
         },
         {
@@ -74,18 +74,18 @@
                 "chanNumber": 4
             },
             "name": "Eos Channel",
-            "posX": 442,
-            "posY": 372,
+            "posX": 441.53847773399639,
+            "posY": 371.53847516641162,
             "uid": "14641672816604"
         },
         {
             "focused": false,
             "internalState": {
-                "text": "Control Eos Channel 3\nwith MIDI Control Change 4:"
+                "text": "Control Eos Channel 4\nwith MIDI Control Change 3:"
             },
             "name": "Notes",
-            "posX": 132,
-            "posY": 352,
+            "posX": 131.53846636326372,
+            "posY": 351.53847443281592,
             "uid": "14641672911292"
         },
         {
@@ -96,8 +96,8 @@
                 "useDefaultChannel": true
             },
             "name": "MIDI Note In",
-            "posX": 661,
-            "posY": 510,
+            "posX": 660.76925500610264,
+            "posY": 509.23078790924319,
             "uid": "14641673571716"
         },
         {
@@ -109,8 +109,8 @@
                 "useInteger": false
             },
             "name": "OSC Out",
-            "posX": 439,
-            "posY": 511,
+            "posX": 438.46155454421245,
+            "posY": 510.76924950413519,
             "uid": "14641673666447"
         },
         {
@@ -119,8 +119,8 @@
                 "text": "Control Submaster 5\nwith MIDI Note F4 velocity value:\n(using custom OSC message)"
             },
             "name": "Notes",
-            "posX": 101,
-            "posY": 489,
+            "posX": 100.76923446542426,
+            "posY": 488.46155637820158,
             "uid": "14641674643538"
         },
         {
@@ -129,8 +129,8 @@
                 "keyName": "go"
             },
             "name": "Eos Key",
-            "posX": 444,
-            "posY": 873,
+            "posX": 443.84617012633436,
+            "posY": 872.30772430374896,
             "uid": "14641676048667"
         },
         {
@@ -139,18 +139,18 @@
                 "threshold": 0.5
             },
             "name": "Threshold",
-            "posX": 578,
-            "posY": 846,
+            "posX": 577.69232888193608,
+            "posY": 845.38464639313941,
             "uid": "14641676111894"
         },
         {
             "focused": false,
             "internalState": {
-                "value": 0.63651247483120621
+                "value": 0.86205876854865848
             },
             "name": "Random Value",
-            "posX": 714,
-            "posY": 893,
+            "posX": 713.84618002987565,
+            "posY": 892.30772503734465,
             "uid": "14641676185322"
         },
         {
@@ -159,18 +159,18 @@
                 "text": "Press Go Button when \nrandom value is above 50%:"
             },
             "name": "Notes",
-            "posX": 120,
-            "posY": 902,
+            "posX": 119.23077360412795,
+            "posY": 901.53849460669642,
             "uid": "14641676487572"
         },
         {
-            "focused": true,
+            "focused": false,
             "internalState": {
                 "keyName": "enter"
             },
             "name": "Eos Key",
-            "posX": 455,
-            "posY": 642,
+            "posX": 454.61540129057818,
+            "posY": 641.53848506995291,
             "uid": "14641677093014"
         },
         {
@@ -181,8 +181,8 @@
                 "useDefaultChannel": true
             },
             "name": "MIDI Note In",
-            "posX": 610,
-            "posY": 652,
+            "posX": 609.23079157722145,
+            "posY": 651.53848543675076,
             "uid": "14641677322890"
         },
         {
@@ -191,8 +191,8 @@
                 "text": "Map MIDI Note C3\nto Eos Enter key:"
             },
             "name": "Notes",
-            "posX": 199,
-            "posY": 647,
+            "posX": 198.46154574106458,
+            "posY": 646.92310065207482,
             "uid": "14641677533568"
         },
         {
@@ -201,8 +201,8 @@
                 "text": "(see 2. tab in drawer for Key configuration)"
             },
             "name": "Notes",
-            "posX": 337,
-            "posY": 751,
+            "posX": 336.92308928134219,
+            "posY": 750.76925830728305,
             "uid": "14641678792306"
         }
     ],
@@ -215,7 +215,7 @@
         "14641676185322|0->14641676111894|1",
         "14641677322890|0->14641677093014|0"
     ],
-    "planeX": -70,
-    "planeY": -108,
+    "planeX": -43,
+    "planeY": -109,
     "version": 0.10000000000000001
 }
