@@ -24,24 +24,19 @@
 #include "utils.h"
 #include "QCircularBuffer.h"
 
-#include <QObject>
+#include <QAbstractAnimation>
 #include <QVector2D>
 
 #include <limits>
 
+/**
+ * @brief The KineticEffect2DConstants namespace contains all constants used in KineticEffect2D.
+ */
 namespace KineticEffect2DConstants {
-
-/**
- * @brief DEFAULT_HISTORY_SIZE is the length of the history of events to store
- * @memberof KineticEffect2D
- */
-static const int DEFAULT_HISTORY_SIZE = 5;
-/**
- * @brief FPS is the update rate of this effect
- * @memberof KineticEffect2D
- */
-static const int FPS = 50;
-
+	/**
+	 * @brief DEFAULT_HISTORY_SIZE is the length of the history of events to store
+	 */
+    static const int DEFAULT_HISTORY_SIZE = 5;
 }
 
 
@@ -66,14 +61,14 @@ struct MoveEvent2D {
  * "Kinetic" means to simulate the moving behavior of a real physial object (inertia and friction)
  * based in the speed and direction (velocity) of a touch movement.
  */
-class KineticEffect2D : public QObject
+class KineticEffect2D : public QAbstractAnimation
 {
 	Q_OBJECT
 
 	Q_PROPERTY(qreal friction MEMBER m_friction)
 
 public:
-	explicit KineticEffect2D(QObject* parent = 0);
+    explicit KineticEffect2D(QAbstractAnimation* parent = 0);
 
 signals:
 	/**
@@ -133,6 +128,26 @@ public slots:
 	 */
 	QVector2D getVelocity() const { return m_velocity; }
 
+    /**
+     * @brief duration return the "duration" of this "animation",
+     * -1 means it runs till it is stopped (when velocity < min_velocity)
+     * @return
+     */
+    int duration() const override { return -1; }
+
+    /**
+     * @brief stopMovement stops any movement animations
+     */
+    void stopMovement();
+
+protected:
+
+    /**
+     * @brief updateCurrentTime is called to progress the animation
+     * (between start() and stop() calls)
+     */
+    void updateCurrentTime(int /*currentTime*/) override;
+
 
 private slots:
 
@@ -172,11 +187,7 @@ private:
 	/**
 	 * @brief m_value is the current position of the movement
 	 */
-	QVector2D m_value;
-	/**
-	 * @brief m_minDistance is the minimum distance per frame before the movement stops
-	 */
-	qreal m_minDistance;
+    QVector2D m_value;
 	/**
 	 * @brief m_minVelocity is the minimum velocity before the movement stops
 	 */

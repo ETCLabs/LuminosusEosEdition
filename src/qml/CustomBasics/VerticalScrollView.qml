@@ -2,10 +2,10 @@ import QtQuick 2.5
 import CustomElements 1.0
 
 
-TouchArea {
+CustomTouchArea {
 	id: scrollArea
 	anchors.fill: parent
-	clip: true
+    clip: contentItem.y < 0
 	property Item contentItem
 
 	KineticEffect {
@@ -29,19 +29,9 @@ TouchArea {
 
 	// --------------------- Handle Mouse Wheel -------------------
 
-	MouseArea {
-		anchors.fill: parent
-		acceptedButtons: Qt.NoButton
-
-		onWheel: {
-			var delta = 0.0;
-			if (wheel.pixelDelta.y) {
-				delta = wheel.pixelDelta.y
-			} else {
-				delta = wheel.angleDelta.y / 3
-			}
-			contentItem.y = Math.max(kineticEffect.minValue, Math.min(contentItem.y + delta, kineticEffect.maxValue))
-			kineticEffect.setValue(contentItem.y)
-		}
-	}
+    onScrollEvent: {
+        contentItem.y = Math.max(kineticEffect.minValue, Math.min(contentItem.y + deltaY, kineticEffect.maxValue))
+        kineticEffect.setValue(contentItem.y)
+        scrollEventWasAccepted()
+    }
 }

@@ -20,20 +20,36 @@
 
 #include "ScriptBlock.h"
 
-#include "NodeBase.h"
+#include "utils.h"
 
 
 ScriptBlock::ScriptBlock(MainController *controller, QString uid)
 	: BlockBase(controller, uid, info().qmlFile)
-	, m_codeIsValid(true)
+    , m_outputNode(nullptr)
+    , m_inputX(nullptr)
+    , m_inputY(nullptr)
+    , m_inputZ(nullptr)
+    , m_code("")
+    , m_codeIsValid(false)
+    , m_variableX(0.0)
+    , m_variableY(0.0)
+    , m_variableZ(0.0)
 {
 	// prepare nodes:
-	outputNode = createOutputNodeHsv("outputNode");
-	inputNode = createInputNodeHsv("inputNode");
+	m_outputNode = createOutputNode("outputNode");
+    m_inputX = createInputNode("inputX");
+    m_inputY = createInputNode("inputY");
+    m_inputZ = createInputNode("inputZ");
 
 	//connect signals and slots:
-	connect(inputNode, SIGNAL(dataChanged()), this, SLOT(evaluateScript()));
-	connect(this, SIGNAL(codeChanged()), this, SLOT(evaluateScript()));
+    connect(m_inputX, SIGNAL(dataChanged()), this, SLOT(onInputXChanged()));
+    connect(m_inputY, SIGNAL(dataChanged()), this, SLOT(onInputYChanged()));
+    connect(m_inputZ, SIGNAL(dataChanged()), this, SLOT(onInputZChanged()));
+
+    // JS attributes:
+    m_codePrefix = "(function(x, y, z) { var v = 0.0; ";
+    m_codePostfix = "; return v; })";
+    updateScriptFunction();
 }
 
 QJsonObject ScriptBlock::getState() const {
@@ -43,13 +59,24 @@ QJsonObject ScriptBlock::getState() const {
 }
 
 void ScriptBlock::setState(const QJsonObject &state) {
-	setCode(state["code"].toString());
+    setCode(state["code"].toString());
 }
 
-void ScriptBlock::evaluateScript() {
-	QString js = m_code;
-	jsEngine.globalObject().setProperty("value", inputNode->data->getValue());
-	QJSValue result = jsEngine.evaluate(js);
+void ScriptBlock::onInputXChanged() {
+    setVariableX(m_inputX->getValue());
+}
+
+void ScriptBlock::onInputYChanged() {
+    setVariableY(m_inputY->getValue());
+}
+
+void ScriptBlock::onInputZChanged() {
+    setVariableZ(m_inputZ->getValue());
+}
+
+void ScriptBlock::updateScriptFunction() {
+    QString js = m_codePrefix + m_code + m_codePostfix;
+	QJSValue result = m_jsEngine.evaluate(js);
 	if (result.isError()) {
 		qDebug()
 				<< "[ScriptBlock] Uncaught exception at line"
@@ -58,13 +85,38 @@ void ScriptBlock::evaluateScript() {
 		setCodeIsValid(false);
 		return;
 	}
-	if (!result.isNumber()) {
-		qDebug() << "[ScriptBlock] Result is not a number.";
+    if (!result.isCallable()) {
+        qDebug() << "[ScriptBlock] Function is not callable.";
 		setCodeIsValid(false);
 		return;
 	}
-	setCodeIsValid(true);
-	double value = result.toNumber();
-	value = std::max(0.0, std::min(value, 1.0));
-	outputNode->setValue(value);
+    setCodeIsValid(true);
+    m_function = result;
+}
+
+void ScriptBlock::updateOutput() {
+    if (!m_codeIsValid) return;
+    QJSValueList args;
+    args << m_variableX << m_variableY << m_variableZ;
+    QJSValue result = m_function.call(args);
+    if (result.isError()) {
+        qDebug()
+                << "[ScriptBlock] Out: Uncaught exception at line"
+                << result.property("lineNumber").toInt()
+                << ":" << result.toString();
+        return;
+    }
+    if (!result.isNumber()) {
+        qDebug() << "[ScriptBlock] Out: Result is not a number.";
+        return;
+    }
+    double value = limit(0, result.toNumber(), 1);
+    m_outputNode->setValue(value);
+}
+
+void ScriptBlock::setCode(const QString& value) {
+    m_code = value;
+    emit codeChanged();
+    updateScriptFunction();
+    updateOutput();
 }

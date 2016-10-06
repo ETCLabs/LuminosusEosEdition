@@ -26,7 +26,8 @@
 void DebugBlock::addAllBlockTypes() {
 	QStringList blockTypes = m_controller->blockManager()->blockList()->getAllBlockTypes();
 	for (int i=0; i<blockTypes.count(); ++i) {
-		m_controller->blockManager()->addNewBlock(blockTypes[i]);
+        // add each block with a random position offset of 1500px:
+        m_controller->blockManager()->addNewBlock(blockTypes[i], 1500);
 	}
 }
 

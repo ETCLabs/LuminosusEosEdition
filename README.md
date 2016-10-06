@@ -1,12 +1,16 @@
 # Luminosus (ETC Eos Edition) - MIDI to OSC Tool
 
-Luminosus (ETC Eos Edition) is the project title for a "companion app" for consoles of the ETC Eos family. At the moment it can convert MIDI Note, Program and Control Change Messages to OSC commands. The goal is to eventually show useful information about Channel Attributes and Cue Lists and provide functions missing in the Eos software (i.e. a random fire effect).
+Luminosus (ETC Eos Edition) is the project title for a "companion app" for consoles of the ETC Eos family.
+It can display and edit cue list, fire and react to cues and show fader banks including their labels.
+It is possible to trigger music playback on specific cues and there are simple effects and Sound2Light
+features that can easily be connected to the consoles functions like channels, submasters or groups.
+It can also convert MIDI Note-, Program- and Control-Change-Messages to OSC commands.
+
 It is designed for touch interaction and runs on Windows, Mac, Android and iOS.
 
 ## Project State
 
-This project is in __pre-alpha / proof-of-concept state__.
-A more complete version will be released __end of September 2016__.
+This project is in beta state. Some bugs are still to be expected but the software is already usable.
 
 ## About this ETCLabs Project
 Luminosus (ETC Eos Edition) is open-source software designed to interact with Electronic Theatre Controls products. This is not official ETC software.
@@ -16,15 +20,8 @@ We also welcome pull requests for bug fixes and feature additions.
 
 # Download
 
-The current release for Windows and Mac is available here: [Download](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/releases)
-
-The manual can be found here: [Manual](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/Manual_en.pdf)
-
-## Open Example File
-
-There is an example project file in the 'doc' folder named [midi_example.lpr](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/midi_example.lpr).
-Copy it to "C:/Users/YourUsername/AppData/Roaming/luminosus/projects/" and it should be visible in the software in the projects tab in the right drawer.
+The current release for Windows, Mac and Android and more information including the manual and changelog is available on the projects website: [www.luminosus.org](https://www.luminosus.org)
 
 # Screenshot
 
-![screenshot](https://github.com/ElectronicTheatreControlsLabs/LuminosusEosEdition/blob/master/doc/midi_example_screenshot.png)
+![screenshot](https://www.luminosus.org/img/main_screenshot.png)

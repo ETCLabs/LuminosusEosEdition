@@ -4,7 +4,7 @@ import CustomElements 1.0
 import "CustomControls"
 import "CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	implicitHeight: -1  // use defaultSize
 
 	property var blockInfo
@@ -43,15 +43,19 @@ TouchArea {
 
 	RippleEffect {
 		id: rippleEffect
-		anchors.fill: parent
-		visible: GRAPHICAL_EFFECTS_LEVEL >= 3
-	}
+        anchors.fill: parent
+    }
 
-	onTouchUp: {
+    onTouchDown: {
+        rippleEffect.touchStart(touch.itemX, touch.itemY)
+    }
+
+    onTouchUp: {
 		if (!canceled) {
-			controller.blockManager().addBlockByNameQml(blockInfo.name)
-			rippleEffect.touchStart(touch.x, touch.y)
-			rippleEffect.touchEnd()
-		}
+            rippleEffect.touchEnd()
+            controller.blockManager().addBlockByNameQml(blockInfo.name)
+        } else {
+            rippleEffect.touchCancel()
+        }
 	}
 }

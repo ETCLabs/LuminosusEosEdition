@@ -7,8 +7,7 @@ BlockBase {
 	id: root
 	width: 70*dp
 	// block is 8*dp smaller that button to end before the rounding of the edges starts
-	height: width + 30*dp - 8*dp
-	pressed: dragarea.pressed
+    height: width + 30*dp - 8*dp
 	settingsComponent: settings
 
 	StretchColumn {
@@ -29,58 +28,16 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
-
+        DragArea {
 			InputNode {
 				objectName: "inputNode"
 			}
 
-			TouchArea {
-				width: 20*dp
-				height: 30*dp
-				anchors.left: parent.left
-
-				property int minSize: 60*dp
-				property int maxSize: 200*dp
-				property int initialWidth: 0
-				property int initialBottom: 0
-				property int initialRight: 0
-				property int initialTouchX: 0
-
-				onTouchDown: {
-					initialWidth = root.width
-					initialBottom = root.y + root.height
-					initialRight = root.x + root.width
-					initialTouchX = touch.sceneX
-				}
-
-				onTouchMove: {
-					root.width = Math.max(minSize, Math.min(initialTouchX - touch.sceneX + initialWidth, maxSize))
-					root.y = initialBottom - root.height
-					root.x = initialRight - root.width
-					root.block.positionChangedExternal()
-				}
-
-				Rectangle {
-					width: 1*dp
-					height: 20*dp
-					anchors.verticalCenter: parent.verticalCenter
-					anchors.horizontalCenter: parent.horizontalCenter
-					anchors.horizontalCenterOffset: -3*dp
-					color: "#888"
-				}
-
-				Rectangle {
-					width: 1*dp
-					height: 20*dp
-					anchors.verticalCenter: parent.verticalCenter
-					anchors.horizontalCenter: parent.horizontalCenter
-					anchors.horizontalCenterOffset: 3*dp
-					color: "#888"
-				}
-			}
+            WidthAndHeightResizeArea {
+                target: root
+                minSize: 50*dp
+                maxSize: 200*dp
+            }
 		}
 	}
 
@@ -120,7 +77,41 @@ BlockBase {
 						onKeyNameChanged: keyNameComboBox.setValue(block.keyName)
 					}
 				}
-			}
+            }
+            BlockRow {
+                visible: block.keyName === "custom"
+                StretchText {
+                    text: "Label:"
+                }
+                TextInput {
+                    id: labelInput
+                    width: parent.width * 0.6
+                    text: block.customLabel
+                    onTextChanged: {
+                        if (text !== block.customLabel) {
+                            block.customLabel = text
+                        }
+                    }
+                    Keys.onTabPressed: keyNameInput.forceActiveFocus()
+                }
+            }
+            BlockRow {
+                visible: block.keyName === "custom"
+                StretchText {
+                    text: "OSC Name:"
+                }
+                TextInput {
+                    id: keyNameInput
+                    width: parent.width * 0.6
+                    text: block.customKeyName
+                    onTextChanged: {
+                        if (text !== block.customKeyName) {
+                            block.customKeyName = text
+                        }
+                    }
+                    Keys.onBacktabPressed: labelInput.forceActiveFocus()
+                }
+            }
 		}
 	}  // end Settings Component
 }

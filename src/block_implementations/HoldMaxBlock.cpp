@@ -1,6 +1,6 @@
 #include "HoldMaxBlock.h"
 
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 HoldMaxBlock::HoldMaxBlock(MainController* controller, QString uid)
@@ -26,7 +26,7 @@ void HoldMaxBlock::setState(const QJsonObject &state) {
 }
 
 void HoldMaxBlock::onInputChanged() {
-	double value = m_inputNode->data->getValue();
+    double value = m_inputNode->getValue();
 	if (value > m_recentMaxValue) {
 		m_recentMaxValue = value;
 	} else {
@@ -38,6 +38,6 @@ void HoldMaxBlock::onInputChanged() {
 }
 
 void HoldMaxBlock::onHoldTimeEnd() {
-	m_recentMaxValue = m_inputNode->data->getValue();
+    m_recentMaxValue = m_inputNode->getValue();
 	m_outputNode->setValue(m_recentMaxValue);
 }

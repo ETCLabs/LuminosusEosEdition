@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 #include <vector>
 #include <map>
@@ -36,79 +37,79 @@
 class MainController;
 
 
-namespace MidiConstants {
-/**
- * @brief OMNI_MODE_CHANNEL is the "magic" channel number to use OMNI mode
- * @memberof MidiManager
- */
-static const int OMNI_MODE_CHANNEL = 0;
-/**
- * @brief NOTE_OFF is the Midi code for a Note Off message
- * @memberof MidiManager
- */
-static const unsigned char NOTE_OFF = 0b1000;
-/**
- * @brief NOTE_ON is the Midi code for a Note On message
- * @memberof MidiManager
- */
-static const unsigned char NOTE_ON = 0b1001;
-/**
- * @brief CONTROL_CHANGE is the Midi code for a Control Change message
- * @memberof MidiManager
- */
-static const unsigned char CONTROL_CHANGE = 0b1011;
-/**
- * @brief PROGRAM_CHANGE is the Midi code for a Program Change message
- * @memberof MidiManager
- */
-static const unsigned char PROGRAM_CHANGE = 0b1100;
-}
-
-
 /**
  * @brief The MidiEvent struct represents an event coming
  * from an external device such as a MIDI controller.
  */
 struct MidiEvent {
-	/**
-	 * @brief inputId is the unique identifier of this event source (i.e. the MIDI channel and note)
-	 */
-	QString inputId;
+    /**
+     * @brief inputId is the unique identifier of this event source (i.e. the MIDI channel and note)
+     */
+    QString inputId;
 
-	/**
-	 * @brief value of the input event between 0 and 1
-	 */
+    /**
+     * @brief value of the input event between 0 and 1
+     */
     double value;
 
-	/**
-	 * @brief type Midi message type (Note On, Program Change etc.)
-	 */
-	int type;
+    /**
+     * @brief type Midi message type (Note On, Program Change etc.)
+     */
+    int type;
 
-	/**
-	 * @brief channel Midi input channel starting with 1 [1-16]
-	 */
-	int channel;
+    /**
+     * @brief channel Midi input channel starting with 1 [1-16]
+     */
+    int channel;
 
-	/**
-	 * @brief target Midi target / first argument (Note, Program etc.) [0-127]
-	 */
-	int target;
+    /**
+     * @brief target Midi target / first argument (Note, Program etc.) [0-127]
+     */
+    int target;
 
-	/**
-	 * @brief convertedFromNoteOff true, if this is a Note On message with value 0.0
-	 * converted from a Note Off message
-	 */
-	bool convertedFromNoteOff;
+    /**
+     * @brief convertedFromNoteOff true, if this is a Note On message with value 0.0
+     * converted from a Note Off message
+     */
+    bool convertedFromNoteOff;
 
-	/**
-	 * @brief FromRawMessage creates a MidiEvent object from raw Midi data
-	 * @param portName name of the port that received that event
-	 * @param message raw data of the message
-	 * @return a new Midi Event object
-	 */
-	static MidiEvent FromRawMessage(QString portName, std::vector<unsigned char>* message);
+    /**
+     * @brief FromRawMessage creates a MidiEvent object from raw Midi data
+     * @param portName name of the port that received that event
+     * @param message raw data of the message
+     * @return a new Midi Event object
+     */
+    static MidiEvent FromRawMessage(QString portName, std::vector<unsigned char>* message);
 };
+
+
+/**
+ * @brief The MidiConstants namespace contains constants useful in Midi conetext.
+ */
+namespace MidiConstants {
+	/**
+	 * @brief OMNI_MODE_CHANNEL is the "magic" channel number to use OMNI mode
+	 */
+	static const int OMNI_MODE_CHANNEL = 0;
+	/**
+	 * @brief NOTE_OFF is the Midi code for a Note Off message
+	 */
+	static const unsigned char NOTE_OFF = 0b1000;
+	/**
+	 * @brief NOTE_ON is the Midi code for a Note On message
+	 */
+	static const unsigned char NOTE_ON = 0b1001;
+	/**
+	 * @brief CONTROL_CHANGE is the Midi code for a Control Change message
+	 */
+	static const unsigned char CONTROL_CHANGE = 0b1011;
+	/**
+	 * @brief PROGRAM_CHANGE is the Midi code for a Program Change message
+	 */
+	static const unsigned char PROGRAM_CHANGE = 0b1100;
+
+    typedef std::function<void(MidiEvent)> NextEventCallback;
+}
 
 
 
@@ -157,6 +158,12 @@ public:
 	 * @param message is the raw Midi data
 	 */
     void rawMidiCallback(std::vector<unsigned char>* message);
+
+    /**
+     * @brief getPortName returns the port name
+     * @return name of the port as QString
+     */
+    QString getPortName() const { return m_portName; }
 
 signals:
 	/**
@@ -241,7 +248,7 @@ public:
 	 * @brief getState returns the current state to persist it
 	 * @return state as Json object
 	 */
-	QJsonObject getState();
+	QJsonObject getState() const;
 	/**
 	 * @brief setState restores a saved state
 	 * @param state Json object
@@ -281,20 +288,22 @@ public slots:
 
 	/**
 	 * @brief registerForNextEvent register a callback that is called when the next event is received
+     * @param id identifier to be able to remove the callback later
 	 * @param callback function taking a string with the uid of the next callback
 	 */
-    void registerForNextEvent(std::function<void(QString)> callback) {
-		m_nextEventCallback = callback;
-		m_nextEventCallbackIsValid = true;
-    }
+    void registerForNextEvent(QString id, MidiConstants::NextEventCallback callback);
 
 	/**
 	 * @brief clearNextEventCallback removes the callback for the next event if there was one
 	 */
-	void clearNextEventCallback() {
-		m_nextEventCallback = [](QString) {};
-		m_nextEventCallbackIsValid = false;
-    }
+    void clearNextEventCallbacks();
+
+    /**
+     * @brief removeNextEventCallback removes a specific callbacks from the list of callbacks
+     * for the next event
+     * @param id of the callback to remove
+     */
+    void removeNextEventCallback(QString id);
 
 	/**
 	 * @brief connectControl connects a control with an input event
@@ -319,23 +328,23 @@ public slots:
 	 * @brief getDefaultInputChannel returns the default Midi input channel
 	 * @return input channel number [1-16] or 0 for OMNI mode
 	 */
-	int getDefaultInputChannel() const { return m_default_input_channel; }
+    int getDefaultInputChannel() const { return m_defaultInputChannel; }
 	/**
 	 * @brief setDefaultInputChannel sets the default Midi input channel
 	 * @param value channel number [1-16] or 0 for OMNI mode
 	 */
-	void setDefaultInputChannel(int value) { m_default_input_channel = limit(0, value, 16); emit defaultInputChannelChanged(); }
+    void setDefaultInputChannel(int value) { m_defaultInputChannel = limit(0, value, 16); emit defaultInputChannelChanged(); }
 
 	/**
 	 * @brief getDefaultOutputChannel returns the default Midi output channel
 	 * @return output channel number [1-16]
 	 */
-	int getDefaultOutputChannel() const { return m_default_output_channel; }
+    int getDefaultOutputChannel() const { return m_defaultOutputChannel; }
 	/**
 	 * @brief setDefaultOutputChannel sets the default Midi output channel
 	 * @param value channel number [1-16]
 	 */
-	void setDefaultOutputChannel(int value) { m_default_output_channel = limit(1, value, 16); emit defaultOutputChannelChanged(); }
+    void setDefaultOutputChannel(int value) { m_defaultOutputChannel = limit(1, value, 16); emit defaultOutputChannelChanged(); }
 
 	/**
 	 * @brief sendChannelVoiceMessage sends a MIDI channel voice message with two arguments (Note or Control)
@@ -359,6 +368,11 @@ public slots:
 	 * @return a list of tone names
 	 */
 	QStringList getToneNames() const;
+
+    /**
+     * @brief refreshDevices checks if new devices have been connected
+     */
+    void refreshDevices();
 
 	// ------------------- Logging --------------------
 
@@ -406,6 +420,16 @@ private:
 	 */
 	void initializeOutputs();
 
+    /**
+     * @brief refreshInputs checks if new input devices have been attached since last check
+     */
+    void refreshInputs();
+
+    /**
+     * @brief refreshOutputs checks if new output devices have been attached since last check
+     */
+    void refreshOutputs();
+
 
 protected:
 
@@ -428,12 +452,12 @@ protected:
 	/**
 	 * @brief m_controller a pointer to the MainController
 	 */
-	MainController*	m_controller;
+	MainController* const	m_controller;
 
 	/**
 	 * @brief m_inputs list of MidiInputDevice objects
 	 */
-	std::vector<MidiInputDevice*> m_inputs;
+	std::vector<QPointer<MidiInputDevice>> m_inputs;
 
 #ifdef RT_MIDI_AVAILABLE
 	/**
@@ -448,15 +472,25 @@ protected:
     std::vector<void*> m_outputs;
 #endif
 
-	/**
-	 * @brief m_nextEventCallback the callback to be called when the next event is received
-	 */
-	std::function<void(QString)> m_nextEventCallback;
+    /**
+     * @brief m_inputPortNames contains all names of openend input ports
+     */
+    QVector<QString> m_inputPortNames;
+
+    /**
+     * @brief m_outputPortNames contains all names of openend output ports
+     */
+    QVector<QString> m_outputPortNames;
+
+    /**
+     * @brief m_portNameBlacklist contains the beginning of all ports not to use
+     */
+    QVector<QString> m_portNameBlacklist;
 
 	/**
-	 * @brief m_nextEventCallbackIsValid true, if the m_nextEventCallback is valid and should be called next time
+     * @brief m_nextEventCallbacks the callbacks to be called when the next event is received
 	 */
-	bool m_nextEventCallbackIsValid;
+    QMap<QString, MidiConstants::NextEventCallback> m_nextEventCallbacks;
 
 	/**
 	 * @brief ControlCallbackList is the type used for the list of callbacks for a specific input
@@ -468,14 +502,14 @@ protected:
 	std::map<QString, ControlCallbackList> m_inputToControlMapping;
 
 	/**
-	 * @brief m_default_input_channel is the default Midi input channel [1-16] or 0 for OMNI mode
+     * @brief m_defaultInputChannel is the default Midi input channel [1-16] or 0 for OMNI mode
 	 */
-	int m_default_input_channel;
+    int m_defaultInputChannel;
 
 	/**
-	 * @brief m_default_output_channel is the default Midi output channel [1-16]
+     * @brief m_defaultOutputChannel is the default Midi output channel [1-16]
 	 */
-	int m_default_output_channel;
+    int m_defaultOutputChannel;
 
 	/**
 	 * @brief log of incoming and / or outgoing messages
@@ -494,6 +528,12 @@ protected:
 	 * @brief m_toneNames is the list of the names of the tones in an octave
 	 */
 	std::vector<QString> m_toneNames;
+
+    /**
+     * @brief m_logChangedSignalDelay is a timer to delay the emission of the logChanged signal
+     * to prevent the log being updated to often
+     */
+    mutable QTimer m_logChangedSignalDelay;
 
 };
 

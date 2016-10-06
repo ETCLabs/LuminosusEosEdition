@@ -27,6 +27,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QQuickItem>
+#include <QPointer>
 
 #include <map>
 
@@ -47,10 +48,26 @@ class BlockBase : public BlockInterface
 {
 	Q_OBJECT
 
+    Q_PROPERTY(bool focused MEMBER m_focused NOTIFY focusedChanged)
+
 public:
     // constructor etc:
+    /**
+     * @brief BlockBase creates a BlockBase object
+     * @param controller a pointer to the main controller
+     * @param uid set this to restore a block or leave empty to create new uid
+     * @param qmlUrl path to QML file to load
+     */
 	explicit BlockBase(MainController* controller, QString uid, QString qmlUrl);
+    /**
+     * @brief ~BlockBase deletes Nodes that were created on the heap
+     */
 	virtual ~BlockBase() override;
+    /**
+     * @brief completeGuiItemCreation completes GUI item creation process, to be called after all
+     * properties were intialized
+     */
+    void completeGuiItemCreation() override;
 
 	// interface methods (documentation is in interface):
 	virtual QJsonObject getState() const override { return QJsonObject(); }
@@ -63,6 +80,9 @@ public:
     virtual void disconnectAllNodes() override;
 	virtual NodeBase* getDefaultInputNode() override;
 	virtual NodeBase* getDefaultOutputNode() override;
+    virtual QJsonObject getNodeMergeModes() const override;
+    virtual void setNodeMergeModes(const QJsonObject& state) override;
+    virtual bool renderIfNotVisible() const override { return false; }
 
     // convenience methods:
 	/**
@@ -72,21 +92,25 @@ public:
 	 */
     QQuickItem* getGuiItemChild(QString name);
 	/**
-	 * @brief createOutputNodeHsv creates a OutputNodeHsv object on the heap,
+     * @brief createOutputNode creates a NodeBase object on the heap,
 	 * registers it to this block and connects it to an GUI Node item
 	 * @param guiItemName the "objectName" of the associated QML element
 	 * @return a pointer to the Node object
 	 */
-	OutputNodeHsv* createOutputNodeHsv(QString guiItemName);
+    NodeBase* createOutputNode(QString guiItemName);
 	/**
-	 * @brief createInputNodeHsv creates a InputNodeHsv object on the heap,
+     * @brief createInputNode creates a NodeBase object on the heap,
 	 * registers it to this block and connects it to an GUI Node item
 	 * @param guiItemName the "objectName" of the associated QML element
 	 * @return a pointer to the Node object
 	 */
-	InputNodeHsv* createInputNodeHsv(QString guiItemName);
+    NodeBase* createInputNode(QString guiItemName);
 
 signals:
+    /**
+     * @brief focusedChanged emitted when the internal focus changed
+     */
+    void focusedChanged();
 
 public slots:
 	QString getUid() const override { return m_uid; }
@@ -104,32 +128,46 @@ public slots:
     virtual void onRemove() override {}
 	QQmlComponent* getSettingsComponent() const override;
 	QString getHelpText() const override { return getBlockInfo().helpText; }
+    void deletedByUser() override;
+    void onDeleteAnimationEnd() override;
+    void makeBlocksConnectedToInputsVisible() override;
 
 protected:
 	/**
 	 * @brief m_uid stores the unique ID of this block
 	 */
-	QString						m_uid;
+	QString m_uid;
 	/**
 	 * @brief m_controller is a pointer to the main controller
 	 */
-	MainController*				m_controller;
+	MainController* const m_controller;
 	/**
 	 * @brief m_component is the QML component of the GUI item
 	 */
-	QQmlComponent				m_component;
+	QQmlComponent m_component;
 	/**
 	 * @brief m_guiItem is a pointer to the create GUI item
 	 */
-	QQuickItem*					m_guiItem;
+	QPointer<QQuickItem> m_guiItem;
 	/**
 	 * @brief m_nodes stores pointer to all created nodes
 	 */
-	std::map<int, NodeBase*>	m_nodes;
+	std::map<int, QPointer<NodeBase>> m_nodes;
 	/**
 	 * @brief m_externalInputMapping stores the mapping of external events to controls
 	 */
-	std::map<QString, QString>	m_externalInputMapping;
+	std::map<QString, QString> m_externalInputMapping;
+
+    /**
+     * @brief m_focused true if this block is focused (independent from Qt keyboard focus)
+     */
+    bool m_focused;
+
+    /**
+     * @brief m_guiItemCompleted false if the GUI item has not been completed yet and
+     * completeGuiItemCreation() should be called before accessing it
+     */
+    bool m_guiItemCompleted;
 
 };
 

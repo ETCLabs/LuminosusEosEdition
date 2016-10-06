@@ -1,16 +1,19 @@
-import QtQuick 2.0
+import QtQuick 2.5
+import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
     id: root
 	height: 30*dp
 	implicitWidth: -1
+    secondTouchEnabled: true
     property bool active: false
     property alias text: text_area.text
     property alias fontSize: text_area.font.pixelSize
     property bool allUpperCase: true
     property bool toggle: false
     property alias text_area: text_area
+    property alias color: text_area.color
 
     signal press
 
@@ -47,33 +50,15 @@ TouchArea {
     }
 
     onTouchUp: {
-        if (!toggle) {
+        if (!toggle && !getFirstTouch().isValid) {
             active = false
-        }
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        enabled: false
-        onContainsMouseChanged: {
-            if (containsMouse) {
-                mouseLeaveAnimation.stop()
-                backgroundRectangle.opacity = 0.1
-            } else {
-                mouseLeaveAnimation.restart()
-            }
-        }
-        onClicked: {
-            mouse.accepted = false
         }
     }
 
     property string uid: ""
     property real externalInput: 0
     Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(uid)
+    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
     onExternalInputChanged: {
         if (externalInput > 0.) {
             active = true

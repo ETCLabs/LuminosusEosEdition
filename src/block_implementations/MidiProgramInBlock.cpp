@@ -21,29 +21,30 @@
 #include "MidiProgramInBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 MidiProgramInBlock::MidiProgramInBlock(MainController *controller, QString uid)
 	: OneOutputBlock(controller, uid, info().qmlFile)
-	, m_target(1)
+    , m_program(1)
 	, m_channel(1)
 	, m_useDefaultChannel(true)
 	, m_programIsActive(false)
+    , m_learning(false)
 {
 	connect(m_controller->midi(), SIGNAL(messageReceived(MidiEvent)), this, SLOT(onMidiMessage(MidiEvent)));
 }
 
 QJsonObject MidiProgramInBlock::getState() const {
 	QJsonObject state;
-	state["target"] = getTarget();
+    state["program"] = getProgram();
 	state["channel"] = getChannel();
 	state["useDefaultChannel"] = getUseDefaultChannel();
 	return state;
 }
 
 void MidiProgramInBlock::setState(const QJsonObject &state) {
-	setTarget(state["target"].toInt());
+    setProgram(state["program"].toInt());
 	setChannel(state["channel"].toInt());
 	setUseDefaultChannel(state["useDefaultChannel"].toBool());
 }
@@ -58,7 +59,7 @@ void MidiProgramInBlock::onMidiMessage(MidiEvent event) {
 			// channel and type are correct
 
 			// check if program number (target) is correct:
-			if (event.target == (m_target - 1)) {
+            if (event.target == (m_program - 1)) {
 				// it is correct -> activate output:
 				m_outputNode->setValue(1.0);
 				emit validMessageReceived();
@@ -74,11 +75,42 @@ void MidiProgramInBlock::onMidiMessage(MidiEvent event) {
 	}
 }
 
-void MidiProgramInBlock::setTarget(int value) {
-	if (value == m_target) return;
-	m_target = limit(1, value, 128);
+void MidiProgramInBlock::setProgram(int value) {
+    if (value == m_program) return;
+    m_program = limit(1, value, 128);
 	m_outputNode->setValue(0.0);
 	m_programIsActive = false;
 	emit programIsActiveChanged();
-	emit targetChanged();
+    emit programChanged();
+}
+
+void MidiProgramInBlock::startLearning() {
+    // check if already in learning state:
+    if (m_learning) {
+        // yes -> cancel learning:
+        m_controller->midi()->removeNextEventCallback(getUid());
+        setLearning(false);
+        return;
+    }
+    // listen for the next event:
+    setLearning(true);
+    m_controller->midi()->registerForNextEvent(getUid(), [this](MidiEvent event) { this->checkIfEventFits(event); });
+}
+
+void MidiProgramInBlock::checkIfEventFits(MidiEvent event) {
+    setLearning(false);
+    // chek if this event was a control change event:
+    if (event.type != MidiConstants::PROGRAM_CHANGE) {
+        m_controller->showToast("This was not a Program Change event.");
+        return;
+    }
+    // set attributes to match the event:
+    setUseDefaultChannel(false);
+    setChannel(event.channel);
+    setProgram(event.target + 1);
+    // update output:
+    m_outputNode->setValue(1.0);
+    emit validMessageReceived();
+    m_programIsActive = true;
+    emit programIsActiveChanged();
 }

@@ -16,8 +16,8 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Threshold";
-		info.category = QStringList {"Logic"};
+		info.typeName = "Threshold";
+        info.category << "Logic";
 		info.helpText = "If the incoming value is below the threshold, the bottom output Node "
 						"will be activated.\n"
 						"If it is above the threshold the top one is activated.";
@@ -50,7 +50,7 @@ private slots:
 protected:
 	double		m_threshold;
 	double		m_inputValue;
-	OutputNodeHsv* m_outputNodeBelow;
+    NodeBase* m_outputNodeBelow;
 };
 
 #endif // THRESHOLDBLOCK_H

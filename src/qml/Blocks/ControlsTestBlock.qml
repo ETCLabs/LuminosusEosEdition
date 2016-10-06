@@ -7,8 +7,7 @@ import "../CustomControls"
 BlockBase {
     id: root
 	width: 120*dp
-	height: 210*dp
-    pressed: dragarea.pressed
+    height: 240*dp
 
 	StretchColumn {
         anchors.fill: parent
@@ -22,6 +21,27 @@ BlockBase {
             }
 			StretchColumn {
 				implicitWidth: -1
+                CustomTouchArea {
+                    height: 30*dp
+                    Text {
+                        anchors.fill: parent
+                        text: "Touch"
+                    }
+
+                    mouseOverEnabled: true
+                    clickDurationEnabled: true
+                    onTouchDown: console.log("down")
+                    onTouchMove: console.log("move")
+                    onTouchUp: console.log("up")
+                    onRightClick: console.log("right")
+                    onShortClick: console.log("short")
+                    onLongClick: console.log("long")
+                    onClick: console.log("click")
+                    onDoubleClick: console.log("doubleClick")
+                    onMouseOverChanged: console.log("mouseOver: ", mouseOver)
+                    onScrollEvent: console.log("wheel: ", deltaX, deltaY)
+                }
+
 				ComboBox2 {
 					height: 30*dp
 					values: ["some", "values", "to", "choose"]
@@ -52,9 +72,7 @@ BlockBase {
                 }
             }
 		}
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 		}
     }
 }

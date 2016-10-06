@@ -37,9 +37,9 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "OSC In";
+		info.typeName = "OSC In";
 		info.nameInUi = "OSC Input";
-		info.category = QStringList("OSC");
+        info.category << "Custom OSC";
 		info.helpText = "Enter the path of an OSC message to listen for.\n\n"
 						"Outputs the value of the first parameter of any matching incoming message.\n"
 						"The expected value range of the parameter can be specified above.\n\n"
@@ -67,6 +67,8 @@ public slots:
 	void onMessageReceived(OSCMessage msg);
 
 	void onEndOfPulse();
+
+    void updateConnection();
 
 	QString getMessage() const { return m_message; }
 	void setMessage(const QString& value) { m_message = value; emit messageChanged(); }

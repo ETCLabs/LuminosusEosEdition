@@ -44,6 +44,11 @@ OSCNetworkManager::OSCNetworkManager()
 	, m_eosUser("0")
 	, m_incompleteStreamData()
 {
+    // prepare log changed signal:
+    m_logChangedSignalDelay.setSingleShot(true);
+    m_logChangedSignalDelay.setInterval(100);
+    connect(&m_logChangedSignalDelay, SIGNAL(timeout()), this, SIGNAL(logChanged()));
+
 	// prepare timer that is used to try to connect again to TCP target:
 	m_tryConnectAgainTimer.setSingleShot(true);
 	connect(&m_tryConnectAgainTimer, SIGNAL(timeout()), this, SLOT(tryToConnectTCP()));
@@ -52,7 +57,7 @@ OSCNetworkManager::OSCNetworkManager()
 	connect(&m_tcpSocket, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(&m_tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError()));
 	connect(&m_udpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingUdpDatagrams()));
-	connect(&m_tcpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingTcpStream()));
+    connect(&m_tcpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingTcpStream()));
 
 	// try to connect:
 	reconnect();
@@ -87,7 +92,8 @@ void OSCNetworkManager::sendMessage(QString messageString, bool forced)
 	if (!m_isEnabled && !forced) return;
 
 	// replace <USER> with chosen user number, used for Eos messages
-	messageString.replace("<USER>", m_eosUser);
+    // not used anymore
+    //messageString.replace("<USER>", m_eosUser);
 
 	size_t outSize;
 	char* packet = OSCPacketWriter::CreateForString(messageString.toLatin1().data(), outSize);
@@ -95,6 +101,7 @@ void OSCNetworkManager::sendMessage(QString messageString, bool forced)
 
 	// Log if logging of outgoing messages is enabled:
 	addToLog(true, messageString);
+    //qInfo() << "[out] " << messageString;
 }
 
 void OSCNetworkManager::sendMessage(QString path, QString argument, bool forced)
@@ -102,7 +109,8 @@ void OSCNetworkManager::sendMessage(QString path, QString argument, bool forced)
 	if (!m_isEnabled && !forced) return;
 
 	// replace <USER> with chosen user number, used for Eos messages
-	path.replace("<USER>", m_eosUser);
+    // not used anymore
+    //path.replace("<USER>", m_eosUser);
 
 	size_t outSize;
 	OSCPacketWriter packetWriter(path.toStdString());
@@ -112,6 +120,53 @@ void OSCNetworkManager::sendMessage(QString path, QString argument, bool forced)
 
 	// Log if logging of outgoing messages is enabled:
 	addToLog(true, path + "=" + argument);
+    //qInfo() << "[out] " << path + "=" + argument;
+}
+
+void OSCNetworkManager::sendMessage(QString path, qreal argument, bool forced)
+{
+    if (!m_isEnabled && !forced) return;
+
+    size_t outSize;
+    OSCPacketWriter packetWriter(path.toStdString());
+    packetWriter.AddFloat64(argument);
+    char* packet = packetWriter.Create(outSize);
+    sendMessageData(packet, outSize);
+
+    // Log if logging of outgoing messages is enabled:
+    addToLog(true, path + "=" + QString::number(argument));
+    //qInfo() << "[out] " << path + "=" + QString::number(argument);
+}
+
+void OSCNetworkManager::sendMessage(QString path, qreal argument1, qreal argument2, bool forced)
+{
+    if (!m_isEnabled && !forced) return;
+
+    size_t outSize;
+    OSCPacketWriter packetWriter(path.toStdString());
+    packetWriter.AddFloat64(argument1);
+    packetWriter.AddFloat64(argument2);
+    char* packet = packetWriter.Create(outSize);
+    sendMessageData(packet, outSize);
+
+    // Log if logging of outgoing messages is enabled:
+    addToLog(true, path + "=" + QString::number(argument1) + "," + QString::number(argument2));
+    //qInfo() << "[out] " << path + "=" + QString::number(argument1) + "," + QString::number(argument2);
+}
+
+void OSCNetworkManager::sendMessage(QString path, QString argument1, QString argument2, bool forced)
+{
+    if (!m_isEnabled && !forced) return;
+
+    size_t outSize;
+    OSCPacketWriter packetWriter(path.toStdString());
+    packetWriter.AddString(argument1.toStdString());
+    packetWriter.AddString(argument2.toStdString());
+    char* packet = packetWriter.Create(outSize);
+    sendMessageData(packet, outSize);
+
+    // Log if logging of outgoing messages is enabled:
+    addToLog(true, path + "=" + argument1 + "," + argument2);
 }
 
 QStringList OSCNetworkManager::getProtocolNames() const
@@ -339,12 +394,12 @@ void OSCNetworkManager::addToLog(bool out, QString text) const
 		QString time = "[" + QTime::currentTime().toString() + "] [Out] ";
 		m_log.prepend(time + text);
 		if (m_log.size() > MAX_LOG_LENGTH) m_log.removeLast();
-		emit logChanged();
+        m_logChangedSignalDelay.start();
 	} else if (!out && m_logIncomingMsg) {
 		QString time = "[" + QTime::currentTime().toString() + "] [In]  ";
 		m_log.prepend(time + text);
 		if (m_log.size() > MAX_LOG_LENGTH) m_log.removeLast();
-		emit logChanged();
+        m_logChangedSignalDelay.start();
 	}
 }
 
@@ -380,7 +435,14 @@ bool OSCNetworkManager::isConnected() const
 	} else {
 		// if UDP is used, the connection can not be "not connected"
 		return true;
-	}
+    }
+}
+
+void OSCNetworkManager::setEosConnectionDefaults()
+{
+    setUseTcp(true);
+    setUseOsc_1_1(false);
+    setTcpPort(3032);
 }
 
 void OSCNetworkManager::enableLogging(bool incoming, bool outgoing)

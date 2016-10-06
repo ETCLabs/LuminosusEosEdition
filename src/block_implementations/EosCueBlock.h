@@ -21,25 +21,27 @@
 #ifndef EOSCUEBLOCK_H
 #define EOSCUEBLOCK_H
 
-#include "block_data/OneInputBlock.h"
+#include "block_data/InOutBlock.h"
+#include "eos_specific/EosCue.h"
 #include "utils.h"
 
 
-class EosCueBlock : public OneInputBlock
+class EosCueBlock : public InOutBlock
 {
 	Q_OBJECT
 
 	Q_PROPERTY(int cueList READ getCueList WRITE setCueList NOTIFY cueListChanged)
 	Q_PROPERTY(double cueNumber READ getCueNumber WRITE setCueNumber NOTIFY cueNumberChanged)
+    Q_PROPERTY(EosCue* cueObject READ getCueObject WRITE setCueObject NOTIFY cueObjectChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Eos Cue";
+		info.typeName = "Eos Cue";
 		info.nameInUi = "Cue";
 		info.category << "Eos";
-		info.helpText = "Fires the selected Cue when the input value is above 50%.";
+        info.helpText = "Fires the selected Cue when the input value is greater than 0.";
 		info.qmlFile = "qrc:/qml/Blocks/EosCueBlock.qml";
 		info.complete<EosCueBlock>();
 		return info;
@@ -53,22 +55,36 @@ public:
 signals:
 	void cueListChanged();
 	void cueNumberChanged();
+    void cueObjectChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
 
-	void onValueChanged();
+    void onValueChanged();
 
-	int getCueList() const { return m_cueList; }
-	void setCueList(int value) { m_cueList = limit(1, value, 999); emit cueListChanged(); }
+    void onActiveCueChanged();
 
-	double getCueNumber() const { return m_cueNumber; }
+    void onImpulseEnd();
+
+    int getCueList() const { return m_cueNumber.list; }
+    void setCueList(int value);
+
+    double getCueNumber() const { return m_cueNumber.numberAsInt / 100.0; }
 	void setCueNumber(double value);
 
+    EosCue* getCueObject() const { return m_cueObject; }
+    void setCueObject(EosCue* value) { m_cueObject = value; emit cueObjectChanged(); }
+
+    void setCueNumber(const EosCueNumber& value);
+
+private slots:
+    void updateCueObject();
+
 protected:
-	int m_cueList;
-	double m_cueNumber;
-	int m_lastValue;
+    EosCueNumber m_cueNumber;
+    double m_lastValue;
+    QPointer<EosCue> m_cueObject;
+    bool m_isActive;
 };
 
 #endif // EOSCUEBLOCK_H

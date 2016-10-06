@@ -1,29 +1,42 @@
 import QtQuick 2.5
+import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	id: root
 	property bool active: false
 	property bool toggle: false
 	property string iconName: ""
 	property bool inverted: false
-	property alias size: icon.size
+    property alias size: icon.width
+    property alias rotation: icon.rotation
 	//C:\Users\thenning\Documents\breeze_icons\actions
 
-	signal press
+    signal press
+
+    mouseOverEnabled: true
+    Rectangle {
+        id: mouseOverFeedback
+        anchors.fill: parent
+        color: "white"
+        opacity: 0.05
+        visible: parent.mouseOver
+    }
 
 	TouchFeedbackEffect {
 		id: touchFeedbackEffect
 		startWhen: root.pressed
 	}
 
-	SvgIconLoader {
-		id: icon
-		//icon: "file:///C:/Users/thenning/Documents/breeze_icons/" + iconName
-		icon: "qrc:/images/svg/" + iconName + ".svg"
-		size: root.width - 8*dp
-		anchors.centerIn: parent
-	}
+    Image {
+        id: icon
+        width: root.height - 8*dp
+        height: width
+        anchors.centerIn: parent
+        source: "qrc:/images/svg/" + iconName + ".svg"
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+    }
 
 	Rectangle {
 		id: bottomLine
@@ -67,7 +80,7 @@ TouchArea {
 	property string uid: ""
 	property real externalInput: 0
 	Component.onCompleted: controller.registerGuiControl(this)
-	Component.onDestruction: if (controller) controller.unregisterGuiControl(uid)
+    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
 	onExternalInputChanged: {
 		if (externalInput > 0.) {
 			active = true

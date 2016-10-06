@@ -34,8 +34,10 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Button";
-		info.category = QStringList {"Controls"};
+		info.typeName = "Button";
+        info.category << "Controls";
+        info.helpText = "A simple button.\n"
+                        "Outputs 1 if pressed and 0 if not.";
 		info.qmlFile = "qrc:/qml/Blocks/ButtonBlock.qml";
 		info.complete<ButtonBlock>();
 		return info;

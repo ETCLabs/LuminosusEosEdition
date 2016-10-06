@@ -32,14 +32,15 @@ class MidiControlInBlock : public OneOutputBlock
 	Q_PROPERTY(int target READ getTarget WRITE setTarget NOTIFY targetChanged)
 	Q_PROPERTY(int channel READ getChannel WRITE setChannel NOTIFY channelChanged)
 	Q_PROPERTY(bool useDefaultChannel READ getUseDefaultChannel WRITE setUseDefaultChannel NOTIFY useDefaultChannelChanged)
+    Q_PROPERTY(bool learning READ getLearning NOTIFY learningChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Control In";
+		info.typeName = "MIDI Control In";
 		info.nameInUi = "Control Change In";
-		info.category = QStringList {"Midi"};
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "Outputs the value of matching incoming MIDI Control Change messages.";
 		info.qmlFile = "qrc:/qml/Blocks/MidiControlInBlock.qml";
@@ -57,11 +58,17 @@ signals:
 	void channelChanged();
 	void useDefaultChannelChanged();
 	void validMessageReceived();
+    void learningChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
 
 	void onMidiMessage(MidiEvent event);
+
+    void startLearning();
+    void checkIfEventFits(MidiEvent event);
+
+    // ------------------------- Getter + Setter -----------------------------
 
 	int getTarget() const { return m_target; }
 	void setTarget(int value) { m_target = limit(0, value, 119); emit targetChanged(); }
@@ -72,10 +79,14 @@ public slots:
 	bool getUseDefaultChannel() const { return m_useDefaultChannel; }
 	void setUseDefaultChannel(bool value) { m_useDefaultChannel = value; emit useDefaultChannelChanged(); }
 
+    bool getLearning() const { return m_learning; }
+    void setLearning(bool value) { m_learning = value; emit learningChanged(); }
+
 protected:
 	int m_target;
 	int m_channel;
 	bool m_useDefaultChannel;
+    bool m_learning;
 };
 
 #endif // MIDICONTROLINBLOCK_H

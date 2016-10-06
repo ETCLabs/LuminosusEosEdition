@@ -110,8 +110,12 @@ public slots:
 	 */
 	void setRightMargin(int value) { m_rightMargin = value; emit rightMarginChanged(); }
 
+    /**
+     * @brief polishIfNoDefaultSize requests polish if no default size is set
+     */
+    void polishIfNoDefaultSize();
+
 protected:
-	virtual void classBegin() override;
 	virtual void componentComplete() override;
 	virtual void updatePolish() override;
 
@@ -122,7 +126,7 @@ private:
 	 */
 	virtual void layoutChildrenWithProportions() = 0;
 	/**
-	 * @brief layoutChildrenWithDefaultSize  positions and resizes the children in unlimited space
+     * @brief layoutChildrenWithDefaultSize positions and resizes the children in unlimited space
 	 * and sets the sizes of all relative-sized items to a multiple of default size
 	 * and sets the implicitSize of this layout
 	 */
@@ -205,6 +209,7 @@ public:
 	explicit StretchColumn(QQuickItem* parent = Q_NULLPTR);
 
 protected:
+    virtual void classBegin() override;
 	virtual void itemChange(ItemChange change, const ItemChangeData & value) override;
 
 private:
@@ -258,6 +263,7 @@ public:
 	explicit StretchRow(QQuickItem* parent = Q_NULLPTR);
 
 protected:
+    virtual void classBegin() override;
 	virtual void itemChange(ItemChange change, const ItemChangeData & value) override;
 
 private:

@@ -89,6 +89,9 @@ class OSCNetworkManager : public QObject
 	Q_OBJECT
 
 public:
+    /**
+     * @brief OSCNetworkManager creates an OSCNetworkManager object
+     */
 	OSCNetworkManager();
 
 public slots:
@@ -199,6 +202,12 @@ public slots:
 	 */
 	bool isConnected() const;
 
+    /**
+     * @brief setEosConnectionDefaults sets all parameters to the default values for a connection
+     * to an Eos console
+     */
+    void setEosConnectionDefaults();
+
 	// ------------------- Logging --------------------
 
 	/**
@@ -247,6 +256,32 @@ public slots:
 	 * @param forced true to send message even if OSC output is disabled
 	 */
 	void sendMessage(QString path, QString argument, bool forced = false);
+
+    /**
+     * @brief Sends an OSC message with a float as the only argument
+     * @param path of the message
+     * @param argument a float to be sent as the only argument
+     * @param forced true to send message even if OSC output is disabled
+     */
+    void sendMessage(QString path, qreal argument, bool forced = false);
+
+    /**
+     * @brief Sends an OSC message with two floats as the arguments
+     * @param path of the message
+     * @param argument1 a float to be sent as the first argument
+     * @param argument2 a float to be sent as the second argument
+     * @param forced true to send message even if OSC output is disabled
+     */
+    void sendMessage(QString path, qreal argument1, qreal argument2, bool forced = false);
+
+    /**
+     * @brief Sends an OSC message with two strings as the arguments
+     * @param path of the message
+     * @param argument1 a string to be sent as the first argument
+     * @param argument2 a string to be sent as the second argument
+     * @param forced true to send message even if OSC output is disabled
+     */
+    void sendMessage(QString path, QString argument1, QString argument2, bool forced = false);
 
 
 	// ------------------- GUI convenience functions --------------------
@@ -481,6 +516,12 @@ private:
 	 * (from TCP stream)
 	 */
 	QByteArray				m_incompleteStreamData;
+
+    /**
+     * @brief m_logChangedSignalDelay is a timer to delay the emission of the logChanged signal
+     * to prevent the log being updated to often
+     */
+    mutable QTimer m_logChangedSignalDelay;
 };
 
 #endif // OSCWRAPPER_H

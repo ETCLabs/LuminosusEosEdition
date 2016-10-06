@@ -1,15 +1,17 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
 import QtGraphicalEffects 1.0
+import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	id: root
 	implicitWidth: -1
 	property var values: ["---"]
 	property var texts: values
 	property int currentIndex: 0
 	property alias align: displayedText.horizontalAlignment
+    property int scrollValue: 0
 
 	property Item dropDownItem
 
@@ -66,8 +68,7 @@ TouchArea {
 
 	// -------------- Touch Handling --------------------
 
-	property int initialOffset: 0
-	property real touchStartY: 0
+    property int initialOffset: 0
 	property bool indexChangedDuringTouch: false
 
 	onTouchDown: {
@@ -81,8 +82,7 @@ TouchArea {
 		if (!enabled) return
 
 		// save initial touch and offset position:
-		initialOffset = currentIndex * 30*dp + touch.y
-		touchStartY = touch.y
+        initialOffset = currentIndex * 30*dp + touch.itemY
 		indexChangedDuringTouch = false
 
 		// create a new DropDown item and show it in right place:
@@ -90,6 +90,7 @@ TouchArea {
 		var xPos = mapToItem(window, 0, 0).x
 		var yPos = mapToItem(window, 0, 0).y
 		dropDownItem = dropDownComponent.createObject(window, {x: xPos, rootY: yPos})
+        dropDownItem.forceActiveFocus()
 	}
 
 	onTouchMove: {
@@ -97,7 +98,7 @@ TouchArea {
 		if (!enabled) return
 
 		// calculate offset from first value:
-		var currentOffset = initialOffset - touch.y
+        var currentOffset = initialOffset - touch.itemY
 
 		// calculate new Index:
 		var newIndex = Math.floor((currentOffset + 15*dp) / (30*dp))
@@ -116,7 +117,7 @@ TouchArea {
 		if (!enabled) return
 
 		// check if the touch was a tap:
-		var dist = Math.abs(touchStartY - touch.y)
+        var dist = Math.abs(touch.itemOriginY - touch.itemY)
 		var isTap = dist < 3*dp
 
 		// if the index changed (even if it is the same as on the start now)
@@ -176,15 +177,38 @@ TouchArea {
 				border.color: "yellow"
 			}
 
-			TouchArea {
+            CustomTouchArea {
+                width: 3000*dp
+                height: 3000*dp
+                anchors.centerIn: parent
+
+                onTouchDown: {
+                    dropDown.destroy()
+                    touch.accepted = false
+                }
+
+                onScrollEvent: {
+                    scrollValue += deltaY
+                    if (scrollValue > 40) {
+                        dropDown.previousItem()
+                        scrollValue = 0
+                    } else if (scrollValue < -40) {
+                        dropDown.nextItem()
+                        scrollValue = 0
+                    }
+                    scrollEventWasAccepted()
+                }
+            }
+
+            CustomTouchArea {
 				anchors.fill: parent
 
-				onTouchDown: {
+                onTouchDown: {
 					// this is called when the DropDown was opened by a tap
 					// and the user clicked on an option
 
 					// calculate Index of clicked option:
-					var newIndex = Math.floor(touch.y / (30*dp))
+                    var newIndex = Math.floor(touch.itemY / (30*dp))
 					// set if it is not the current index:
 					if (newIndex != currentIndex) {
 						controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
@@ -193,6 +217,33 @@ TouchArea {
 					dropDown.destroy()
 				}
 			}
+
+            onActiveFocusChanged: {
+                if (!activeFocus) {
+                    dropDown.destroy()
+                }
+            }
+
+            Keys.onEscapePressed: dropDown.destroy()
+
+            function nextItem() {
+                var len = texts.length
+                var newIndex = (((currentIndex + 1)%len)+len)%len
+                controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
+            }
+
+            function previousItem() {
+                var len = texts.length
+                var newIndex = (((currentIndex - 1)%len)+len)%len
+                controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
+            }
+
+            Keys.onUpPressed: {
+                previousItem()
+            }
+            Keys.onDownPressed: {
+                nextItem()
+            }
 		}
 	}
 }

@@ -1,12 +1,15 @@
 import QtQuick 2.5
+import CustomElements 1.0
 
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	id: root
 	// stretch in both directions:
 	implicitWidth: -1
 	implicitHeight: -1
+
+    secondTouchEnabled: true
 
 	// public properties:
 	property bool active: false
@@ -14,6 +17,7 @@ TouchArea {
 	property bool toggle: false
 	property bool marked: false
 	property string text: ""
+    property bool showLed: true
 
 	// emitted when active changes to true
 	signal press
@@ -45,6 +49,7 @@ TouchArea {
 		anchors.bottom: parent.bottom
 		anchors.bottomMargin: active ? 10*dp : 12*dp
 		source: "qrc:/images/push_button_led_off.png"
+        visible: showLed
 	}
 
 	Image {
@@ -54,7 +59,7 @@ TouchArea {
 		anchors.bottom: parent.bottom
 		anchors.bottomMargin: active ? 10*dp : 12*dp
 		source: "qrc:/images/push_button_led_blue.png"
-		visible: marked
+        visible: marked && showLed
 	}
 
 	Image {
@@ -71,17 +76,20 @@ TouchArea {
 				easing.type: Easing.OutCubic
 			}
 		}
+        visible: showLed
 	}
 
 	Text {
-		width: parent.width - 20*dp
+        height: parent.height - 16*dp
+        width: parent.width - 16*dp
 		anchors.centerIn: parent
-		anchors.verticalCenterOffset: pressed ? -4*dp : -6*dp
+        anchors.verticalCenterOffset: showLed ? (pressed ? -4*dp : -6*dp) : (pressed ? -2*dp : -4*dp)
 		style: Text.Raised
 		styleColor: "#222"
 		color: "#999"
 		font.bold: true
 		fontSizeMode: Text.Fit
+        wrapMode: Text.Wrap  // break into new line if too long
 		horizontalAlignment: Text.AlignHCenter
 		text: root.text
 		visible: root.text !== ""
@@ -107,7 +115,9 @@ TouchArea {
 	}
 
 	onTouchUp: {
-		handleTouchUp()
+        if (!getFirstTouch().isValid) {
+            handleTouchUp()
+        }
 	}
 
 	function handleTouchUp() {
@@ -122,7 +132,7 @@ TouchArea {
 	property string uid: ""
 	property real externalInput: 0
 	Component.onCompleted: controller.registerGuiControl(this)
-	Component.onDestruction: if (controller) controller.unregisterGuiControl(uid)
+    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
 	onExternalInputChanged: {
 		if (externalInput > 0.) {
 			handleTouchDown()

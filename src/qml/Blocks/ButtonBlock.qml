@@ -7,8 +7,7 @@ BlockBase {
     id: root
 	width: 70*dp
 	// block is 8*dp smaller that button to end before the rounding of the edges starts
-	height: width + 30*dp - 8*dp
-    pressed: dragarea.pressed
+    height: width + 30*dp - 8*dp
 	settingsComponent: settings
 
 	StretchColumn {
@@ -23,55 +22,16 @@ BlockBase {
 			onActiveChanged: root.block.value = (active ? 1 : 0)
 		}
 
-		DragArea {
-            id: dragarea
-            guiBlock: root
+        DragArea {
+            WidthResizeAreaLeft {
+                target: root
+                minSize: 60*dp
+                maxSize: 200*dp
+            }
 
 			OutputNode {
                 objectName: "outputNode"
             }
-
-			TouchArea {
-				width: 20*dp
-				height: 30*dp
-				anchors.right: parent.right
-
-				property int minSize: 50*dp
-				property int maxSize: 200*dp
-				property int initialWidth: 0
-				property int initialBottom: 0
-				property int initialTouchX: 0
-
-				onTouchDown: {
-					initialWidth = root.width
-					initialBottom = root.y + root.height
-					initialTouchX = touch.sceneX
-				}
-
-				onTouchMove: {
-					root.width = Math.max(minSize, Math.min(touch.sceneX - initialTouchX + initialWidth, maxSize))
-					root.y = initialBottom - root.height
-					root.block.positionChangedExternal()
-				}
-
-				Rectangle {
-					width: 1*dp
-					height: 20*dp
-					anchors.verticalCenter: parent.verticalCenter
-					anchors.horizontalCenter: parent.horizontalCenter
-					anchors.horizontalCenterOffset: -3*dp
-					color: "#888"
-				}
-
-				Rectangle {
-					width: 1*dp
-					height: 20*dp
-					anchors.verticalCenter: parent.verticalCenter
-					anchors.horizontalCenter: parent.horizontalCenter
-					anchors.horizontalCenterOffset: 3*dp
-					color: "#888"
-				}
-			}
         }
     }
 

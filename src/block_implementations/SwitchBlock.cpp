@@ -21,7 +21,7 @@
 #include "SwitchBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 SwitchBlock::SwitchBlock(MainController* controller, QString uid)

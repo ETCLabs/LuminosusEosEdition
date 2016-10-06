@@ -21,32 +21,51 @@
 #ifndef COLORWHEELBLOCK_H
 #define COLORWHEELBLOCK_H
 
-#include "block_data/BlockBase.h"
-#include "NodeBase.h"
-#include "block_data/OneOutputBlock.h"
+#include "block_data/InOutBlock.h"
 
-class ColorwheelBlock : public OneOutputBlock
+class ColorwheelBlock : public InOutBlock
 {
     Q_OBJECT
+
+    Q_PROPERTY(double hue READ getHue WRITE setHue NOTIFY hueChanged)
+    Q_PROPERTY(double sat READ getSat WRITE setSat NOTIFY satChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Colorwheel";
-		info.category << "Other";
-		info.dependencies = {BlockDependency::Experimental};
+		info.typeName = "Colorwheel";
+        info.category << "Controls";
+        info.helpText = "Can be used in connection with Eos Channel or Group Block.\n\n"
+                        "The intensity can be controlled with the input node.";
 		info.qmlFile = "qrc:/qml/Blocks/ColorwheelBlock.qml";
 		info.complete<ColorwheelBlock>();
 		return info;
 	}
 
-	explicit ColorwheelBlock(MainController* controller, QString uid) : OneOutputBlock(controller, uid, info().qmlFile) {
+    explicit ColorwheelBlock(MainController* controller, QString uid);
 
-	}
+    virtual QJsonObject getState() const override;
+    virtual void setState(const QJsonObject& state) override;
+
+signals:
+    void hueChanged();
+    void satChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
+
+    void updateOutput();
+
+    double getHue() const { return m_hue; }
+    void setHue(double value);
+
+    double getSat() const { return m_sat; }
+    void setSat(double value);
+
+protected:
+    double m_hue;
+    double m_sat;
 };
 
 #endif // COLORWHEELBLOCK_H

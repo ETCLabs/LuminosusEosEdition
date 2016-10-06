@@ -1,12 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>main.qml</file>
-        <file>qml/CustomBasics/TouchArea.qml</file>
         <file>qml/CustomControls/Slider.qml</file>
         <file>qml/CustomBasics/BlockBase.qml</file>
         <file>qml/CustomBasics/DragArea.qml</file>
         <file>qml/CustomBasics/HaloEffect.qml</file>
-        <file>qml/CustomBasics/InfinitePlane.qml</file>
         <file>qml/CustomBasics/ShaderBackground.qml</file>
         <file>qml/CustomBasics/ShaderResources.js</file>
         <file>qml/CustomControls/Button.qml</file>
@@ -24,7 +21,6 @@
         <file>qml/CustomBasics/BlackBorder.qml</file>
         <file>qml/CustomControls/ButtonBottomLine.qml</file>
         <file>qml/CustomControls/ButtonSideLine.qml</file>
-        <file>qml/CustomBasics/InfinitePlaneTouchController.qml</file>
         <file>qml/CustomBasics/TouchFeedbackEffect.qml</file>
         <file>qml/PulseEffect.qml</file>
         <file>qml/RippleEffect.qml</file>
@@ -47,6 +43,20 @@
         <file>qml/CustomControls/PushButton.qml</file>
         <file>qml/CustomBasics/DrawerTabButton.qml</file>
         <file>qml/CustomControls/SvgButton.qml</file>
-        <file>qml/CustomBasics/SvgIconLoader.qml</file>
+        <file>qml/CustomControls/NumericInputWindowed.qml</file>
+        <file>qml/CustomBasics/WorkspacePlane.qml</file>
+        <file>qml/CustomBasics/WorkspacePlaneTouchController.qml</file>
+        <file>qml/CustomBasics/WidthResizeArea.qml</file>
+        <file>qml/CustomBasics/WidthAndHeightResizeArea.qml</file>
+        <file>qml/CustomBasics/HeightResizeArea.qml</file>
+        <file>qml/ImportProjectDialog.qml</file>
+        <file>qml/ExportProjectDialog.qml</file>
+        <file>qml/EosFaderItem.qml</file>
+        <file>qml/EosCueListEntry.qml</file>
+        <file>qml/QmlOnlyBlockFileSelectorDialog.qml</file>
+        <file>qml/AudioPlaybackBlockFileSelector.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/CustomBasics/WidthResizeAreaLeft.qml</file>
+        <file>qml/CustomControls/PlayPauseButton.qml</file>
     </qresource>
 </RCC>

@@ -21,19 +21,23 @@
 #include "SliderBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 #include "utils.h"
 
 
 QJsonObject SliderBlock::getState() const {
 	QJsonObject state;
-	state["guiItemHeight"] = getGuiItemConst()->height();
+    double dp = m_controller->getGuiScaling();
+    state["value"] = getValue();
+    state["guiItemHeight"] = getGuiItemConst()->height() / dp;
 	return state;
 }
 
 void SliderBlock::setState(const QJsonObject &state) {
+    setValue(state["value"].toDouble());
 	if (state["guiItemHeight"].toDouble() > 0) {
-		getGuiItem()->setHeight(state["guiItemHeight"].toDouble());
+        double dp = m_controller->getGuiScaling();
+        getGuiItem()->setHeight(state["guiItemHeight"].toDouble() * dp);
 	}
 }
 

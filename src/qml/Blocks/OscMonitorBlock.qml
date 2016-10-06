@@ -6,8 +6,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: 450*dp
-	height: 300*dp
-	pressed: dragarea.pressed
+    height: 300*dp
 	onWidthChanged: block.positionChanged()
 
 	StretchColumn {
@@ -37,6 +36,11 @@ BlockBase {
 				text: "Clear"
 				onPress: controller.osc().clearLog()
 			}
+            HeightResizeArea {
+                width: 30*dp
+                target: root
+                maxSize: 1000*dp
+            }
 
 			Component.onCompleted: {
 				// initialize checkbox values:
@@ -58,21 +62,22 @@ BlockBase {
 				verticalLayoutDirection: ListView.BottomToTop
 				anchors.fill: parent
 				anchors.leftMargin: 5*dp
-				visible: logList.count !== 0
+                visible: (logList.count !== 0) && !controller.sendCustomOscToEos
 				delegate: Text {
-					height: contentHeight + 3*dp
-					width: parent.width
+                    height: contentHeight + 3*dp
+                    anchors.left: parent.left
+                    anchors.right: parent.right
 					wrapMode: Text.Wrap
 					text: modelData
 					color: (modelData.indexOf("[In]") !== -1) ? "#5d82dd" : "#aaa"
 					font.pixelSize: 14*dp
 					font.family: "BPmono"
-				}  // end delegate
-
-				onCountChanged: {
-					// emit contentYChanged signal, otherwise scrollbar position will be wrong
-					contentYChanged()
-				}
+                }  // end delegate
+                // the default cacheBuffer value is greater than zero
+                // but a value greater than zeros causes the application to crahs because of
+                // the asynchronous creation of delegates and a possible race condition with
+                // the debugger
+                cacheBuffer: 0
 
 				Connections {
 					target: controller.osc()
@@ -84,15 +89,28 @@ BlockBase {
 
 			Text {
 				text: "No Messages"
-				visible: logList.count === 0
+                visible: (logList.count === 0) && !controller.sendCustomOscToEos
 				anchors.centerIn: parent
 			}
+
+            Text {
+                text: "Custom OSC messages are sent to Eos.
+Use Eos OSC Connection Monitor
+or set up a custom connection in the settings."
+                visible: controller.sendCustomOscToEos
+                anchors.centerIn: parent
+                horizontalAlignment: Text.AlignHCenter
+            }
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
-			text: "OSC Monitor"
+        DragArea {
+            text: "Custom OSC Monitor"
+
+            WidthResizeArea {
+                target: root
+                minSize: 450*dp
+                maxSize: 1100*dp
+            }
 		}
 	}
 }

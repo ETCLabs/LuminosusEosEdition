@@ -30,17 +30,20 @@ class EosKeyBlock : public OneInputBlock
 
 	Q_PROPERTY(QString labelText READ getLabelText NOTIFY keyNameChanged)
 	Q_PROPERTY(QString keyName READ getKeyName WRITE setKeyName NOTIFY keyNameChanged)
+    Q_PROPERTY(QString customLabel READ getCustomLabel WRITE setCustomLabel NOTIFY customLabelChanged)
+    Q_PROPERTY(QString customKeyName READ getCustomKeyName WRITE setCustomKeyName NOTIFY customKeyNameChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Eos Key";
+		info.typeName = "Eos Key";
 		info.nameInUi = "Key";
 		info.category << "Eos";
 		info.qmlFile = "qrc:/qml/Blocks/EosKeyBlock.qml";
-		info.helpText = "Triggers the selected Key on the Eos.\n"
-						"Can be resized by dragging the two vertical lines.";
+        info.helpText = "Triggers the selected Key on the Eos.<br>"
+                        "Can be resized by dragging the two vertical lines.<br><br>"
+                        "The OSC key names can be found here: <a href=\"https://github.com/ElectronicTheatreControlsLabs/OSCLayouts/blob/master/Eos%20OSC%20Keys.pdf\">Eos OSC Keys</a>";
 		info.complete<EosKeyBlock>();
 		return info;
 	}
@@ -52,6 +55,8 @@ public:
 
 signals:
 	void keyNameChanged();
+    void customLabelChanged();
+    void customKeyNameChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
@@ -69,7 +74,14 @@ public slots:
 	QString getKeyName() const { return m_keyName; }
 	void setKeyName(QString value);
 
+    QString getCustomLabel() const { return m_customLabel; }
+    void setCustomLabel(QString value);
+
+    QString getCustomKeyName() const { return m_customKeyName; }
+    void setCustomKeyName(QString value) { m_customKeyName = value; emit customKeyNameChanged(); }
+
 private:
+    void addAllKeys();
 	void addKey(QString keyName, QString label);
 
 protected:
@@ -77,6 +89,8 @@ protected:
 	QStringList m_keyNames;
 	QMap<QString, QString> m_keyLabels;
 	double m_lastValue;
+    QString m_customLabel;
+    QString m_customKeyName;
 };
 
 #endif // EOSKEYBLOCK_H

@@ -115,6 +115,35 @@ void FileSystemManager::deleteFile(QString dir, QString filename) const {
     QFile::remove(path);
 }
 
+void FileSystemManager::importFile(QString inputPath, QString dir, bool overwrite) const {
+    QString outputPath = getDataDir(dir) + QFileInfo(inputPath).fileName();
+    if (QDir().exists(outputPath)) {
+        if (overwrite) {
+            QFile::remove(outputPath);
+        } else {
+            return;
+        }
+    }
+    QFile::copy(inputPath, outputPath);
+    // if inputPath is a resource file (":/...") fix the permissions:
+    if (inputPath.startsWith(":")) {
+        QFile(outputPath).setPermissions(QFile::ReadOwner|QFile::WriteOwner
+                                         |QFile::ReadGroup|QFile::ReadOther);
+    }
+}
+
+void FileSystemManager::exportFile(QString dir, QString filename, QString outputPath, bool overwrite) const {
+    QString inputPath = getDataDir(dir) + filename;
+    if (QDir().exists(outputPath)) {
+        if (overwrite) {
+            QFile::remove(outputPath);
+        } else {
+            return;
+        }
+    }
+    QFile::copy(inputPath, outputPath);
+}
+
 QString FileSystemManager::getDataDir(QString dir) const {
     if (dir.length()) {
         return m_dataRoot + dir + "/";

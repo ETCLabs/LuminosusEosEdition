@@ -21,7 +21,7 @@
 #include "MidiNoteOutBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 MidiNoteOutBlock::MidiNoteOutBlock(MainController *controller, QString uid)
@@ -49,7 +49,7 @@ void MidiNoteOutBlock::setState(const QJsonObject &state) {
 }
 
 void MidiNoteOutBlock::onValueChanged() {
-	double value = m_inputNode->data->getValue();
+    double value = m_inputNode->getValue();
 	if (value == m_lastValue) return;
 	int type = MidiConstants::NOTE_ON;
 	int channel = m_useDefaultChannel ? m_controller->midi()->getDefaultOutputChannel() : m_channel;

@@ -6,8 +6,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: Math.max(textInput.implicitWidth + 20*dp, 100*dp)
-	height: Math.max(textInput.implicitHeight + 38*dp, 60*dp)
-	pressed: dragarea.pressed
+    height: Math.max(textInput.implicitHeight + 38*dp, 60*dp)
 	onWidthChanged: block.positionChanged()
 
 	StretchColumn {
@@ -33,9 +32,7 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 			text: "Notes"
 		}
 	}  // end main Column

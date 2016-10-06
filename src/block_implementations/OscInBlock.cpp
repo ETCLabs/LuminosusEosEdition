@@ -21,7 +21,7 @@
 #include "OscInBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 OscInBlock::OscInBlock(MainController *controller, QString uid)
@@ -30,7 +30,12 @@ OscInBlock::OscInBlock(MainController *controller, QString uid)
 	, m_minValue(0)
 	, m_maxValue(1)
 {
-	connect(controller->osc(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+    connect(m_controller, SIGNAL(sendCustomOscToEosChanged()), this, SLOT(updateConnection()));
+    if (m_controller->getSendCustomOscToEos()) {
+        connect(controller->eosConnection(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+    } else {
+        connect(controller->osc(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+    }
 }
 
 QJsonObject OscInBlock::getState() const {
@@ -62,7 +67,17 @@ void OscInBlock::onMessageReceived(OSCMessage msg) {
 }
 
 void OscInBlock::onEndOfPulse() {
-	m_outputNode->setValue(0.0);
+    m_outputNode->setValue(0.0);
+}
+
+void OscInBlock::updateConnection() {
+    if (m_controller->getSendCustomOscToEos()) {
+        disconnect(m_controller->osc(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+        connect(m_controller->eosConnection(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+    } else {
+        disconnect(m_controller->eosConnection(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+        connect(m_controller->osc(), SIGNAL(messageReceived(OSCMessage)), this, SLOT(onMessageReceived(OSCMessage)));
+    }
 }
 
 void OscInBlock::setMinValue(double value) {

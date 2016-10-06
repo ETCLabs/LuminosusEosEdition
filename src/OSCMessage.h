@@ -101,13 +101,13 @@ public:
 	 * @brief isTrue returns if the arguments probably mean true or "do that"
 	 * @return true if there are no arguments or if the first argument is true or 1
 	 */
-	bool isTrue();
+    bool isTrue() const;
 
 	/**
 	 * @brief value converts the arguments to a single number and returns it
 	 * @return the value of the first argument if it exists and is a number, otherwise return 0.0
 	 */
-	qreal value();
+    qreal value() const;
 
 	// ------------- Debug ----------------------
 

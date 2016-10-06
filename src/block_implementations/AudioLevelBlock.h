@@ -21,54 +21,73 @@
 #ifndef AUDIOLEVELBLOCK_H
 #define AUDIOLEVELBLOCK_H
 
-#include <QObject>
-#include <QTimer>
 #include "block_data/OneOutputBlock.h"
+#include "AudioInputAnalyzer.h"
 #include "utils.h"
 
-
-class AudioInputAnalyzer;
+#include <QPointer>
 
 
 class AudioLevelBlock : public OneOutputBlock {
 
     Q_OBJECT
 
+    Q_PROPERTY(AudioInputAnalyzer* analyzer READ getAnalyzer NOTIFY inputChanged)
+    Q_PROPERTY(double currentBand READ getCurrentBand WRITE setCurrentBand NOTIFY currentBandChanged)
+    Q_PROPERTY(bool agcEnabled READ getAgcEnabled WRITE setAgcEnabled NOTIFY agcEnabledChanged)
+
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Audio Level";
-		info.category = QStringList {"Sound2Light"};
+		info.typeName = "Audio Level";
+        info.category << "Sound2Light";
+        info.dependencies = {BlockDependency::AudioInput};
+        info.helpText = "Outputs the level at the selected frequency (red stripe).\n"
+                        "The input device can be chosen above.";
 		info.qmlFile = "qrc:/qml/Blocks/AudioLevelBlock.qml";
 		info.complete<AudioLevelBlock>();
 		return info;
-	}
-
-    double currentBand = 0.5;
-    AudioInputAnalyzer* analyzer = nullptr;
+    }
 
     explicit AudioLevelBlock(MainController* m_controller, QString m_uid);
     ~AudioLevelBlock();
 
 	virtual QJsonObject getState() const override;
 
-    virtual void setState(const QJsonObject& state) override {
-        setInputByName(state["inputName"].toString());
-	}
+    virtual void setState(const QJsonObject& state) override;
 
 signals:
     void inputChanged();
+    void currentBandChanged();
+    void agcEnabledChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
 
+    void updateOutput();
+
+    QVector<double> getSpectrumPoints();
+
+    QString getInputName() const;
     void setInputByName(QString name);
-    QString getInputName();
-    void refreshOutput();
-    QList<qreal> getSpectrumPoints();
-    void setCurrentBand(double value) { currentBand = limitToOne(value); }
-    qreal getCurrentBand() { return currentBand; }
+
+    AudioInputAnalyzer* getAnalyzer() const { return m_analyzer; }
+
+    qreal getCurrentBand() const { return m_currentBand; }
+    void setCurrentBand(double value);
+
+    bool getAgcEnabled() const { return m_agcEnabled; }
+    void setAgcEnabled(bool value) { m_agcEnabled = value; emit agcEnabledChanged(); }
+
+protected:
+    QPointer<AudioInputAnalyzer> m_analyzer;
+
+    double m_currentBand;
+
+    double m_lastValue;
+
+    bool m_agcEnabled;
 
 };
 

@@ -79,7 +79,7 @@ MidiInputDevice::MidiInputDevice(uint portNumber, QObject *parent)
 		m_input->setCallback( &staticMidiCallback, (void*)this );
 		qDebug() << "MIDI input device found: " << m_portName;
     } catch ( RtMidiError &error ) {
-		qWarning() << "An error occured while creating RtMidiIn object:";
+		qCritical() << "An error occured while creating RtMidiIn object:";
         error.printMessage();
 	}
 }
@@ -96,7 +96,7 @@ MidiInputDevice::MidiInputDevice(QObject* parent)
 		m_input->openVirtualPort(m_portName.toStdString());
 		m_input->setCallback( &staticMidiCallback, (void*)this );
 	} catch ( RtMidiError &error ) {
-		qWarning() << "An error occured while creating virtual RtMidiIn object:";
+		qCritical() << "An error occured while creating virtual RtMidiIn object:";
 		error.printMessage();
 	}
 }
@@ -125,14 +125,23 @@ void MidiInputDevice::rawMidiCallback(std::vector<unsigned char> *message) {
 
 MidiManager::MidiManager(MainController *controller)
 	: QObject(controller)
-	, m_controller(controller)
-	, m_nextEventCallbackIsValid(false)
-	, m_default_input_channel(1)
-	, m_default_output_channel(1)
+    , m_controller(controller)
+    , m_defaultInputChannel(1)
+    , m_defaultOutputChannel(1)
 	, m_log()
 	, m_logInput(true)
 	, m_logOutput(true)
 {
+    // prepare log changed signal:
+    m_logChangedSignalDelay.setSingleShot(true);
+    m_logChangedSignalDelay.setInterval(100);
+    connect(&m_logChangedSignalDelay, SIGNAL(timeout()), this, SIGNAL(logChanged()));
+
+    // prepare Port Blacklist:
+    m_portNameBlacklist << "Microsoft GS Wavetable Synth"
+                        << "Luminosus In"
+                        << "Luminosus Out"
+                        << "RtMidi";
 	m_toneNames = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 	// Register ExternalInputEvent as Qt Meta Type to be able to store it in QVariants etc.:
 	qRegisterMetaType<MidiEvent>("MidiEvent");
@@ -170,12 +179,26 @@ void MidiManager::initializeInputs() {
 		qWarning() << "Could not create RtMidiIn object.";
 		return;
 	}
-	unsigned int numberOfPorts = midiin->getPortCount();
-	delete midiin;
-	for ( unsigned int i=0; i<numberOfPorts; i++ ) {
-		m_inputs.push_back(new MidiInputDevice(i, this));
-		connect(m_inputs[i], SIGNAL(eventReceived(MidiEvent)), this, SLOT(onExternalEvent(MidiEvent)));
+    unsigned int numberOfPorts = midiin->getPortCount();
+    for ( unsigned int i=0; i<numberOfPorts; i++ ) {
+        QString portName = QString::fromStdString(midiin->getPortName(i));
+
+        // ignore blacklisted ports:
+        bool blacklisted = false;
+        for (QString blacklistedName: m_portNameBlacklist) {
+            if (portName.startsWith(blacklistedName)) {
+                blacklisted = true;
+                break;
+            }
+        }
+        if (blacklisted) continue;
+
+        MidiInputDevice* input = new MidiInputDevice(i, this);
+        m_inputs.push_back(input);
+        m_inputPortNames.push_back(portName);
+        connect(input, SIGNAL(eventReceived(MidiEvent)), this, SLOT(onExternalEvent(MidiEvent)));
 	}
+    delete midiin;
 
 #ifndef Q_OS_WIN  // virtual Midi Ports aren't possible with Windows and RtMidi
 	// create virtual input port:
@@ -192,29 +215,44 @@ void MidiManager::initializeOutputs() {
 	try {
 		midiout = new RtMidiOut();
 	} catch ( RtMidiError &error ) {
-		qWarning() << "An error occured while creating RtMidiOut object:";
+        qCritical() << "An error occured while creating RtMidiOut object:";
 		error.printMessage();
 		return;
 	}
 	if (!midiout) {
-		qWarning() << "Could not create RtMidiOut object.";
+        qCritical() << "Could not create RtMidiOut object.";
 		return;
 	}
-	unsigned int numberOfPorts = midiout->getPortCount();
-	delete midiout;
-	for (unsigned int i=0; i<numberOfPorts; ++i) {
-		RtMidiOut* output = new RtMidiOut();
-		if (!output) continue;
-		output->openPort(i);
-		// ignore default Windows Synth output:
-		QString portName = QString::fromStdString(output->getPortName(i));
-		if (portName.startsWith("Microsoft GS Wavetable Synth")) {
-			delete output;
-			continue;
-		}
-		m_outputs.push_back(output);
+    unsigned int numberOfPorts = midiout->getPortCount();
+    for (unsigned int i=0; i<numberOfPorts; ++i) {
+        QString portName = QString::fromStdString(midiout->getPortName(i));
+
+        // ignore blacklisted ports:
+        bool blacklisted = false;
+        for (QString blacklistedName: m_portNameBlacklist) {
+            if (portName.startsWith(blacklistedName)) {
+                blacklisted = true;
+                break;
+            }
+        }
+        if (blacklisted) continue;
+
+        RtMidiOut* output = new RtMidiOut();
+        if (!output) continue;
+
+        try {
+            output->openPort(i);
+        } catch ( RtMidiError &error ) {
+            qCritical() << "An error occured while opening RtMidiOut port:";
+            error.printMessage();
+            return;
+        }
+
+        m_outputs.push_back(output);
+        m_outputPortNames.push_back(portName);
 		qDebug() << "MIDI output device found: " << portName;
 	}
+    delete midiout;
 
 #ifndef Q_OS_WIN  // virtual Midi Ports aren't possible with Windows and RtMidi
 	// create virtual output port:
@@ -227,17 +265,110 @@ void MidiManager::initializeOutputs() {
 #endif  // RT_MIDI_AVAILABLE
 }
 
+void MidiManager::refreshInputs() {
+#ifdef RT_MIDI_AVAILABLE
+    RtMidiIn* midiin = 0;
+    try {
+        midiin = new RtMidiIn();
+    } catch ( RtMidiError &error ) {
+        qWarning() << "An error occured while creating RtMidiIn object:";
+        error.printMessage();
+        return;
+    }
+    if (!midiin) {
+        qWarning() << "Could not create RtMidiIn object.";
+        return;
+    }
+    unsigned int numberOfPorts = midiin->getPortCount();
+    for ( unsigned int i=0; i<numberOfPorts; i++ ) {
+        QString portName = QString::fromStdString(midiin->getPortName(i));
+
+        // ignore blacklisted ports:
+        bool blacklisted = false;
+        for (QString blacklistedName: m_portNameBlacklist) {
+            if (portName.startsWith(blacklistedName)) {
+                blacklisted = true;
+                break;
+            }
+        }
+        if (blacklisted) continue;
+
+        // check if port is already opened:
+        if (m_inputPortNames.contains(portName)) {
+            continue;
+        }
+        MidiInputDevice* input = new MidiInputDevice(i, this);
+        m_inputs.push_back(input);
+        m_inputPortNames.push_back(portName);
+        connect(input, SIGNAL(eventReceived(MidiEvent)), this, SLOT(onExternalEvent(MidiEvent)));
+    }
+    delete midiin;
+#endif  // RT_MIDI_AVAILABLE
+}
+
+void MidiManager::refreshOutputs() {
+#ifdef RT_MIDI_AVAILABLE
+    RtMidiOut* midiout = 0;
+    try {
+        midiout = new RtMidiOut();
+    } catch ( RtMidiError &error ) {
+        qCritical() << "An error occured while creating RtMidiOut object:";
+        error.printMessage();
+        return;
+    }
+    if (!midiout) {
+        qCritical() << "Could not create RtMidiOut object.";
+        return;
+    }
+    unsigned int numberOfPorts = midiout->getPortCount();
+    for (unsigned int i=0; i<numberOfPorts; ++i) {
+        QString portName = QString::fromStdString(midiout->getPortName(i));
+
+        // ignore blacklisted ports:
+        bool blacklisted = false;
+        for (QString blacklistedName: m_portNameBlacklist) {
+            if (portName.startsWith(blacklistedName)) {
+                blacklisted = true;
+                break;
+            }
+        }
+        if (blacklisted) continue;
+
+        // check if port is already opened:
+        if (m_outputPortNames.contains(portName)) {
+            continue;
+        }
+
+        RtMidiOut* output = new RtMidiOut();
+        if (!output) continue;
+
+        try {
+            output->openPort(i);
+        } catch ( RtMidiError &error ) {
+            qCritical() << "An error occured while opening RtMidiOut port:";
+            error.printMessage();
+            return;
+        }
+
+        m_outputs.push_back(output);
+        m_outputPortNames.push_back(portName);
+        qDebug() << "MIDI output device found: " << portName;
+    }
+    delete midiout;
+#endif  // RT_MIDI_AVAILABLE
+}
+
 void MidiManager::addToLog(bool out, QString text) const {
 	if (out && m_logOutput) {
 		QString time = "[" + QTime::currentTime().toString() + "] [Out] ";
 		m_log.prepend(time + text);
 		if (m_log.size() > MAX_LOG_LENGTH) m_log.removeLast();
-		emit logChanged();
+        m_logChangedSignalDelay.start();
 	} else if (!out && m_logInput) {
 		QString time = "[" + QTime::currentTime().toString() + "] [In]  ";
 		m_log.prepend(time + text);
 		if (m_log.size() > MAX_LOG_LENGTH) m_log.removeLast();
-		emit logChanged();
+        m_logChangedSignalDelay.start();
 	}
 }
 
@@ -276,7 +407,7 @@ void MidiManager::addToLog(bool out, int type, int channel, int target, double v
 	addToLog(out, msg);
 }
 
-QJsonObject MidiManager::getState() {
+QJsonObject MidiManager::getState() const {
 	QJsonObject state;
 	state["defaultInputChannel"] = getDefaultInputChannel();
 	state["defaultOutputChannel"] = getDefaultOutputChannel();
@@ -315,6 +446,18 @@ void MidiManager::setState(QJsonObject state) {
     }
 }
 
+void MidiManager::registerForNextEvent(QString id, MidiConstants::NextEventCallback callback) {
+    m_nextEventCallbacks[id] = callback;
+}
+
+void MidiManager::clearNextEventCallbacks() {
+    m_nextEventCallbacks.clear();
+}
+
+void MidiManager::removeNextEventCallback(QString id) {
+    m_nextEventCallbacks.remove(id);
+}
+
 void MidiManager::connectControl(QString controlUid, QString inputUid) {
 	// check if there already is an entry for this input uid:
 	if (!mapContains(m_inputToControlMapping, inputUid)) {
@@ -336,15 +479,17 @@ void MidiManager::disconnectControl(QString controlUid) {
 
 void MidiManager::onExternalEvent(MidiEvent event) {
 	// call nextEvent callback if there is one:
-	if (m_nextEventCallbackIsValid) {
-		m_nextEventCallback(event.inputId);
-		m_nextEventCallbackIsValid = false;
+    if (!m_nextEventCallbacks.isEmpty()) {
+        for (auto callback: m_nextEventCallbacks) {
+            callback(event);
+        }
+        m_nextEventCallbacks.clear();
     }
 
 	// set "externalInput" property on controls that are mapped to this input:
 	if (mapContains(m_inputToControlMapping, event.inputId)) {
 		for (QString controlUid: m_inputToControlMapping[event.inputId]) {
-			QQuickItem* control = m_controller->getControlFromUid(controlUid);
+            QQuickItem* control = m_controller->getControlFromUid(controlUid);
 			// check if control still exists:
             if (!control) continue;
             control->setProperty("externalInput", event.value);
@@ -363,6 +508,11 @@ QStringList MidiManager::getToneNames() const {
 	return tones;
 }
 
+void MidiManager::refreshDevices() {
+    refreshInputs();
+    refreshOutputs();
+}
+
 void MidiManager::sendChannelVoiceMessage(unsigned char type, unsigned char channel, unsigned char target, double value) {
 #ifdef RT_MIDI_AVAILABLE
 	std::vector<unsigned char> message(3);
@@ -370,7 +520,12 @@ void MidiManager::sendChannelVoiceMessage(unsigned char type, unsigned char chan
 	message[1] = target;
 	message[2] = (unsigned char)(value * 127);
 	for (RtMidiOut* output: m_outputs) {
-		output->sendMessage(&message);
+        try {
+            output->sendMessage(&message);
+        } catch ( RtMidiError &error ) {
+            qWarning("MIDI device not available (probably disconnect).");
+            output->closePort();
+        }
 	}
 	addToLog(true, type, channel, target, value);
 #endif
@@ -382,7 +537,12 @@ void MidiManager::sendChannelVoiceMessage(unsigned char type, unsigned char chan
 	message[0] = (type << 4) | (channel - 1);
 	message[1] = target;
 	for (RtMidiOut* output: m_outputs) {
-		output->sendMessage(&message);
+        try {
+            output->sendMessage(&message);
+        } catch ( RtMidiError &error ) {
+            qWarning("MIDI device not available (probably disconnect).");
+            output->closePort();
+        }
 	}
 	if (m_logOutput) {
 		addToLog(true, type, channel, target, 0);

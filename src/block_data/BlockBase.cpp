@@ -21,7 +21,7 @@
 #include "BlockBase.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 #include <QQmlEngine>
 #include <time.h>
@@ -37,6 +37,8 @@ BlockBase::BlockBase(MainController* controller, QString uid, QString qmlUrl)
   , m_uid(uid)
   , m_controller(controller)
   , m_component(controller->qmlEngine(), QUrl(qmlUrl))
+  , m_focused(false)
+  , m_guiItemCompleted(false)
 {
 	// Tell QML that this object is owned by C++ and should not be deleted by the JS GC:
 	// This is very important because otherwise SEGFAULTS will appear randomly!
@@ -47,26 +49,36 @@ BlockBase::BlockBase(MainController* controller, QString uid, QString qmlUrl)
 	}
 	m_guiItem = (QQuickItem*)m_component.beginCreate(controller->qmlEngine()->rootContext());
 	if (!m_guiItem) {
-		qWarning() << "Could not create GUI item: " << m_component.errorString();
-    }
-    //guiItem->setProperty("block", QVariant::fromValue<QObject*>(this));
+		qCritical() << "Could not create GUI item: " << m_component.errorString();
+	}
+    //guiItem->setProperty("block", QVariant::fromValue<QObject*>(this)); -> called in completeCreation()
 }
 
 BlockBase::~BlockBase() {
 	// delete the created Nodes:
 	for (auto const& entry: m_nodes) {
 		NodeBase* node = entry.second;
+		Q_ASSERT_X(node, "BlockBase dtor", "Node object does not exist.");
 		node->deleteLater();
-	}
+    }
+}
+
+void BlockBase::completeGuiItemCreation() {
+    m_guiItem->setProperty("block", QVariant::fromValue<QObject*>(this));
+    m_component.completeCreate();
+    m_guiItemCompleted = true;
 }
 
 QJsonArray BlockBase::getConnections() {
 	QJsonArray connections;
 	for (auto const& kv: m_nodes) {
 		NodeBase* node = kv.second;
-		if (node->m_isOutput && node->m_connected) {
+		Q_ASSERT_X(node, "getConnections()", "Node object does not exist.");
+        if (node->isOutput()) {
+            for (QString connection: node->getConnections())
+            connections.append(connection);
             // "outputUid->inputUid"
-            connections.append(node->getUid().append("->").append(node->m_connectedNode->getUid()));
+            // node->getUid().append("->").append(node->m_connectedNode->getUid())
         }
     }
     return connections;
@@ -78,28 +90,32 @@ NodeBase* BlockBase::getNodeById(int id) {
 }
 
 QQuickItem* BlockBase::getGuiItem() {
-	Q_ASSERT_X(m_guiItem, "getGuiItem()", "GUI item does not exist");
-	m_guiItem->setProperty("block", QVariant::fromValue<QObject*>(this));
-	m_component.completeCreate();
+    Q_ASSERT_X(m_guiItem, "getGuiItem()", "GUI item does not exist.");
+    if (!m_guiItemCompleted) {
+        completeGuiItemCreation();
+    }
 	return m_guiItem;
 }
 
 const QQuickItem* BlockBase::getGuiItemConst() const {
-	Q_ASSERT_X(m_guiItem, "getGuiItem()", "GUI item does not exist");
+	Q_ASSERT_X(m_guiItem, "getGuiItemConst()", "GUI item does not exist.");
 	return m_guiItem;
 }
 
 void BlockBase::disconnectAllNodes() {
 	for (auto entry: m_nodes) {
 		NodeBase* node = entry.second;
-		node->disconnect();
+		Q_ASSERT_X(node, "disconnectAllNodes()", "Node object does not exist.");
+        node->disconnectAll();
+        node->defocus();
 	}
 }
 
 NodeBase* BlockBase::getDefaultInputNode() {
 	for (auto entry: m_nodes) {
 		NodeBase* node = entry.second;
-		if (!node->m_isOutput) {
+		Q_ASSERT_X(node, "getDefaultInputNode()", "Node object does not exist.");
+        if (!node->isOutput()) {
 			return node;
 		}
 	}
@@ -109,52 +125,112 @@ NodeBase* BlockBase::getDefaultInputNode() {
 NodeBase* BlockBase::getDefaultOutputNode() {
 	for (auto entry: m_nodes) {
 		NodeBase* node = entry.second;
-		if (node->m_isOutput) {
+		Q_ASSERT_X(node, "getDefaultOutputNode()", "Node object does not exist.");
+        if (node->isOutput()) {
 			return node;
 		}
 	}
-	return nullptr;
+    return nullptr;
 }
 
-QQuickItem* BlockBase::getGuiItemChild(QString name)
-{
-	return (QQuickItem*)(m_guiItem->findChild<QObject*>(name));
+QJsonObject BlockBase::getNodeMergeModes() const {
+    QJsonObject state;
+    for (auto entry: m_nodes) {
+        int index = entry.first;
+        NodeBase* node = entry.second;
+        if (!node) continue;
+        if (!node->isOutput()) {
+            state[QString::number(index)] = node->getHtpMode();
+        }
+    }
+    return state;
 }
 
-OutputNodeHsv* BlockBase::createOutputNodeHsv(QString guiItemName) {
+void BlockBase::setNodeMergeModes(const QJsonObject& state) {
+    for (auto entry: m_nodes) {
+        int index = entry.first;
+        NodeBase* node = entry.second;
+        if (!node) continue;
+        if (!node->isOutput()) {
+            node->setHtpMode(state[QString::number(index)].toBool());
+        }
+    }
+}
+
+QQuickItem* BlockBase::getGuiItemChild(QString name) {
+	Q_ASSERT_X(m_guiItem, "getGuiItemChild()", "GUI item does not exist");
+	QQuickItem* item = qobject_cast<QQuickItem*>(m_guiItem->findChild<QObject*>(name));
+	if (!item) {
+		qCritical() << "Could not find GUI item with object name: " << name;
+		return nullptr;
+	}
+	return item;
+}
+
+NodeBase* BlockBase::createOutputNode(QString guiItemName) {
 	int number = m_nodes.size();
-    auto node = new OutputNodeHsv(this, number);
+    auto node = new NodeBase(this, number, true);
+	QQmlEngine::setObjectOwnership(node, QQmlEngine::CppOwnership);
     node->setGuiItem(getGuiItemChild(guiItemName));
 	m_nodes[number] = node;
     return node;
 }
 
-InputNodeHsv* BlockBase::createInputNodeHsv(QString guiItemName) {
+NodeBase* BlockBase::createInputNode(QString guiItemName) {
 	int number = m_nodes.size();
-    auto node = new InputNodeHsv(this, number);
+    auto node = new NodeBase(this, number, false);
+	QQmlEngine::setObjectOwnership(node, QQmlEngine::CppOwnership);
     node->setGuiItem(getGuiItemChild(guiItemName));
 	m_nodes[number] = node;
     return node;
 }
 
-QString BlockBase::getBlockName() const { return getBlockInfo().name; }
+QString BlockBase::getBlockName() const { return getBlockInfo().nameInUi; }
 
 void BlockBase::focus() {
-	m_controller->blockManager()->focusBlock(this);
+    m_controller->blockManager()->focusBlock(this);
 }
 
 void BlockBase::defocus() {
     getGuiItem()->setProperty("focused", false);
+    m_focused = false;
+    emit focusedChanged();
 }
 
 void BlockBase::onFocus() {
 	// Qt-independent focus:
 	getGuiItem()->setProperty("focused", true);
+    m_focused = true;
+    emit focusedChanged();
 	// Qt keyboard focus (i.e. for delete key):
 	QMetaObject::invokeMethod(getGuiItem(), "forceActiveFocus");
 }
 
-QQmlComponent *BlockBase::getSettingsComponent() const {
-	return m_guiItem->property("settingsComponent").value<QQmlComponent*>();
+QQmlComponent* BlockBase::getSettingsComponent() const {
+	Q_ASSERT_X(m_guiItem, "getGuiItemChild()", "GUI item does not exist");
+    return m_guiItem->property("settingsComponent").value<QQmlComponent*>();
+}
+
+void BlockBase::deletedByUser() {
+    disconnectAllNodes();
+    QMetaObject::invokeMethod(getGuiItem(), "startDeleteAnimation");
+}
+
+void BlockBase::onDeleteAnimationEnd() {
+    m_controller->blockManager()->deleteBlock(this);
+}
+
+void BlockBase::makeBlocksConnectedToInputsVisible() {
+    for (auto entry: m_nodes) {
+        NodeBase* node = entry.second;
+        if (!node) continue;
+        if (node->isOutput()) continue;
+        for (NodeBase* outputNode: node->getConnectedNodes()) {
+            if (!outputNode) continue;
+            BlockInterface* otherBlock = outputNode->getBlock();
+            if (!otherBlock) continue;
+            otherBlock->getGuiItem()->setVisible(true);
+        }
+    }
 }
 

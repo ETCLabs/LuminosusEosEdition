@@ -20,9 +20,11 @@
 
 #include "OneInputBlock.h"
 
+#include "Nodes.h"  // for QPointer<Node>
+
 OneInputBlock::OneInputBlock(MainController* controller, QString uid, QString qmlUrl)
 	: BlockBase(controller, uid, qmlUrl)
 {
 	// prepare nodes:
-	m_inputNode = createInputNodeHsv("inputNode");
+	m_inputNode = createInputNode("inputNode");
 }

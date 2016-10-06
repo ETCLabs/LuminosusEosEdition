@@ -23,36 +23,72 @@
 #include "Matrix.h"
 
 ColorMatrix::ColorMatrix()
-	: hsvData(1, std::vector<std::vector<double>>(1, std::vector<double>(3, 0)))
-	, hsvValid(true)
-	, rgbData(1, std::vector<std::vector<double>>(1, std::vector<double>(3, 0)))
-	, rgbValid(true)
-	, value(0)
-	, valueValid(true)
+    : m_hsvData(1, std::vector<std::vector<double>>(1, std::vector<double>(3, 0)))
+    , m_hsvIsValid(false)
+    , m_rgbData(1, std::vector<std::vector<double>>(1, std::vector<double>(3, 0)))
+    , m_rgbIsValid(false)
+    , m_value(0)
+    , m_valueIsValid(true)
+    , m_absoluteMaximum(1)
+    , m_absoluteMaximumIsProvided(false)
 {}
 
 void ColorMatrix::rescaleTo(std::size_t sx, std::size_t sy) {
 	// FIXME: is this correct?
-	if (hsvData.size() != sx || hsvData[0].size() != sy
-			|| rgbData.size() != sx || rgbData[0].size() != sy
+    if (m_hsvData.size() != sx || m_hsvData[0].size() != sy
+            || m_rgbData.size() != sx || m_rgbData[0].size() != sy
 			|| sx < 1 || sy < 1) {
 		return;
 	}
 	// change width:
-	hsvData.resize(sx);
-	rgbData.resize(sx);
+    m_hsvData.resize(sx);
+    m_rgbData.resize(sx);
 	// for all columns:
 	for (std::size_t x=0; x<sx; x++) {
 		// change height:
-		hsvData[x].resize(sy);
-		rgbData[x].resize(sy);
+        m_hsvData[x].resize(sy);
+        m_rgbData[x].resize(sy);
 		// for all color values:
 		for (std::size_t y=0; y<sy; y++) {
 			// set length of color values to three values (RGB or HSV):
-			hsvData[x][y].resize(3);
-			rgbData[x][y].resize(3);
+            m_hsvData[x][y].resize(3);
+            m_rgbData[x][y].resize(3);
 		}
-	}
+    }
+}
+
+void ColorMatrix::mixHtp(const ColorMatrix& other) {
+    // Special Case:
+    // check if in both Matrices only the value attribute is valid:
+    if (!m_hsvIsValid && !m_rgbIsValid && !other.m_hsvIsValid && !other.m_rgbIsValid) {
+        m_value = std::max(m_value, other.m_value);
+        return;
+    }
+
+    // do normal RGB HTP mix:
+    if (!m_rgbIsValid) updateRgb();
+    if (!other.m_rgbIsValid) updateRgb();
+    std::size_t sx = getSX();
+    std::size_t sy = getSY();
+    for (std::size_t x=0; x<sx; x++) {
+        for (std::size_t y=0; y<sy; y++) {
+            m_rgbData[x][y][0] = std::max(m_rgbData[x][y][0], other.m_rgbData[x][y][0]);
+            m_rgbData[x][y][1] = std::max(m_rgbData[x][y][1], other.m_rgbData[x][y][1]);
+            m_rgbData[x][y][2] = std::max(m_rgbData[x][y][2], other.m_rgbData[x][y][2]);
+        }
+    }
+    m_hsvIsValid = false;
+    m_valueIsValid = false;
+
+    // absolute maximum:
+    if (other.m_absoluteMaximumIsProvided) {
+        if (m_absoluteMaximumIsProvided) {
+            m_absoluteMaximum = std::max(m_absoluteMaximum, other.m_absoluteMaximum);
+        } else {
+            m_absoluteMaximum = other.m_absoluteMaximum;
+            m_absoluteMaximumIsProvided = true;
+        }
+    }
 }
 
 void ColorMatrix::setHsv(double h, double s, double v) {
@@ -60,24 +96,24 @@ void ColorMatrix::setHsv(double h, double s, double v) {
 	std::size_t sy = getSY();
 	for (std::size_t x=0; x<sx; x++) {
 		for (std::size_t y=0; y<sy; y++) {
-			hsvData[x][y][0] = h;
-			hsvData[x][y][1] = s;
-			hsvData[x][y][2] = v;
+            m_hsvData[x][y][0] = h;
+            m_hsvData[x][y][1] = s;
+            m_hsvData[x][y][2] = v;
 		}
 	}
-	hsvValid = true;
-	rgbValid = false;
-	valueValid = false;
+    m_hsvIsValid = true;
+    m_rgbIsValid = false;
+    m_valueIsValid = false;
 }
 
 void ColorMatrix::setHsvAt(std::size_t x, std::size_t y, double h, double s, double v) {
 	// TODO: check if x and y are in the boundaries
-	hsvData[x][y][0] = h;
-	hsvData[x][y][1] = s;
-	hsvData[x][y][2] = v;
-	hsvValid = true;
-	rgbValid = false;
-	valueValid = false;
+    m_hsvData[x][y][0] = h;
+    m_hsvData[x][y][1] = s;
+    m_hsvData[x][y][2] = v;
+    m_hsvIsValid = true;
+    m_rgbIsValid = false;
+    m_valueIsValid = false;
 }
 
 void ColorMatrix::setRgb(double r, double g, double b) {
@@ -85,68 +121,90 @@ void ColorMatrix::setRgb(double r, double g, double b) {
 	std::size_t sy = getSY();
 	for (std::size_t x=0; x<sx; x++) {
 		for (std::size_t y=0; y<sy; y++) {
-			rgbData[x][y][0] = r;
-			rgbData[x][y][1] = g;
-			rgbData[x][y][2] = b;
+            m_rgbData[x][y][0] = r;
+            m_rgbData[x][y][1] = g;
+            m_rgbData[x][y][2] = b;
 		}
 	}
-	hsvValid = false;
-	rgbValid = true;
-	valueValid = false;
+    m_hsvIsValid = false;
+    m_rgbIsValid = true;
+    m_valueIsValid = false;
 }
 
 void ColorMatrix::setRgb(const colorData2d &newRgb) {
-	rgbData = newRgb;
-	hsvValid = false;
-	rgbValid = true;
-	valueValid = false;
+    m_rgbData = newRgb;
+    m_hsvIsValid = false;
+    m_rgbIsValid = true;
+    m_valueIsValid = false;
 }
 
 void ColorMatrix::setRgbAt(std::size_t x, std::size_t y, double r, double g, double b) {
 	// TODO: check if x and y are in the boundaries
-	rgbData[x][y][0] = r;
-	rgbData[x][y][1] = g;
-	rgbData[x][y][2] = b;
-	hsvValid = false;
-	rgbValid = true;
-	valueValid = false;
+    m_rgbData[x][y][0] = r;
+    m_rgbData[x][y][1] = g;
+    m_rgbData[x][y][2] = b;
+    m_hsvIsValid = false;
+    m_rgbIsValid = true;
+    m_valueIsValid = false;
 }
 
 void ColorMatrix::setValue(double v) {
-	value = v;
-	hsvValid = false;
-	rgbValid = false;
-	valueValid = true;
+    m_value = v;
+    m_hsvIsValid = false;
+    m_rgbIsValid = false;
+    m_valueIsValid = true;
 }
 
 double ColorMatrix::getValue() const {
-	if (!valueValid) {
-		if (hsvValid) {
-			value = hsvData[0][0][2];
+    if (!m_valueIsValid) {
+        if (m_hsvIsValid) {
+            m_value = m_hsvData[0][0][2];
 		} else {
-			value = std::max(std::max(rgbData[0][0][0], rgbData[0][0][1]), rgbData[0][0][0]);
+            m_value = std::max(std::max(m_rgbData[0][0][0], m_rgbData[0][0][1]), m_rgbData[0][0][0]);
 		}
-		valueValid = true;
+        m_valueIsValid = true;
 	}
-	return value;
+    return m_value;
+}
+
+void ColorMatrix::setAbsoluteMaximum(double value) {
+    m_absoluteMaximum = value;
+    m_absoluteMaximumIsProvided = true;
+}
+
+void ColorMatrix::setAbsoluteValue(double v) {
+    m_absoluteMaximum = v;
+    m_value = 1;
+    m_hsvIsValid = false;
+    m_rgbIsValid = false;
+    m_valueIsValid = true;
+    m_absoluteMaximumIsProvided = true;
+}
+
+double ColorMatrix::getAbsoluteValue(double defaultMax) const {
+    if (m_absoluteMaximumIsProvided) {
+        return m_value * m_absoluteMaximum;
+    } else {
+        return m_value * defaultMax;
+    }
 }
 
 void ColorMatrix::updateHsv() const {
-	if (rgbValid) {
+    if (m_rgbIsValid) {
 		rgbToHsv();
 	} else {
-		const_cast<ColorMatrix*>(this)->setHsv(0, value, 0);
+        const_cast<ColorMatrix*>(this)->setHsv(0, 0, m_value);
 	}
-	hsvValid = true;
+    m_hsvIsValid = true;
 }
 
 void ColorMatrix::updateRgb() const {
-	if (hsvValid) {
+    if (m_hsvIsValid) {
 		hsvToRgb();
 	} else {
-		const_cast<ColorMatrix*>(this)->setRgb(value, value, value);
+        const_cast<ColorMatrix*>(this)->setRgb(m_value, m_value, m_value);
 	}
-	rgbValid = true;
+    m_rgbIsValid = true;
 }
 
 void ColorMatrix::rgbToHsv() const {
@@ -155,15 +213,15 @@ void ColorMatrix::rgbToHsv() const {
 	for (std::size_t x=0; x<sx; ++x) {
 		for (std::size_t y=0; y<sy; ++y) {
 			double r, g, b, maxc, minc, h, s, delta;
-			r = rgbData[x][y][0];
-			g = rgbData[x][y][1];
-			b = rgbData[x][y][2];
+            r = m_rgbData[x][y][0];
+            g = m_rgbData[x][y][1];
+            b = m_rgbData[x][y][2];
 			maxc = std::max(std::max(r, g), b);
 			minc = std::min(std::min(r, g), b);
 			if (minc == maxc) {
-				hsvData[x][y][0] = 0;
-				hsvData[x][y][1] = 0;
-				hsvData[x][y][2] = maxc;
+                m_hsvData[x][y][0] = 0;
+                m_hsvData[x][y][1] = 0;
+                m_hsvData[x][y][2] = maxc;
 				continue;
 			}
 			delta = maxc - minc;
@@ -179,9 +237,9 @@ void ColorMatrix::rgbToHsv() const {
             if (h < 0) {
                 h += 1;
             }
-            hsvData[x][y][0] = h;
-            hsvData[x][y][1] = s;
-            hsvData[x][y][2] = maxc;
+            m_hsvData[x][y][0] = h;
+            m_hsvData[x][y][1] = s;
+            m_hsvData[x][y][2] = maxc;
         }
     }
 }
@@ -193,13 +251,13 @@ void ColorMatrix::hsvToRgb() const {
     for (std::size_t x=0; x<sx; ++x) {
         for (std::size_t y=0; y<sy; ++y) {
             double h, s, v, f, p, q, t, r, g, b;
-            h = hsvData[x][y][0];
-            s = hsvData[x][y][1];
-            v = hsvData[x][y][2];
+            h = m_hsvData[x][y][0];
+            s = m_hsvData[x][y][1];
+            v = m_hsvData[x][y][2];
             if (s == 0.0) {
-                rgbData[x][y][0] = v;
-                rgbData[x][y][1] = v;
-                rgbData[x][y][2] = v;
+                m_rgbData[x][y][0] = v;
+                m_rgbData[x][y][1] = v;
+                m_rgbData[x][y][2] = v;
                 continue;
             }
             int i = int(h*6);
@@ -217,9 +275,9 @@ void ColorMatrix::hsvToRgb() const {
                 case 5: r = v, g = p, b = q; break;
 				default: r = 0, g = 0, b = 0; break;
             }
-            rgbData[x][y][0] = r;
-            rgbData[x][y][1] = g;
-            rgbData[x][y][2] = b;
+            m_rgbData[x][y][0] = r;
+            m_rgbData[x][y][1] = g;
+            m_rgbData[x][y][2] = b;
         }
     }
 }

@@ -21,7 +21,7 @@
 #include "Engine.h"
 
 
-Engine::Engine(int fps, QObject* parent)
+Engine::Engine(QObject* parent, int fps)
 	: QObject(parent)
 	, m_timer(this)
 	, m_fps(fps)
@@ -30,9 +30,17 @@ Engine::Engine(int fps, QObject* parent)
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
 }
 
+void Engine::start() {
+    m_timer.start(1000 / m_fps);
+}
+
+void Engine::stop() {
+    m_timer.stop();
+}
+
 void Engine::tick() {
-	// calculate time once last frame:
-	double timeSinceLastFrame = HighResTime::getElapsedSecAndUpdate(m_lastFrameTime);
+    // calculate time once last frame:
+    const double timeSinceLastFrame = HighResTime::getElapsedSecAndUpdate(m_lastFrameTime);
 
 	// call signals in logical order:
 	emit updateBlocks(timeSinceLastFrame);

@@ -29,20 +29,21 @@ int ARTNET_STRING_SIZE = 8;
 char ARTNET_STRING[] = "Art-Net";
 uint8_t ARTNET_VERSION = 14;
 
-ArtNetSender::ArtNetSender() : udpSocket(new QUdpSocket(this)), universes(16) {
+ArtNetSender::ArtNetSender()
+    : udpSocket(this)
+    , universes(16)
+{
     for (uint i = 0; i < universes.size(); ++i) {
         universes[i] = ArtNetUniverse(0, 0, i);
     }
 }
 
-void ArtNetSender::sendData(std::vector<uint8_t> data)
-{
+void ArtNetSender::sendData(std::vector<uint8_t> data) {
     uint8_t* message = universes[0].getPacketData(data);
-    udpSocket->writeDatagram((char*)message, 18+512, QHostAddress::Broadcast, ARTNET_PORT);
+    udpSocket.writeDatagram((char*)message, 18+512, QHostAddress::Broadcast, ARTNET_PORT);
 }
 
-void ArtNetSender::sendValue(int value)
-{
+void ArtNetSender::sendValue(int value) {
     std::vector<uint8_t> data(512);
     for (int i = 0; i < 512; i++) {
         data[i] = value;

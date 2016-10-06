@@ -31,12 +31,6 @@
         <file>images/icon/app_icon_48.png</file>
         <file>images/icon/app_icon_512.png</file>
         <file>images/icon/app_icon_64.png</file>
-        <file>images/bg/polygon_grey.png</file>
-        <file>images/node_shadow@2x.png</file>
-        <file>images/node_shadow.png</file>
-        <file>images/bg/polygon_grey@2x.png</file>
-        <file>images/bg/polygon_grey_portrait@2x.png</file>
-        <file>images/bg/polygon_grey_portrait.png</file>
         <file>images/light_glow.png</file>
         <file>images/light_glow_foreground.png</file>
         <file>images/color_wheel_cursor.png</file>
@@ -59,5 +53,31 @@
         <file>images/svg/copy.svg</file>
         <file>images/svg/undo.svg</file>
         <file>images/svg/trash.svg</file>
+        <file>images/etc_logo_180.png</file>
+        <file>images/etc_logo_180_circle_green.png</file>
+        <file>images/etc_logo_180_circle_red.png</file>
+        <file>images/luminosus_info_block_logo.png</file>
+        <file>images/bg/polygon_grey.jpg</file>
+        <file>images/tombstone.png</file>
+        <file>images/node_precomposed_red@2x.png</file>
+        <file>images/node_precomposed_blue.png</file>
+        <file>images/node_precomposed_blue@2x.png</file>
+        <file>images/node_precomposed_red.png</file>
+        <file>images/edit_icon.png</file>
+        <file>images/cancel_icon.png</file>
+        <file>images/tick_icon.png</file>
+        <file>images/tick_icon_green.png</file>
+        <file>images/cancel_icon_red.png</file>
+        <file>images/down_arrow_slim_blue.png</file>
+        <file>images/fader_go_icon.png</file>
+        <file>images/fader_stop_icon.png</file>
+        <file>images/node_precomposed_cyan.png</file>
+        <file>images/node_precomposed_cyan@2x.png</file>
+        <file>images/spectrum_gradient.png</file>
+        <file>images/svg/down_arrow_slim.svg</file>
+        <file>images/bg/blueprint_grey_tiled.jpg</file>
+        <file>images/bg/blueprint_tiled.jpg</file>
+        <file>images/bg/gradient_grey.jpg</file>
+        <file>images/bg/solid_grey.jpg</file>
     </qresource>
 </RCC>

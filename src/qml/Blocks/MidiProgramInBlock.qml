@@ -6,8 +6,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: 130*dp
-	height: 60*dp
-	pressed: dragarea.pressed
+    height: 60*dp
 	settingsComponent: settings
 
 	StretchColumn {
@@ -20,20 +19,18 @@ BlockBase {
 				text: "Program:"
 			}
 			NumericInput {
-				value: block.target
+                value: block.program
 				minimumValue: 1
 				maximumValue: 128
 				onValueChanged: {
-					if (value !== block.target) {
-						block.target = value
+                    if (value !== block.program) {
+                        block.program = value
 					}
 				}
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 			text: "MIDI"
 			OutputNode {
 				objectName: "outputNode"
@@ -46,9 +43,10 @@ BlockBase {
 				height: 10*dp
 				radius: width / 2
 				anchors.verticalCenter: parent.verticalCenter
-				anchors.right: parent.right
-				anchors.rightMargin: 10*dp
+                anchors.left: parent.left
+                anchors.leftMargin: 10*dp
 				color: block.programIsActive ? "lightgreen" : "#777"
+                antialiasing: false
 			}
 		}
 	}  // end main column
@@ -80,7 +78,7 @@ BlockBase {
 			}
 			BlockRow {
 				Text {
-					text: "Channel:"
+                    text: "MIDI Channel:"
 					width: parent.width - 40*dp
 					enabled: !useDefaultCheckbox.active
 				}
@@ -97,6 +95,15 @@ BlockBase {
 					enabled: !useDefaultCheckbox.active
 				}
 			}
+            BlockRow {
+                StretchText {
+                    text: "Learn:"
+                }
+                ButtonBottomLine {
+                    text: block.learning ? "Cancel" : "Start"
+                    onPress: block.startLearning()
+                }
+            }
 		}
 	}  // end Settings Component
 }

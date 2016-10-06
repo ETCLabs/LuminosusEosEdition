@@ -28,21 +28,19 @@
 // Forward declaration to reduce dependencies
 class MainController;
 
-
+/**
+ * @brief The GlobalOscCommandsConstants namespace contains all constants used in GlobalOscCommands.
+ */
 namespace GlobalOscCommandsConstants {
+	/**
+	 * @brief pathPrefix is the start of all global command OSC messages for this software
+	 */
+	static const QString pathPrefix = "/lumi/";
 
-/**
- * @brief pathPrefix is the start of all global command OSC messages for this software
- * @memberof GlobalOscCommands
- */
-static const QString pathPrefix = "/lumi/";
-
-/**
- * @brief projectChange is the second part of the path of a message to change the project
- * @memberof GlobalOscCommands
- */
-static const QString projectChange = "project";
-
+	/**
+	 * @brief projectChange is the second part of the path of a message to change the project
+	 */
+	static const QString projectChange = "project";
 }
 
 /**
@@ -72,7 +70,7 @@ protected:
 	/**
 	 * @brief m_controller pointer to MainController instance
 	 */
-	MainController* m_controller;
+	MainController* const m_controller;
 };
 
 #endif // GLOBALOSCCOMMANDS_H

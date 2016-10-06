@@ -1,8 +1,6 @@
 #ifndef SWITCHBLOCK
 #define SWITCHBLOCK
 
-#include "block_data/BlockBase.h"
-#include "NodeBase.h"
 #include "block_data/OneOutputBlock.h"
 
 class SwitchBlock : public OneOutputBlock
@@ -13,8 +11,9 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Switch";
-		info.category = QStringList {"Controls"};
+		info.typeName = "Switch";
+        info.category << "Controls";
+        info.helpText = "A simple switch that outputs either 0 or 1.";
 		info.qmlFile = "qrc:/qml/Blocks/SwitchBlock.qml";
 		info.complete<SwitchBlock>();
 		return info;

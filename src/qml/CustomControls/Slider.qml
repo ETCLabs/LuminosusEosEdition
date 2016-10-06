@@ -2,13 +2,12 @@ import QtQuick 2.5
 import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	id: root
     property int padding: 20*dp
     property real value: 0.0
 	property real indicator: 0.0
-	property bool useIndicator: false
-    maximumTouchPoints: 1
+    property bool useIndicator: false
 	implicitHeight: -1
 
     Rectangle {
@@ -47,7 +46,7 @@ TouchArea {
 
     KineticEffect {
         id: kineticEffect
-        friction: 0.3
+        friction: 0.18
         minValue: padding
         maxValue: parent.height - padding
 		onMoving: setValueByPosition(position)
@@ -55,17 +54,17 @@ TouchArea {
 
     onTouchDown: {
         controller.checkForExternalInputConnection(uid)
-        kineticEffect.setValue(touch.y)
-        kineticEffect.start(touch.y)
-		setValueByPosition(touch.y)
+        kineticEffect.setValue(touch.itemY)
+        kineticEffect.start(touch.itemY)
+        setValueByPosition(touch.itemY)
     }
 
 	onTouchMove: {
-		kineticEffect.update(Math.max(kineticEffect.minValue, Math.min(touch.y, kineticEffect.maxValue)))
+        kineticEffect.update(Math.max(kineticEffect.minValue, Math.min(touch.itemY, kineticEffect.maxValue)))
     }
 
 	onTouchUp: {
-		kineticEffect.stop(Math.max(kineticEffect.minValue, Math.min(touch.y, kineticEffect.maxValue)))
+        kineticEffect.stop(Math.max(kineticEffect.minValue, Math.min(touch.itemY, kineticEffect.maxValue)))
 	}
 
 	function setValueByPosition(position) {
@@ -77,7 +76,7 @@ TouchArea {
     property string uid: ""
     property real externalInput: 0
     Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(uid)
+    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
     onExternalInputChanged: {
 		controller.setPropertyWithoutChangingBindings(this, "value", externalInput)
     }

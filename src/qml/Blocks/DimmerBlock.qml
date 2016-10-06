@@ -7,17 +7,15 @@ BlockBase {
     id: root
     width: 60*dp
     height: 60*dp
-    pressed: dragarea.pressed
     settingsComponent: settings
 
 	StretchColumn {
         anchors.fill: parent
 
         BlockRow {
-            OutputNode {
-                objectName: "outputNode"
+            InputNode {
+                objectName: "inputNode"
                 width: 15*dp
-
             }
             Item {
 				width: 30*dp
@@ -40,24 +38,22 @@ BlockBase {
                     height: 30*dp
                     opacity: block.value
                 }
-                TouchArea {
+                CustomTouchArea {
                     anchors.fill: parent
                     property real initialValue: 0.0
                     property real touchStartY: 0.0
                     onTouchDown: {
                         initialValue = block.value
-                        touchStartY = touch.y
                     }
 
                     onTouchMove: {
-                        var value = initialValue + (touchStartY - touch.y) / (120*dp)
+                        var value = initialValue + (touch.originY - touch.y) / (120*dp)
                         block.value = Math.max(0, Math.min(value, 1))
                     }
                 }
             }
-
-            InputNode {
-                objectName: "inputNode"
+            OutputNode {
+                objectName: "outputNode"
                 width: 15*dp
 
             }
@@ -65,7 +61,6 @@ BlockBase {
 
         DragArea {
             id: dragarea
-			guiBlock: parent.parent
             text: root.block.getGuiName()
             Connections {
                 target: block
@@ -88,33 +83,32 @@ BlockBase {
 
             BlockRow {
                 Text {
-                    text: "Name"
+                    text: "Name:"
                     width: parent.width / 2
                 }
                 TextInput {
                     text: block.getName()
                     width: parent.width / 2
                     inputMethodHints: Qt.ImhPreferLatin
-                    onTextChanged: {
-                        block.setName(text)
+                    onDisplayTextChanged: {
+                        block.setName(displayText)
                     }
                 }
             }
             BlockRow {
-                Text {
-                    text: "Channel"
-                    width: parent.width / 2
+                StretchText {
+                    text: "Channel:"
                 }
-                TextInput {
-                    width: parent.width / 2
-                    text: block.channel
-                    hintText: "1"
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    onTextChanged: {
-                        if (!text) return
-						if (parseInt(text) !== block.channel) {
-							block.channel = Math.max(1, Math.min(8192, parseInt(text)))
-						}
+                NumericInput {
+                    width: 60*dp
+                    implicitWidth: 0  // do not stretch
+                    minimumValue: 1
+                    maximumValue: 8192
+                    value: block.channel
+                    onValueChanged: {
+                        if (value !== block.channel) {
+                            block.channel = value
+                        }
                     }
                 }
             }

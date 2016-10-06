@@ -1,8 +1,4 @@
 import QtQuick 2.5
-import QtQuick.Layouts 1.2
-import QtGraphicalEffects 1.0
-import QtQuick.Controls 1.4
-import QtQuick.Window 2.2
 
 import "CustomControls"
 import "CustomBasics"
@@ -15,14 +11,25 @@ VerticalScrollView {
 		height: implicitHeight
 		Text {
 			width: parent.width
-			height: 40*dp
+            height: 30*dp
 			text: "Block Settings"
 			color: "#fff"
 			horizontalAlignment: Text.AlignHCenter
-			verticalAlignment: Text.AlignVCenter
+            verticalAlignment: Text.AlignBottom
 			font.family: "Quicksand"
 			font.pixelSize: 22*dp
-		}
+        }
+        Text {
+            id: blockTypeLabel
+            width: parent.width
+            height: 30*dp
+            text: "Block Type"
+            color: "#aaa"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignTop
+            font.family: "Quicksand"
+            font.pixelSize: 18*dp
+        }
 		Loader {
 			height: 40*dp  // inital height
 			anchors.left: parent.left
@@ -35,8 +42,10 @@ VerticalScrollView {
 				var focusedBlock = controller.blockManager().getFocusedBlock()
 				if (focusedBlock) {
 					blockSettings.sourceComponent = focusedBlock.getSettingsComponent()
+                    blockTypeLabel.text = focusedBlock.getBlockName()
 				} else {
 					blockSettings.sourceComponent = noFocusedBlockDummy;
+                    blockTypeLabel.text = ""
 				}
 				//gc()
 			}
@@ -56,7 +65,7 @@ VerticalScrollView {
 			Component {
 				id: noFocusedBlockDummy
 				Column {
-					width: parent.width
+                    width: parent ? parent.width : 0
 					height: 60*dp
 					Spacer {
 						height: 20*dp
@@ -101,6 +110,10 @@ VerticalScrollView {
 			font.letterSpacing: 1*dp
 			font.weight: Font.Normal
 			wrapMode: Text.Wrap
+            textFormat: Text.AutoText
+            // HTML Links:
+            linkColor: "lightblue"
+            onLinkActivated: Qt.openUrlExternally(link)
 
 			Component.onCompleted: updateHelp()
 			onVisibleChanged: if (visible) updateHelp()

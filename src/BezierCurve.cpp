@@ -1,36 +1,3 @@
-/****************************************************************************
-**
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
-**
-** This file is part of the demonstration applications of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:LGPL21$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
-**
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
-**
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
-
 #include "BezierCurve.h"
 
 #include <QtQuick/qsgnode.h>
@@ -48,11 +15,11 @@ BezierCurve::BezierCurve(QQuickItem *parent)
     , m_startHandle(300, 0)
     , m_endHandle(-300, 0)
     , m_endPoint(500, 500)
-    , m_segmentCount(32)
+    , m_color("blue")
+    , m_lineWidth(1)
     , m_device_pixel_ratio(QGuiApplication::primaryScreen()->devicePixelRatio())
 {
     setFlag(ItemHasContents, true);
-	setAntialiasing(true);
 }
 
 BezierCurve::~BezierCurve()
@@ -139,61 +106,105 @@ void BezierCurve::setLineWidth(float width)
     update();
 }
 
+QPointF BezierCurve::calculateBezierPoint(double t, const QPointF& p0, const QPointF& p1, const QPointF& p2, const QPointF& p3) {
+    // from http://devmag.org.za/2011/04/05/bzier-curves-a-tutorial
+    double u = 1 - t;
+    double tt = t*t;
+    double uu = u*u;
+    double uuu = uu * u;
+    double ttt = tt * t;
 
-void BezierCurve::setSegmentCount(int count)
-{
-    if (m_segmentCount == count)
-        return;
+    QPointF p = uuu * p0; //first term
+    p += 3 * uu * t * p1; //second term
+    p += 3 * u * tt * p2; //third term
+    p += ttt * p3; //fourth term
 
-    m_segmentCount = count;
-    emit segmentCountChanged(count);
-    update();
+    return p;
 }
 
-QSGNode* BezierCurve::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
-{
-    QSGGeometryNode *node = 0;
-    QSGGeometry *geometry = 0;
+QPointF BezierCurve::calculateBezierTangent(double t, const QPointF& p0, const QPointF& p1, const QPointF& p2, const QPointF& p3) {
+    // from http://stackoverflow.com/questions/19605179/drawing-tangent-lines-for-each-point-in-bezier-curve
+    double u = 1 - t;
+    double tt = t*t;
+    double uu = u*u;
 
+    QPointF p = (-3) * p0 * uu;
+    p += 3 * p1 * (uu - 2 * t * u);
+    p += 3 * p2 * (-tt + u * 2 * t);
+    p += 3 * p3 * tt;
+
+    return p;
+}
+
+QPointF BezierCurve::normalFromTangent(const QPointF& tangent) {
+    // returns a normalized normal vector given a tangent vector
+    if (tangent.manhattanLength() == 0) return QPointF(0, 0);
+    QPointF n(tangent.y(), tangent.x() * (-1));
+    n /= QVector2D(n).length();
+    return n;
+}
+
+QSGNode* BezierCurve::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
+{
+    // check if both left and right item exist:
     if (m_leftItem == nullptr || m_rightItem == nullptr) {
         return nullptr;
     }
 
+    // -------------------- Prepare QSG Node:
+    QSGGeometryNode* node = 0;
+    QSGGeometry* geometry = 0;
+    // calculate reasonable segment count:
+    int segmentCount = qMax(16.0, qMin(qAbs(m_endPoint.y() - m_startPoint.y()) / 25, 50.0));
+    int verticesCount = segmentCount * 2;
     if (!oldNode) {
         node = new QSGGeometryNode;
-        geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), m_segmentCount);
-        geometry->setLineWidth(m_lineWidth * m_device_pixel_ratio);
-        geometry->setDrawingMode(GL_LINE_STRIP);
+        geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), verticesCount);
+        geometry->setDrawingMode(GL_TRIANGLE_STRIP);
         node->setGeometry(geometry);
         node->setFlag(QSGNode::OwnsGeometry);
-        QSGFlatColorMaterial *material = new QSGFlatColorMaterial;
+        QSGFlatColorMaterial* material = new QSGFlatColorMaterial;
         material->setColor(m_color);
         node->setMaterial(material);
         node->setFlag(QSGNode::OwnsMaterial);
     } else {
         node = static_cast<QSGGeometryNode *>(oldNode);
         geometry = node->geometry();
-        geometry->allocate(m_segmentCount);
+        geometry->allocate(verticesCount);
     }
+    QSGGeometry::Point2D* vertices = geometry->vertexDataAsPoint2D();
 
-    QSGGeometry::Point2D *vertices = geometry->vertexDataAsPoint2D();
-    int deltaX = std::max(30, std::min(int(m_endPoint.x() - m_startPoint.x()), 200));
-    QPointF endHandle(-deltaX, 0);
-    QPointF startHandle(deltaX, 0);
-    for (int i = 0; i < m_segmentCount; ++i) {
-        qreal t = i / qreal(m_segmentCount - 1);
-        qreal invt = 1 - t;
+    // calculate control points:
+    int handleLength = std::max(50, std::min(int(m_endPoint.x() - m_startPoint.x()), 80));
+    const QPointF& p0 = m_startPoint;
+    const QPointF p1(m_startPoint.x() + handleLength, m_startPoint.y());
+    const QPointF p2(m_endPoint.x() - handleLength, m_endPoint.y());
+    const QPointF& p3 = m_endPoint;
 
-        QPointF pos = invt * invt * invt * m_startPoint
-                    + 3 * invt * invt * t * (m_startPoint + startHandle)
-                    + 3 * invt * t * t * (m_endPoint + endHandle)
-                    + t * t * t * m_endPoint;
-        QPointF posInScene = mapToScene(QPointF(this->x(), this->y()));
-        float x = pos.x() - posInScene.x() + this->x();
-        float y = pos.y() - posInScene.y() + this->y();
+    // triangulate cubic bezier curve:
+    const QPointF posInScene = mapToScene(QPointF(0, 0));
+    double widthOffset = m_lineWidth / 2;
+    for (int i = 0; i < segmentCount; ++i) {
+        // t is the position on the line:
+        const qreal t = i / qreal(segmentCount - 1);
 
-        vertices[i].set(x, y);
+        // pos is the point on the curve at "t":
+        const QPointF pos = calculateBezierPoint(t, p0, p1, p2, p3) - posInScene;
+
+        // normal is the normal vector at that point
+        const QPointF normal = normalFromTangent(calculateBezierTangent(t, p0, p1, p2, p3));
+
+        // first is a point offsetted in the normal direction by lineWidth / 2 from pos
+        const QPointF first = pos - normal * widthOffset;
+
+        // ssecond is a point offsetted in the negative normal direction by lineWidth / 2 from pos
+        const QPointF second = pos + normal * widthOffset;
+
+        // add first and second as vertices to this geometry:
+        vertices[i*2].set(first.x(), first.y());
+        vertices[i*2+1].set(second.x(), second.y());
     }
+    // tell Scene Graph that this items needs to be drawn:
     node->markDirty(QSGNode::DirtyGeometry);
 
     return node;

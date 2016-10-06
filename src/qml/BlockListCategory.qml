@@ -49,7 +49,7 @@ StretchColumn {
 		return categoryObject
 	}
 
-	TouchArea {
+    CustomTouchArea {
 		id: row
 		height: 30*dp
 		StretchRow {  // row with left margin

@@ -121,6 +121,23 @@ public:
 	 */
     void deleteFile(QString dir, QString filename) const;
 
+    /**
+     * @brief importFile imports a file from the filesystem to the app data directory
+     * @param inputPath path to the file in the filesystem
+     * @param dir inside the app data dir
+     * @param overwrite true to overwrite a possible existing file
+     */
+    void importFile(QString inputPath, QString dir, bool overwrite = true) const;
+
+    /**
+     * @brief exportFile
+     * @param dir
+     * @param filename
+     * @param outputPath
+     * @param overwrite
+     */
+    void exportFile(QString dir, QString filename, QString outputPath, bool overwrite = true) const;
+
 public slots:
 	/**
 	 * @brief getDataDir returns the full path to a sub dir inside the app data die

@@ -21,7 +21,7 @@
 #include "DimmerBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 int DimmerBlock::instances = 0;
 
@@ -29,8 +29,8 @@ DimmerBlock::DimmerBlock(MainController *controller, QString uid)
 	: BlockBase(controller, uid, info().qmlFile)
 {
 	// prepare nodes:
-	outputNode = createOutputNodeHsv("outputNode");
-	inputNode = createInputNodeHsv("inputNode");
+	outputNode = createOutputNode("outputNode");
+	inputNode = createInputNode("inputNode");
 	// prepare member variables:
 	instances++;
 	m_channel = instances;
@@ -56,7 +56,7 @@ void DimmerBlock::setState(const QJsonObject &state) {
 
 double DimmerBlock::getValue() const {
 	if (inputNode) {
-		return inputNode->data->getValue();
+        return inputNode->getValue();
 	} else {
 		return 0;
 	}
@@ -69,7 +69,7 @@ void DimmerBlock::setChannel(int channel) {
 
 void DimmerBlock::onValueChanged()
 {
-	double value = inputNode->data->getValue();
+    double value = inputNode->getValue();
 	m_controller->output()->setChannel(m_channel, value);
 	outputNode->setValue(value);
 }

@@ -20,10 +20,12 @@
 
 #include "InOutBlock.h"
 
+#include "Nodes.h"  // for QPointer<NodeBase>
+
 InOutBlock::InOutBlock(MainController* controller, QString uid, QString qmlUrl)
 	: BlockBase(controller, uid, qmlUrl)
 {
 	// prepare nodes:
-	m_outputNode = createOutputNodeHsv("outputNode");
-	m_inputNode = createInputNodeHsv("inputNode");
+	m_outputNode = createOutputNode("outputNode");
+	m_inputNode = createInputNode("inputNode");
 }

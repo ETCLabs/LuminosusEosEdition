@@ -20,14 +20,14 @@
 
 #include "ThresholdBlock.h"
 
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 ThresholdBlock::ThresholdBlock(MainController* controller, QString uid)
 	: InOutBlock(controller, uid, info().qmlFile)
 	, m_threshold(0.5)
 {
-	m_outputNodeBelow = createOutputNodeHsv("outputNodeBelow");
+	m_outputNodeBelow = createOutputNode("outputNodeBelow");
 	connect(m_inputNode, SIGNAL(dataChanged()), this, SLOT(update()));
 	connect(this, SIGNAL(thresholdChanged()), this, SLOT(update()));
 }
@@ -43,7 +43,7 @@ void ThresholdBlock::setState(const QJsonObject &state) {
 }
 
 void ThresholdBlock::update() {
-	double value = m_inputNode->data->getValue();
+    double value = m_inputNode->getValue();
 	if (value > m_threshold) {
 		m_outputNode->setValue(1.0);
 		m_outputNodeBelow->setValue(0.0);

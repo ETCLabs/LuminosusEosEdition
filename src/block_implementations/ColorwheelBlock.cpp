@@ -19,3 +19,50 @@
 // THE SOFTWARE.
 
 #include "ColorwheelBlock.h"
+
+#include "Nodes.h"
+#include "utils.h"
+
+
+ColorwheelBlock::ColorwheelBlock(MainController* controller, QString uid)
+    : InOutBlock(controller, uid, info().qmlFile)
+    , m_hue(0)
+    , m_sat(1)
+{
+    connect(m_inputNode, SIGNAL(dataChanged()), this, SLOT(updateOutput()));
+}
+
+QJsonObject ColorwheelBlock::getState() const {
+    QJsonObject state;
+    state["hue"] = getHue();
+    state["sat"] = getSat();
+    return state;
+}
+
+void ColorwheelBlock::setState(const QJsonObject &state) {
+    setHue(state["hue"].toDouble());
+    setSat(state["sat"].toDouble());
+}
+
+void ColorwheelBlock::updateOutput() {
+    double value = 1;
+    if (m_inputNode->isConnected()) {
+        value = m_inputNode->getValue();
+    }
+    m_outputNode->getDataToModify().setHsv(m_hue, m_sat, value);
+    m_outputNode->dataWasModifiedByBlock();
+}
+
+void ColorwheelBlock::setHue(double value) {
+    if (value == m_hue) return;
+    m_hue = limit(0, value, 1);
+    emit hueChanged();
+    updateOutput();
+}
+
+void ColorwheelBlock::setSat(double value) {
+    if (value == m_sat) return;
+    m_sat = limit(0, value, 1);
+    emit satChanged();
+    updateOutput();
+}

@@ -21,7 +21,7 @@
 #include "BlockManager.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 #include <QQmlEngine>
 #include <QQuickItem>
@@ -33,6 +33,7 @@ BlockManager::BlockManager(MainController* controller)
     , m_controller(controller)
 	, m_startChannel(1)
 	, m_lastDeletedBlockStates(BlockManagerConstants::undoHistoryLength)
+    , m_hideBlocksOutsideViewports(true)
 {
 	// Register classes which slots should be accessible from QML:
 	qmlRegisterType<BlockList>();
@@ -47,10 +48,59 @@ NodeBase* BlockManager::getNodeByUid(QString uid) {
     int nodeId = uid.split("|").at(1).toInt();
     if (m_currentBlocksByUid.count(blockUid) == 0) return nullptr;
     BlockInterface* block = m_currentBlocksByUid[blockUid];
-	return block->getNodeById(nodeId);
+    return block->getNodeById(nodeId);
 }
 
-BlockInterface* BlockManager::restoreBlock(const QJsonObject& blockState, bool animated) {
+void BlockManager::updateBlockVisibility(QQuickItem* workspace) {
+    if (!m_hideBlocksOutsideViewports) return;
+    if (!workspace) return;
+    const qreal left = workspace->x() * (-1) - 30;  // offset in negative direction
+    const qreal right = left + workspace->width() + 60;
+    const qreal top = workspace->y() * (-1) - 30;  // offset in negative direction
+    const qreal bottom = top + workspace->height() + 60;
+
+    QVector<BlockInterface*> visibleBlocks;
+
+    // check which block is inside the viewport and should be visible:
+    for (BlockInterface* block: m_currentBlocks) {
+        if (!block) continue;
+        if (block->renderIfNotVisible()) continue;
+        QQuickItem* guiItem = block->getGuiItem();
+        if (!guiItem) continue;
+
+        if (guiItem->x() > right || (guiItem->x() + guiItem->width()) < left
+                || guiItem->y() > bottom || (guiItem->y() + guiItem->height()) < top) {
+            // block is not in viewport
+            guiItem->setVisible(false);
+        } else {
+            // block is inside viewport
+            guiItem->setVisible(true);
+            visibleBlocks.append(block);
+        }
+    }
+
+    // iterate over all visible blocks and make the blocks connected to their input nodes
+    // also visible because their output nodes are responsible for drawing the connection lines:
+    for (BlockInterface* block: visibleBlocks) {
+        block->makeBlocksConnectedToInputsVisible();
+    }
+}
+
+void BlockManager::setHideBlocksOutsideViewports(bool value) {
+    m_hideBlocksOutsideViewports = value;
+
+    if (!m_hideBlocksOutsideViewports) {
+        for (BlockInterface* block: m_currentBlocks) {
+            if (!block) continue;
+            QQuickItem* guiItem = block->getGuiItem();
+            if (!guiItem) continue;
+
+            guiItem->setVisible(true);
+        }
+    }
+}
+
+BlockInterface* BlockManager::restoreBlock(const QJsonObject& blockState, bool animated, bool connectOnAdd) {
 	QString blockType = blockState["name"].toString();
 	QString uid = blockState["uid"].toString();
 	BlockInterface* block = createBlockInstance(blockType, uid);
@@ -65,14 +115,36 @@ BlockInterface* BlockManager::restoreBlock(const QJsonObject& blockState, bool a
 		return nullptr;
 	}
 
-	// final position of the block:
-	int finalX = blockState["posX"].toInt();
-	int finalY = blockState["posY"].toInt();
+    // determ final position of the block:
+    double dp = m_controller->getGuiScaling();
+    int finalX = int(blockState["posX"].toDouble() * dp);
+    int finalY = int(blockState["posY"].toDouble() * dp);
+
+    // "connect on add":
+    if (connectOnAdd && NodeBase::focusExists()) {
+        NodeBase* focusedNode = NodeBase::getFocusedNode();
+        QQuickItem* otherGuiItem = focusedNode->getBlock()->getGuiItem();
+        NodeBase* nodeOfAddedBlock = nullptr;
+        if (focusedNode->isOutput()) {
+            nodeOfAddedBlock = block->getDefaultInputNode();
+            finalX = otherGuiItem->x() + 50 + otherGuiItem->width();
+            finalY = otherGuiItem->y();
+        } else {
+            nodeOfAddedBlock = block->getDefaultOutputNode();
+            finalX = otherGuiItem->x() - 50 - guiItem->width();
+            finalY = otherGuiItem->y();
+        }
+        if (nodeOfAddedBlock) {
+            nodeOfAddedBlock->onTouched();
+        }
+    }
+
+    // set final position:
 	if (animated) {
 		// set position before animation:
-		QPoint spawn = getSpawnPosition();
+        QPoint spawn = getSpawnPosition(50);
 		guiItem->setX(spawn.x());
-		guiItem->setY( spawn.y());
+        guiItem->setY(spawn.y());
 		// animate to final position:
 		QMetaObject::invokeMethod(guiItem, "moveAnimatedTo", Q_ARG(QVariant, finalX), Q_ARG(QVariant, finalY));
 	} else {
@@ -84,12 +156,13 @@ BlockInterface* BlockManager::restoreBlock(const QJsonObject& blockState, bool a
 	if (blockState["focused"].toBool()) {
 		focusBlock(block);
 	}
+    block->setNodeMergeModes(blockState["nodeMergeModes"].toObject());
 
 	// return a pointer to the block instance:
 	return block;
 }
 
-BlockInterface* BlockManager::addNewBlock(QString blockType) {
+BlockInterface* BlockManager::addNewBlock(QString blockType, int randomOffset) {
 	BlockInterface* block = createBlockInstance(blockType);
 	if (!block) {
 		qWarning() << "Could not create block instance of type: " << blockType;
@@ -102,30 +175,34 @@ BlockInterface* BlockManager::addNewBlock(QString blockType) {
 	}
 
 	// set position before animation:
+    double dp = m_controller->getGuiScaling();
 	QPoint blockListPos = getBlockListPosition();
 	guiItem->setX(blockListPos.x());
-	guiItem->setY( blockListPos.y());
+    guiItem->setY(blockListPos.y());
 	// animate to final position:
-	QPoint spawn = getSpawnPosition();
+    if (randomOffset < 0) {
+        randomOffset = BlockManagerConstants::defaultBlockPositionOffset;
+    }
+    QPoint spawn = getSpawnPosition(randomOffset);
 	int finalX = spawn.x() - guiItem->width() / 2;
 	int finalY = spawn.y() - guiItem->height() / 2;
 
 	// "connect on add":
-	if (NodeBase::m_focusExists) {
-		NodeBase* focusedNode = NodeBase::m_focusedNode;
-		QQuickItem* otherGuiItem = focusedNode->m_block->getGuiItem();
-		NodeBase* otherNode = nullptr;
-		if (focusedNode->m_isOutput) {
-			otherNode = block->getDefaultInputNode();
-			finalX = otherGuiItem->x() - 50 - guiItem->width();
-			finalY = otherGuiItem->y();
+    if (NodeBase::focusExists()) {
+        NodeBase* focusedNode = NodeBase::getFocusedNode();
+        QQuickItem* otherGuiItem = focusedNode->getBlock()->getGuiItem();
+        NodeBase* nodeOfAddedBlock = nullptr;
+        if (focusedNode->isOutput()) {
+            nodeOfAddedBlock = block->getDefaultInputNode();
+            finalX = otherGuiItem->x() + 50*dp + otherGuiItem->width();
+            finalY = otherGuiItem->y();
 		} else {
-			otherNode = block->getDefaultOutputNode();
-			finalX = otherGuiItem->x() + 50 + otherGuiItem->width();
-			finalY = otherGuiItem->y();
+            nodeOfAddedBlock = block->getDefaultOutputNode();
+            finalX = otherGuiItem->x() - 50*dp - guiItem->width();
+            finalY = otherGuiItem->y();
 		}
-		if (otherNode) {
-			otherNode->onTouched();
+        if (nodeOfAddedBlock) {
+            nodeOfAddedBlock->onTouched();
 		}
 	}
 
@@ -134,7 +211,7 @@ BlockInterface* BlockManager::addNewBlock(QString blockType) {
 		focusBlock(block);
 	}
 
-	QMetaObject::invokeMethod(guiItem, "moveAnimatedTo", Q_ARG(QVariant, finalX), Q_ARG(QVariant, finalY));
+    QMetaObject::invokeMethod(guiItem, "moveAnimatedTo", Q_ARG(QVariant, finalX), Q_ARG(QVariant, finalY));
 
 	// return a pointer to the block instance:
     return block;
@@ -146,10 +223,11 @@ void BlockManager::addBlockByNameQml(QString blockType) {
 
 void BlockManager::deleteAllBlocks() {
     // iterate over copy because map will be modified:
-    for (auto entry: std::map<QString, BlockInterface*>(m_currentBlocksByUid)) {
+	for (auto entry: std::map<QString, QPointer<BlockInterface>>(m_currentBlocksByUid)) {
         QString uid = entry.first;
         deleteBlock(uid, true);
     }
+    emit blockInstanceCountChanged();
 }
 
 void BlockManager::deleteBlock(BlockInterface* block, bool forced) {
@@ -175,6 +253,7 @@ void BlockManager::deleteBlock(BlockInterface* block, bool forced) {
     m_currentBlocks.erase(std::find(m_currentBlocks.begin(), m_currentBlocks.end(), block));
     m_currentBlocksByUid.erase(block->getUid());
     block->deleteLater();
+    emit blockInstanceCountChanged();
 }
 
 void BlockManager::deleteBlock(QString uid, bool forced) {
@@ -184,7 +263,7 @@ void BlockManager::deleteBlock(QString uid, bool forced) {
 
 void BlockManager::deleteFocusedBlock() {
     if (!m_focusedBlock) return;
-	deleteBlock(m_focusedBlock);
+    m_focusedBlock->deletedByUser();
 }
 
 void BlockManager::duplicateFocusedBlock() {
@@ -193,9 +272,9 @@ void BlockManager::duplicateFocusedBlock() {
 	// remove uid to let the block generate a new one:
 	state["uid"] = "";
 	// offset the position:
-	state["posX"] = state["posX"].toInt() + (std::rand() % 50);
-	state["posY"] = state["posY"].toInt() + (std::rand() % 50);
-	restoreBlock(state);
+    state["posX"] = state["posX"].toDouble() + (std::rand() % 50);
+    state["posY"] = state["posY"].toDouble() + (std::rand() % 50);
+    restoreBlock(state, /*animated*/ true, /*connectOnAdd*/ true);
 }
 
 void BlockManager::copyFocusedBlock() {
@@ -209,10 +288,11 @@ void BlockManager::pasteBlock() {
 	// remove uid to let the block generate a new one:
 	state["uid"] = "";
 	// set position to normal spawn position:
-	QPoint spawn = getSpawnPosition();
-	state["posX"] = spawn.x();
-	state["posY"] = spawn.y();
-	restoreBlock(state);
+    QPoint spawn = getSpawnPosition(50);
+    double dp = m_controller->getGuiScaling();
+    state["posX"] = spawn.x() / dp;
+    state["posY"] = spawn.y() / dp;
+    restoreBlock(state, /*animated*/ true, /*connectOnAdd*/ true);
 }
 
 void BlockManager::restoreDeletedBlock() {
@@ -231,18 +311,35 @@ BlockInterface* BlockManager::getBlockByUid(QString uid) {
 	return nullptr;
 }
 
-QJsonObject BlockManager::getBlockState(BlockInterface* block) {
+QJsonObject BlockManager::getBlockState(BlockInterface* block) const {
+    double dp = m_controller->getGuiScaling();
 	QJsonObject blockState;
-	blockState["name"] = block->getBlockInfo().name;
+	blockState["name"] = block->getBlockInfo().typeName;
 	blockState["uid"] = block->getUid();
-	blockState["posX"] = block->getGuiItem()->x();
-	blockState["posY"] = block->getGuiItem()->y();
+    blockState["posX"] = block->getGuiItem()->x() / dp;
+    blockState["posY"] = block->getGuiItem()->y() / dp;
 	blockState["focused"] = getFocusedBlock() == block;
+    blockState["nodeMergeModes"] = block->getNodeMergeModes();
 	blockState["internalState"] = block->getState();
-	return blockState;
+    return blockState;
 }
 
-QPoint BlockManager::getSpawnPosition() {
+QPoint BlockManager::getBlocksMidpoint() const {
+    double avgX = 0;
+    double avgY = 0;
+    int blockCount = m_currentBlocks.size();
+
+    for (BlockInterface* block: m_currentBlocks) {
+        if (!block) continue;
+        QQuickItem* guiItem = block->getGuiItem();
+        if (!guiItem) continue;
+        avgX += (guiItem->x() + guiItem->width() / 2) / blockCount;
+        avgY += (guiItem->y() + guiItem->height() / 2) / blockCount;
+    }
+    return QPoint(avgX, avgY);
+}
+
+QPoint BlockManager::getSpawnPosition(int randomOffset) const {
 	QObject* rootObject = (QObject*)(m_controller->qmlEngine()->rootObjects()[0]);
 	int windowWidth = rootObject->property("width").toInt();
 	int windowHeight = rootObject->property("height").toInt();
@@ -253,11 +350,13 @@ QPoint BlockManager::getSpawnPosition() {
 	spawn.setX(planeX + windowWidth / 2);
 	spawn.setY(planeY + windowHeight / 2);
 	// add a random offset:
-	spawn += QPoint(std::rand() % 50, std::rand() % 50);
+    double maxOffset = randomOffset * m_controller->getGuiScaling();
+    spawn += QPoint(fmod(std::rand(), maxOffset) - (maxOffset / 2),
+                    fmod(std::rand(), maxOffset) - (maxOffset / 2));
 	return spawn;
 }
 
-QPoint BlockManager::getBlockListPosition() {
+QPoint BlockManager::getBlockListPosition() const {
 	QObject* rootObject = (QObject*)(m_controller->qmlEngine()->rootObjects()[0]);
 	int windowWidth = rootObject->property("width").toInt();
 	int windowHeight = rootObject->property("height").toInt();
@@ -302,12 +401,13 @@ BlockInterface* BlockManager::createBlockInstance(QString blockType, QString uid
 	// add instance to lists:
 	m_currentBlocks.push_back(block);
 	m_currentBlocksByUid[block->getUid()] = block;
+    emit blockInstanceCountChanged();
 	// return a pointer to the block instance:
 	return block;
 }
 
 QQuickItem*BlockManager::createGuiItem(BlockInterface* block) {
-	// create GUI item:
+    // create GUI item:
 	QQuickItem* guiItem = block->getGuiItem();
 	QObject* rootObject = (QObject*)(m_controller->qmlEngine()->rootObjects()[0]);
 	QQuickItem* plane = (QQuickItem*)(rootObject->findChild<QObject*>("plane"));

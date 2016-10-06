@@ -34,14 +34,15 @@ class MidiNoteInBlock : public OneOutputBlock
 	Q_PROPERTY(bool useDefaultChannel READ getUseDefaultChannel WRITE setUseDefaultChannel NOTIFY useDefaultChannelChanged)
 	Q_PROPERTY(int tone READ getTone WRITE setTone NOTIFY keyChanged)
 	Q_PROPERTY(int octave READ getOctave WRITE setOctave NOTIFY keyChanged)
+    Q_PROPERTY(bool learning READ getLearning NOTIFY learningChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Note In";
+		info.typeName = "MIDI Note In";
 		info.nameInUi = "Note In";
-		info.category = QStringList("Midi");
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "Outputs the velocity of incoming messages for the selected note.\n"
 						"Note Off messages will be interpreted as Note On with velocity 0.\n"
@@ -61,11 +62,17 @@ signals:
 	void channelChanged();
 	void validMessageReceived();
 	void useDefaultChannelChanged();
+    void learningChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
 
 	void onMidiMessage(MidiEvent event);
+
+    void startLearning();
+    void checkIfEventFits(MidiEvent event);
+
+    // ------------------------- Getter + Setter -----------------------------
 
 	int getKey() const { return m_key; }
 	void setKey(int value) { m_key = limit(0, value, 127); emit keyChanged(); }
@@ -82,10 +89,14 @@ public slots:
 	int getOctave() const { return m_key / 12; }
 	void setOctave(int value);
 
+    bool getLearning() const { return m_learning; }
+    void setLearning(bool value) { m_learning = value; emit learningChanged(); }
+
 protected:
 	int m_key;
 	int m_channel;
 	bool m_useDefaultChannel;
+    bool m_learning;
 };
 
 

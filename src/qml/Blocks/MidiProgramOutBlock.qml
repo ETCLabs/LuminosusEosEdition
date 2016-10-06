@@ -6,8 +6,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: 130*dp
-	height: 60*dp
-	pressed: dragarea.pressed
+    height: 60*dp
 	settingsComponent: settings
 
 	StretchColumn {
@@ -31,9 +30,7 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 			text: "MIDI"
 			InputNode {
 				objectName: "inputNode"
@@ -46,9 +43,10 @@ BlockBase {
 				height: 10*dp
 				radius: width / 2
 				anchors.verticalCenter: parent.verticalCenter
-				anchors.left: parent.left
-				anchors.leftMargin: 10*dp
+                anchors.right: parent.right
+                anchors.rightMargin: 10*dp
 				color: ledTimer.running ? "lightgreen" : "#777"
+                antialiasing: false
 
 				Timer {
 					// this timer is triggered when the LED should light up
@@ -94,7 +92,7 @@ BlockBase {
 			}
 			BlockRow {
 				Text {
-					text: "Channel:"
+                    text: "MIDI Channel:"
 					width: parent.width - 40*dp
 					enabled: !useDefaultCheckbox.active
 				}

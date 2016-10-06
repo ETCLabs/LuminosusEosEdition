@@ -107,6 +107,9 @@ void OSCMessage::setData(const QByteArray &data, bool convertNumberStrings)
 
 QString OSCMessage::pathPart(int index) const
 {
+    if (index < 0) {
+        index = m_path.size() + index;
+    }
 	if (m_path.size() <= index) {
 		return "";
 	}
@@ -118,7 +121,7 @@ bool OSCMessage::pathStartsWith(QString value) const
 	return m_pathString.startsWith(value);
 }
 
-bool OSCMessage::isTrue()
+bool OSCMessage::isTrue() const
 {
 	if (m_arguments.isEmpty()) return true;
 	if (m_arguments.first().type() == QVariant::Double && m_arguments.first().toDouble() > 0.99) return true;
@@ -127,7 +130,7 @@ bool OSCMessage::isTrue()
 	return false;
 }
 
-qreal OSCMessage::value()
+qreal OSCMessage::value() const
 {
 	if (m_arguments.isEmpty()) return 0.0;
 	if (m_arguments.first().type() == QVariant::Double) return m_arguments.first().toDouble();
@@ -157,20 +160,20 @@ QString OSCMessage::getArgumentsAsDebugString()
 
 void OSCMessage::printToQDebug() const
 {
-	qDebug() << "---------------------------------";
-	qDebug() << "Path: " << m_path;
+    qInfo() << "---------------------------------";
+    qInfo() << "Path: " << m_path;
 	for (int i=0; i<m_arguments.size(); ++i) {
 		const QVariant& arg = m_arguments[i];
 		if (arg.type() == QVariant::Int) {
-			qDebug() << i << " Int Argument: " << arg.toInt();
+            qInfo() << i << " Int Argument: " << arg.toInt();
 		} else if (arg.type() == QVariant::Double) {
-			qDebug() << i << " Double Argument: " << arg.toDouble();
+            qInfo() << i << " Double Argument: " << arg.toDouble();
 		} else if (arg.type() == QVariant::String) {
-			qDebug() << i << " String Argument: " << arg.toString();
+            qInfo() << i << " String Argument: " << arg.toString();
 		} else if (arg.type() == QVariant::Bool) {
-			qDebug() << i << " Bool Argument: " << arg.toBool();
+            qInfo() << i << " Bool Argument: " << arg.toBool();
 		} else {
-			qDebug() << i << " Unknown Argument Type: " << arg.typeName();
+            qInfo() << i << " Unknown Argument Type: " << arg.typeName();
 		}
 	}
 }

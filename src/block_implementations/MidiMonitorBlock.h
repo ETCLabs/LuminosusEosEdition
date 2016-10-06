@@ -32,9 +32,9 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Monitor";
+		info.typeName = "MIDI Monitor";
 		info.nameInUi = "Monitor";
-		info.category = QStringList("Midi");
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "With the buttons at the top you can choose if incoming and / or outgoing "
 						"messages will be logged and displayed.";
@@ -43,11 +43,10 @@ public:
 		return info;
 	}
 
-	explicit MidiMonitorBlock(MainController* controller, QString uid)
-		: BlockBase(controller, uid, info().qmlFile)
-	{
+    explicit MidiMonitorBlock(MainController* controller, QString uid);
 
-	}
+    virtual QJsonObject getState() const override;
+    virtual void setState(const QJsonObject& state) override;
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }

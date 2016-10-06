@@ -16,12 +16,14 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "OSC Out";
-		info.nameInUi = "OSC Output";
-		info.category = QStringList("OSC");
+		info.typeName = "OSC Out";
+        info.nameInUi = "OSC Output";
+        info.category << "Custom OSC";
 		info.helpText = "Enter message in the form:\n/path/to/parameter=argument\n\n"
 						"<value> will be replaced with a value in the defined range\n"
-						"(see settings above)";
+                        "(see settings above)\n"
+                        "An absolute value like a time value will not be scaled.\n"
+                        "To convert a time (i.e. from BPM Block) to a real BPM value use <bpm>.";
 		info.qmlFile = "qrc:/qml/Blocks/OscOutBlock.qml";
 		info.complete<OscOutBlock>();
 		return info;

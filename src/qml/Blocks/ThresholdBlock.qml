@@ -1,5 +1,4 @@
 import QtQuick 2.5
-import Qt.labs.controls 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 import "../CustomControls"
@@ -7,22 +6,20 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: 80*dp
-	height: 200*dp
-	pressed: dragarea.pressed
+    height: 200*dp
 
 	StretchColumn {
 		anchors.fill: parent
 
 		Item {
 			height: 30*dp
+            OutputNode {
+                objectName: "outputNode"
+            }
 			Text {
 				text: "above"
 				anchors.centerIn: parent
-			}
-			OutputNode {
-				anchors.left: parent.left
-				objectName: "outputNode"
-			}
+            }
 		}
 
 		Slider {
@@ -48,18 +45,14 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
-			text: "below"
-			OutputNode {
-				anchors.left: parent.left
-				objectName: "outputNodeBelow"
-			}
-			InputNode {
-				anchors.right: parent.right
+        DragArea {
+            text: "below"
+            InputNode {
 				objectName: "inputNode"
 			}
+            OutputNode {
+                objectName: "outputNodeBelow"
+            }
 		}
 	}
 }

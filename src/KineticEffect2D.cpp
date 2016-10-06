@@ -20,19 +20,18 @@
 
 #include "KineticEffect2D.h"
 
-#include <QTimer>
 #include <QDebug>
 
-KineticEffect2D::KineticEffect2D(QObject* parent)
-	: QObject(parent)
+
+KineticEffect2D::KineticEffect2D(QAbstractAnimation* parent)
+    : QAbstractAnimation(parent)
 	, m_history(KineticEffect2DConstants::DEFAULT_HISTORY_SIZE)
 	, m_isManual(false)
 	, m_origin(0, 0)
 	, m_velocity(0, 0)
-	, m_value(0, 0)
-	, m_minDistance(0.1)
-	, m_minVelocity(0.5)
-	, m_friction(0.05)
+    , m_value(0, 0)
+    , m_minVelocity(3.0)  // min 3 pixel per second
+    , m_friction(0.05)
 	, m_lastUpdate(HighResTime::now())
 {
 }
@@ -78,8 +77,12 @@ void KineticEffect2D::stop(qreal x, qreal y) {
 		oldestSampleInShortTime = m_history[index];
 	}
 	QVector2D totalDistance = newestSample.position - oldestSampleInShortTime.position;
-	qreal durationInSec = HighResTime::diff(newestSample.time, oldestSampleInShortTime.time);
-	m_velocity = totalDistance / qMax(durationInSec, 0.0001);
+    qreal durationInSec = HighResTime::diff(newestSample.time, oldestSampleInShortTime.time);
+    m_velocity = totalDistance / qMax(durationInSec, 0.0001);
+    // m_velocity unit is pixels per second
+    // limit it to 8000 pixels per second initial velocity:
+    m_velocity.setX(limit(-8000, m_velocity.x(), 8000));
+    m_velocity.setY(limit(-8000, m_velocity.y(), 8000));
 	m_lastUpdate = newestSample.time;
 	triggerVelocityUpdate();
 }
@@ -87,15 +90,20 @@ void KineticEffect2D::stop(qreal x, qreal y) {
 void KineticEffect2D::cancel() {
 	m_isManual = false;
 	m_lastUpdate = m_history.last().time;
-	triggerVelocityUpdate();
+    triggerVelocityUpdate();
+}
+
+void KineticEffect2D::stopMovement() {
+    QAbstractAnimation::stop();
+}
+
+void KineticEffect2D::updateCurrentTime(int)
+{
+    updateVelocity();
 }
 
 void KineticEffect2D::applyDistance(QVector2D distance) {
-	m_value += distance;
-	if (distance.length() < m_minDistance) {
-		m_velocity = QVector2D(0, 0);
-        m_value = QVector2D(qRound(m_value.x()), qRound(m_value.y()));
-	}
+    m_value += distance;
 }
 
 void KineticEffect2D::updateVelocity() {
@@ -103,16 +111,16 @@ void KineticEffect2D::updateVelocity() {
 		m_velocity = QVector2D(0, 0);
         m_value = QVector2D(qRound(m_value.x()), qRound(m_value.y()));
 		emit moving(m_value, m_origin, m_isManual);
+        QAbstractAnimation::stop();
 		return;
 	}
-	m_velocity -= m_velocity * m_friction;
-	qreal timeSinceLastUpdateInSec = HighResTime::getElapsedSecAndUpdate(m_lastUpdate);
-	applyDistance(m_velocity * timeSinceLastUpdateInSec);
-	triggerVelocityUpdate();
-	velocityChanged();
+    double timeSinceLastUpdateInSec = HighResTime::getElapsedSecAndUpdate(m_lastUpdate);
+    m_velocity -= m_velocity * m_friction * (timeSinceLastUpdateInSec / (1.0/50));
+    applyDistance(m_velocity * timeSinceLastUpdateInSec);
+    emit velocityChanged();
 	emit moving(m_value, m_origin, m_isManual);
 }
 
 void KineticEffect2D::triggerVelocityUpdate() {
-	QTimer::singleShot(1000 / KineticEffect2DConstants::FPS, this, SLOT(updateVelocity()));
+    QAbstractAnimation::start();
 }

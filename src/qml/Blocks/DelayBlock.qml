@@ -8,8 +8,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: 120*dp
-	height: 90*dp
-	pressed: dragarea.pressed
+    height: 90*dp
 
 	StretchColumn {
 		anchors.fill: parent
@@ -58,16 +57,14 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
-			text: "Delay"
-			OutputNode {
-				objectName: "outputNode"
-			}
+        DragArea {
+            text: "Delay"
 			InputNode {
 				objectName: "inputNode"
 			}
+            OutputNode {
+                objectName: "outputNode"
+            }
 		}
 	}
 }

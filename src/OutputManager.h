@@ -18,24 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef OUTPUT
-#define OUTPUT
-
-#include <QObject>
-#include <QUdpSocket>
+#ifndef OUTPUTMANAGER_H
+#define OUTPUTMANAGER_H
 
 #include "ArtNetSender.h"
 
+#include <QObject>
+
+// forward declaration:
 class MainController;
 
 class OutputManager : public QObject
 {
-    Q_OBJECT
-
-private:
-    ArtNetSender m_artnet;
-    std::vector<std::vector<uint8_t>> m_universes;
-    bool m_universe_changed[16];
+	Q_OBJECT
 
 public:
     OutputManager(MainController* controller);
@@ -45,7 +40,12 @@ public slots:
     void setAllChannel(float value);
     void triggerOutput();
 
+protected:
+	ArtNetSender m_artnet;
+	std::vector<std::vector<uint8_t>> m_universes;
+	bool m_universe_changed[16];
+
 };
 
-#endif // OUTPUT
+#endif // OUTPUTMANAGER_H
 

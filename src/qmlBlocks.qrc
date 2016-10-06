@@ -30,5 +30,32 @@
         <file>qml/Blocks/SwitchBlock.qml</file>
         <file>qml/Blocks/ThresholdBlock.qml</file>
         <file>qml/Blocks/NotesBlock.qml</file>
+        <file>qml/Blocks/PreviewBlock.qml</file>
+        <file>qml/Blocks/LogBlock.qml</file>
+        <file>qml/Blocks/EosCmdBlock.qml</file>
+        <file>qml/Blocks/EosInfoBlock.qml</file>
+        <file>qml/Blocks/EosCueListBlock.qml</file>
+        <file>qml/Blocks/EosFaderBankBlock.qml</file>
+        <file>qml/Blocks/EosMasterPlaybackBlock.qml</file>
+        <file>qml/Blocks/LuminosusInfoBlock.qml</file>
+        <file>qml/Blocks/EosWheelsBlock.qml</file>
+        <file>qml/Blocks/EosOscMonitorBlock.qml</file>
+        <file>qml/Blocks/EosSubBlock.qml</file>
+        <file>qml/Blocks/EosGroupBlock.qml</file>
+        <file>qml/Blocks/EosSingleFaderBlock.qml</file>
+        <file>qml/Blocks/EosMacroBlock.qml</file>
+        <file>qml/Blocks/StopwatchBlock.qml</file>
+        <file>qml/Blocks/QmlOnlyBlock.qml</file>
+        <file>qml/Blocks/AudioPlaybackBlock.qml</file>
+        <file>qml/Blocks/ClockBlock.qml</file>
+        <file>qml/Blocks/LinearValueBlock.qml</file>
+        <file>qml/Blocks/SinusValueBlock.qml</file>
+        <file>qml/Blocks/TickGeneratorBlock.qml</file>
+        <file>qml/Blocks/BeatDetectionBlock.qml</file>
+        <file>qml/Blocks/AudioVolumeBlock.qml</file>
+        <file>qml/Blocks/EosEffectBlock.qml</file>
+        <file>qml/Blocks/PageAnchorBlock.qml</file>
+        <file>qml/Blocks/StyledTextBlock.qml</file>
+        <file>qml/Blocks/ImageBlock.qml</file>
     </qresource>
 </RCC>

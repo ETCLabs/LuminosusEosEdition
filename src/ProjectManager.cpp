@@ -22,7 +22,9 @@
 
 #include "MainController.h"
 #include "block_data/BlockManager.h"
-#include "NodeBase.h"
+#include "Nodes.h"
+#include "utils.h"
+
 
 // create a shorter alias for the constants namespace:
 namespace PMC = ProjectManagerConstants;
@@ -39,17 +41,18 @@ ProjectManager::ProjectManager(MainController* controller)
 }
 
 void ProjectManager::setCurrentProject(QString name, bool createIfNotExist, bool animated) {
-	// try to adapt name to an exisiting project with same name except for the case:
+    // try to adapt name to an existing project with same name except for the case:
 	name = correctCaseIfPossible(name);
 	if (name == m_currentProjectName) return;
 	// loading new projects is only allowed if previous loading is completed:
 	if (m_loadingIsInProgress) return;
 	// check if file for project exists:
-	if (!m_controller->dao()->fileExists(PMC::subdirectory, name + PMC::fileEnding)) {
-		qWarning() << "Project does not exist: " << name;
+    if (!m_controller->dao()->fileExists(PMC::subdirectory, name + PMC::fileEnding)) {
 		if (createIfNotExist) {
+            qDebug() << "New project created: " << name;
 			return createAndLoad(name);
 		} else {
+            qWarning() << "Project does not exist: " << name;
 			return;
 		}
 	}
@@ -123,20 +126,87 @@ QStringList ProjectManager::getProjectList() const {
 		filename.remove(PMC::fileEnding);
 		projectNames.append(filename);
 	}
-	return projectNames;
+    return projectNames;
+}
+
+void ProjectManager::importProjectFile(QString filename, bool load) {
+    // import file to config directory:
+#ifdef Q_OS_WIN
+    // under Windows, filename often starts with three slashes:
+    if (filename.startsWith("file:///")) {
+        filename.remove("file:///");
+    }
+#endif
+    if (filename.startsWith("file://")) {
+        filename.remove("file://");
+    }
+    qDebug() << "Import project " << filename;
+    if (!filename.isEmpty()) {
+        m_controller->dao()->importFile(filename, PMC::subdirectory);
+    }
+    emit projectListChanged();
+
+    // load project:
+    if (load) {
+        QString projectName = QFileInfo(filename).baseName();
+        setCurrentProject(projectName, /*createIfNotExist*/ false);
+    }
+}
+
+void ProjectManager::exportCurrentProjectTo(QString filename) const {
+#ifdef Q_OS_WIN
+    // under Windows, filename often starts with three slashes:
+    if (filename.startsWith("file:///")) {
+        filename.remove("file:///");
+    }
+#endif
+    if (filename.startsWith("file://")) {
+        filename.remove("file://");
+    }
+    if (!filename.endsWith(PMC::fileEnding)) {
+        filename.append(PMC::fileEnding);
+    }
+    qDebug() << "Export project to " << filename;
+    if (!filename.isEmpty()) {
+        m_controller->dao()->exportFile(PMC::subdirectory, m_currentProjectName + PMC::fileEnding, filename);
+    }
+}
+
+QStringList ProjectManager::getFilenameFilters() const {
+    QStringList filters;
+    filters.append("Luminosus Projects (*" + PMC::fileEnding + ")");
+    return filters;
+}
+
+void ProjectManager::centerViewOnBlocks() {
+    QPoint midpoint = m_controller->blockManager()->getBlocksMidpoint();
+    QQuickWindow* window = m_controller->getMainWindow();
+    if (!window) return;
+    midpoint -= QPoint(window->width() / 2, window->height() / 2);
+    setPlanePosition(midpoint.x() * (-1), midpoint.y() * (-1));
+}
+
+void ProjectManager::setPlanePosition(int x, int y) const {
+    QObject* rootObject = (QObject*)(m_controller->qmlEngine()->rootObjects()[0]);
+    QQuickItem* plane = (QQuickItem*)(rootObject->findChild<QObject*>("plane"));
+    plane->setX(x);
+    plane->setY(y);
+    QQuickItem* planeController = (QQuickItem*)(rootObject->findChild<QObject*>("planeController"));
+    QMetaObject::invokeMethod(planeController, "onExternalPositionChange");
 }
 
 // ------------------------------- Private ----------------------------
 
 void ProjectManager::loadProjectState(QString name, bool animated) {
+    // try to load project file:
 	QJsonObject projectState = m_controller->dao()->loadJsonObject(PMC::subdirectory, name + PMC::fileEnding);
 	if (projectState.empty()) {
 		qWarning() << "Project file does not exist or is empty.";
 		return;
 	}
-	// prevent snapshots being saved before the project is completely loaded
-	// including animations:
-	setLoadingStateFor(500);
+
+    // project file exists -> start loading:
+    m_loadingIsInProgress = true;
 
 	// reset workspace:
 	BlockManager* blockManager = m_controller->blockManager();
@@ -144,34 +214,78 @@ void ProjectManager::loadProjectState(QString name, bool animated) {
 
 	// restore project related settings:
 	setPlanePosition(projectState["planeX"].toDouble(), projectState["planeY"].toDouble());
-	// TODO: restore plane scale
+    // TODO: restore plane scale
+    m_controller->anchorManager()->setState(projectState["anchors"].toObject());
+    m_controller->setBackgroundName(projectState["backgroundName"].toString());
 
-	// restore blocks:
+    // restoring the blocks often takes longer than one frame
+    // to revent frames being skipped, the blocks are created in multiple chuncks
+
+    // copy block states to temporary member variable:
+    m_blocksToBeCreated.clear();
 	for (QJsonValueRef blockStateRef: projectState["blocks"].toArray()) {
-		QJsonObject blockState = blockStateRef.toObject();
-		blockManager->restoreBlock(blockState, animated);
-	}
+        m_blocksToBeCreated.append(blockStateRef.toObject());
+    }
+    // copy connections to be made after blocks have been created to memeber variable:
+    m_connectionsToBeMade = projectState["connections"].toArray();
 
-	// restore block connections:
-	for (QJsonValueRef connectionRef: projectState["connections"].toArray()) {
-		QString connection = connectionRef.toString();
-		QString outputUid = connection.split("->").at(0);
-		QString inputUid = connection.split("->").at(1);
-		NodeBase* outputNode = blockManager->getNodeByUid(outputUid);
-		NodeBase* inputNode = blockManager->getNodeByUid(inputUid);
-		if (outputNode && inputNode) {
-			outputNode->connectTo(inputNode);
-		}
-	}
+    // create first chunk of blocks in the next frame (in 10ms)
+    QTimer::singleShot(10, [this, animated]() { this->createChunckOfBlocks(animated); } );
 }
 
-void ProjectManager::setLoadingStateFor(int ms) {
+void ProjectManager::createChunckOfBlocks(bool animated) {
+    // this is called with QTimer by loadProjectState() or previous createChunckOfBlocks() call
+    // try to create as many blocks as possible in the next 12 ms:
+
+    HighResTime::time_point_t start = HighResTime::now();
+    BlockManager* blockManager = m_controller->blockManager();
+    while (!m_blocksToBeCreated.isEmpty()) {
+        QJsonObject blockState = m_blocksToBeCreated.takeLast();
+        blockManager->restoreBlock(blockState, animated);
+
+        if (HighResTime::elapsedSecSince(start) * 1000 > 12) {
+            // 12ms are over, continue work in next frame:
+            break;
+        }
+    }
+
+    if (m_blocksToBeCreated.isEmpty()) {
+        // all blocks have been created -> continue with connections:
+        QTimer::singleShot(8, this, SLOT(completeProjectLoading()));
+    } else {
+        // there are still blocks to be created:
+        QTimer::singleShot(8, [this, animated]() { this->createChunckOfBlocks(animated); } );
+    }
+
+}
+
+void ProjectManager::completeProjectLoading() {
+    // this is called after all blocks have been created by createChunckOfBlocks()
+    // restore block connections:
+    BlockManager* blockManager = m_controller->blockManager();
+    for (QJsonValueRef connectionRef: m_connectionsToBeMade) {
+        QString connection = connectionRef.toString();
+        QString outputUid = connection.split("->").at(0);
+        QString inputUid = connection.split("->").at(1);
+        NodeBase* outputNode = blockManager->getNodeByUid(outputUid);
+        NodeBase* inputNode = blockManager->getNodeByUid(inputUid);
+        if (outputNode && inputNode) {
+            outputNode->connectTo(inputNode);
+        }
+    }
+
+    // prevent snapshots being saved before the project is completely loaded
+    // including animations:
+    releaseLoadingStateAfter(500);
+}
+
+void ProjectManager::releaseLoadingStateAfter(int ms) {
 	m_loadingIsInProgress = true;
 	// change value back to false after ms milliseconds:
 	QTimer::singleShot(ms, [this]() { this->m_loadingIsInProgress = false; } );
 }
 
-void ProjectManager::saveStateAsProject(QString name) {
+void ProjectManager::saveStateAsProject(QString name) const {
 	if (name.isEmpty()) return;
 	// saving the state is only allowed if previous loading is completed:
 	if (m_loadingIsInProgress) return;
@@ -203,11 +317,14 @@ void ProjectManager::saveStateAsProject(QString name) {
 	projectState["planeX"] = plane->x();
 	projectState["planeY"] = plane->y();
 
+    projectState["anchors"] = m_controller->anchorManager()->getState();
+    projectState["backgroundName"] = m_controller->getBackgroundName();
+
 	// write file to file system:
 	m_controller->dao()->saveFile(PMC::subdirectory, name + PMC::fileEnding, projectState);
 }
 
-QString ProjectManager::correctCaseIfPossible(QString name) {
+QString ProjectManager::correctCaseIfPossible(QString name) const {
 	QStringList projectNames = getProjectList();
 	for (int i=0; i<projectNames.count(); ++i) {
 		if (isEqualInsensitive(name, projectNames.at(i))) {
@@ -216,13 +333,4 @@ QString ProjectManager::correctCaseIfPossible(QString name) {
 	}
 	return name;
 
-}
-
-void ProjectManager::setPlanePosition(int x, int y) {
-	QObject* rootObject = (QObject*)(m_controller->qmlEngine()->rootObjects()[0]);
-	QQuickItem* plane = (QQuickItem*)(rootObject->findChild<QObject*>("plane"));
-	plane->setX(x);
-	plane->setY(y);
-	QQuickItem* planeController = (QQuickItem*)(rootObject->findChild<QObject*>("planeController"));
-	QMetaObject::invokeMethod(planeController, "onExternalPositionChange");
 }

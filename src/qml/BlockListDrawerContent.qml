@@ -60,7 +60,7 @@ StretchColumn {
 	Flickable {
 		implicitHeight: -1  // stretch to fill height
 		contentHeight: blockListContainer.implicitHeight + 20*dp
-		clip: true
+        clip: true
 
 		StretchColumn {
 			id: blockListContainer

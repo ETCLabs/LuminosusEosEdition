@@ -24,23 +24,17 @@
 #include "utils.h"
 
 #include "QCircularBuffer.h"
-#include <QObject>
+#include <QAbstractAnimation>
 #include <limits>
 
-
+/**
+ * @brief The KineticEffectConstants namespace contains all constants used in KineticEffect.
+ */
 namespace KineticEffectConstants {
-
-/**
- * @brief DEFAULT_HISTORY_SIZE is the length of the history of events to store
- * @memberof KineticEffect
- */
-static const int DEFAULT_HISTORY_SIZE = 5;
-/**
- * @brief FPS is the update rate of this effect
- * @memberof KineticEffect
- */
-static const int FPS = 50;
-
+	/**
+	 * @brief DEFAULT_HISTORY_SIZE is the length of the history of events to store
+	 */
+    static const int DEFAULT_HISTORY_SIZE = 5;
 }
 
 /**
@@ -64,7 +58,7 @@ struct MoveEvent {
  * "Kinetic" means to simulate the moving behavior of a real physial object (inertia and friction)
  * based in the speed and direction (velocity) of a touch movement.
  */
-class KineticEffect : public QObject
+class KineticEffect : public QAbstractAnimation
 {
 	Q_OBJECT
 
@@ -73,7 +67,7 @@ class KineticEffect : public QObject
     Q_PROPERTY(qreal maxValue READ getMaxValue WRITE setMaxValue NOTIFY maxValueChanged)
 
 public:
-	explicit KineticEffect(QObject *parent = 0);
+    explicit KineticEffect(QAbstractAnimation* parent = 0);
 
 signals:
 	/**
@@ -157,6 +151,20 @@ public slots:
 	 */
     void setMaxValue(qreal value) { m_maxValue = value; emit maxValueChanged(); }
 
+    /**
+     * @brief duration return the "duration" of this "animation",
+     * -1 means it runs till it is stopped (when velocity < min_velocity)
+     * @return
+     */
+    int duration() const override { return -1; }
+
+protected:
+
+    /**
+     * @brief updateCurrentTime is called to progress the animation
+     * (between start() and stop() calls)
+     */
+    void updateCurrentTime(int /*currentTime*/) override;
 
 private slots:
 	/**
@@ -195,11 +203,7 @@ private:
 	/**
 	 * @brief m_value is the current position of the movement
 	 */
-	qreal m_value;
-	/**
-	 * @brief m_minDistance is the minimum distance per frame before the movement stops
-	 */
-	qreal m_minDistance;
+    qreal m_value;
 	/**
 	 * @brief m_minVelocity is the minimum velocity before the movement stops
 	 */
@@ -219,7 +223,7 @@ private:
 	/**
 	 * @brief m_maxValue is the maximum value that can be reached (i.e. object borders)
 	 */
-	qreal m_maxValue;
+    qreal m_maxValue;
 
 };
 

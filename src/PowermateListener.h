@@ -23,7 +23,6 @@
 
 #include <QFile>
 #include <QThread>
-#include <QDebug>
 
 #if defined(Q_OS_LINUX)
     #include <linux/input.h>
@@ -34,20 +33,11 @@ class PowermateListener : public QThread {
     Q_OBJECT
 
 public:
-
-    bool isPressed = false;
-    double lastPressTime;
-    double lastRotationTime;
-    QFile device_out;
-
     explicit PowermateListener(QObject *parent = 0);
 
 #if defined(Q_OS_LINUX)
     void processEvent(const input_event& event);
 #endif
-
-protected:
-    void run();
 
 signals:
     void rotated(double val, bool isPressed);
@@ -57,6 +47,16 @@ signals:
 public slots:
     void setBrightness(double);
     void startPulsing();
+
+protected:
+    void run();
+
+public:
+
+    bool isPressed = false;
+    double lastPressTime;
+    double lastRotationTime;
+    QFile device_out;
 
 };
 

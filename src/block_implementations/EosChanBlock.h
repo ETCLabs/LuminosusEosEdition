@@ -29,16 +29,18 @@ class EosChanBlock : public OneInputBlock
 {
 	Q_OBJECT
 
-	Q_PROPERTY(int channelNumber READ getChannelNumber WRITE setChannelNumber NOTIFY channelNumberChanged)
+    Q_PROPERTY(int channelNumber READ getChannelNumber WRITE setChannelNumber NOTIFY channelNumberChanged)
+    Q_PROPERTY(QString valueText READ getValueText NOTIFY valueTextChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Eos Channel";
+		info.typeName = "Eos Channel";
 		info.nameInUi = "Channel";
-		info.category = QStringList("Eos");
-		info.helpText = "Controls the selected channel of an Eos console.";
+        info.category << "Eos";
+        info.helpText = "Controls the selected channel of an Eos console.\n"
+                        "Sets OSC user implicitly to 0.";
 		info.qmlFile = "qrc:/qml/Blocks/EosChanBlock.qml";
 		info.complete<EosChanBlock>();
 		return info;
@@ -51,6 +53,8 @@ public:
 
 signals:
 	void channelNumberChanged();
+    void lastValueChanged();
+    void valueTextChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
@@ -58,11 +62,15 @@ public slots:
 	void onValueChanged();
 
 	int getChannelNumber() const { return m_chanNumber; }
-	void setChannelNumber(int value) { m_chanNumber = limit(1, value, 32768); emit channelNumberChanged(); }
+    void setChannelNumber(int value);
+
+    QString getValueText() const { return m_valueText; }
+    void setValueText(QString value) { m_valueText = value; emit valueTextChanged(); }
 
 protected:
 	int m_chanNumber;
-	int m_lastValue;
+    std::vector<double> m_lastValue;
+    QString m_valueText;
 };
 
 #endif // EOSCHANBLOCK_H

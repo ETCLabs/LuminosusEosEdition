@@ -1,54 +1,39 @@
 import QtQuick 2.5
+import CustomElements 1.0
 
 Item {
 	property bool focused: false
+    property bool htp: false
     width: 15*dp
     height: 30*dp
-	anchors.right: parent.right
+    anchors.left: parent.left
 
     signal touched()
+    signal longClick()
 
     Image {
         width: 30*dp
         height: 30*dp
-		source: "qrc:/images/node_shadow.png"
+        x: -15*dp
+        source: dp <= 1 ? (focused ? "qrc:/images/node_precomposed_red.png" : "qrc:/images/node_precomposed_" + (htp ? "cyan.png" : "blue.png"))
+                        : (focused ? "qrc:/images/node_precomposed_red@2x.png" : "qrc:/images/node_precomposed_" + (htp ? "cyan@2x.png" : "blue@2x.png"))
     }
 
-    Rectangle {
-        width: 14*dp
-        height: 14*dp
-        x: 7*dp
-        y: 8*dp
-        radius: 7*dp
-        color: "#2C89E1"
-        border.width: 2*dp
-        border.color: "#bbb"
-        gradient: focused ? gradient_red : gradient_blue2
-
-        Gradient {
-            id: gradient_blue
-            GradientStop { position: 0.0; color: "#2C89E1" }
-            GradientStop { position: 1.0; color: "#166ED4" }
-        }
-        Gradient {
-            id: gradient_blue2
-            GradientStop { position: 0.0; color: "#71ABF0" }
-            GradientStop { position: 1.0; color: "#507496" }
-        }
-        Gradient {
-            id: gradient_red
-            GradientStop { position: 0.0; color: "red" }
-            GradientStop { position: 1.0; color: "darkred" }
-        }
-    }
-
-    TouchArea {
+    CustomTouchArea {
         id: touchArea
         width: 30*dp
         height: 30*dp
+        x: -15*dp
 
-        onTouchDown: {
-            parent.touched()
+        clickDurationEnabled: true
+        onShortClick: parent.touched()
+        onLongClick: {
+            parent.longClick()
+            if (htp) {
+                controller.showToast("HTP Mode")
+            } else {
+                controller.showToast("LTP Mode")
+            }
         }
     }
 }

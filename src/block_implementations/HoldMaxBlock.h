@@ -37,8 +37,8 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Hold Max";
-		info.category = QStringList {"Logic"};
+		info.typeName = "Hold Max";
+        info.category << "Logic";
 		info.helpText = "Outputs the highest value in the last x seconds.";
 		info.qmlFile = "qrc:/qml/Blocks/HoldMaxBlock.qml";
 		info.complete<HoldMaxBlock>();

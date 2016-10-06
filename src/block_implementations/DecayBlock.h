@@ -38,10 +38,10 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Decay";
-		info.category = QStringList {"Logic"};
-		info.helpText = "If the incoming value is above 50% the output will be activated.\n"
-						"It will be deactivated when the incoming value falls below 50% "
+		info.typeName = "Decay";
+        info.category << "Logic";
+        info.helpText = "If the incoming value is greater than 0 the output will be activated.\n"
+                        "It will be deactivated when the incoming value is 0 "
 						"or after the given time (decay).";
 		info.qmlFile = "qrc:/qml/Blocks/DecayBlock.qml";
 		info.complete<DecayBlock>();

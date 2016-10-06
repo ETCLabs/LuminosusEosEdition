@@ -45,7 +45,7 @@ public:
 	 * @param fps the amount of frames per second to generate
 	 * @param parent QObject parent
 	 */
-	explicit Engine(int fps = 50, QObject *parent = 0);
+    explicit Engine(QObject* parent = 0, int fps = 50);
 
 signals:
 	/**
@@ -65,16 +65,12 @@ public slots:
 	/**
 	 * @brief start starts the engine, signals will then be emitted every frame
 	 */
-    void start() {
-		m_timer.start(1000 / m_fps);
-    }
+    void start();
 
 	/**
 	 * @brief stop stops the engine, no more signals will be emitted
 	 */
-    void stop() {
-		m_timer.stop();
-    }
+    void stop();
 
 private slots:
 

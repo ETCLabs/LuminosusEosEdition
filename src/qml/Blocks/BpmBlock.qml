@@ -5,30 +5,46 @@ import "../CustomControls"
 
 BlockBase {
 	id: root
-	width: 110*dp
-	height: 60*dp
-	pressed: dragarea.pressed
+    width: 120*dp
+    height: 90*dp
 
 	StretchColumn {
 		anchors.fill: parent
 
-		Text {
-			height: 30*dp
-			horizontalAlignment: Text.AlignHCenter
-			verticalAlignment: Text.AlignVCenter
+        ButtonBottomLine {
+            height: 30*dp
 			text: block.bpm.toFixed(1) + " BPM"
+            onPress: block.triggerBeat()
 		}
+        BlockRow {
+            ButtonSideLine {
+                text: "/2"
+                onPress: block.factor = 0.5
+                marked: block.factor === 0.5
+            }
+            ButtonSideLine {
+                text: "1x"
+                onPress: block.factor = 1
+                marked: block.factor === 1
+            }
+            ButtonSideLine {
+                text: "2x"
+                onPress: block.factor = 2
+                marked: block.factor === 2
+            }
+            ButtonSideLine {
+                text: "4x"
+                onPress: block.factor = 4
+                marked: block.factor === 4
+            }
+        }
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 			text: "BPM"
-			OutputNode {
-				anchors.left: parent.left
+            OutputNode {
 				objectName: "outputNode"
 			}
-			InputNode {
-				anchors.right: parent.right
+            InputNode {
 				objectName: "inputNode"
 			}
 		}

@@ -18,13 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <stdint.h>
-
 #include "OutputManager.h"
-#include "ArtNetSender.h"
+
 #include "MainController.h"
 
-OutputManager::OutputManager(MainController* controller) : m_artnet(), m_universes(16, std::vector<uint8_t>(512, 0)) {
+#include <stdint.h>
+
+OutputManager::OutputManager(MainController* controller)
+    : m_artnet()
+    , m_universes(16, std::vector<uint8_t>(512, 0))
+{
+    for (int i=0; i<16; ++i) {
+        m_universe_changed[i] = false;
+    }
     connect(controller->engine(), SIGNAL(updateOutput(double)), this, SLOT(triggerOutput()));
 }
 

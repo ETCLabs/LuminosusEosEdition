@@ -26,6 +26,7 @@
 
 #include "QCircularBuffer.h"
 #include <QObject>
+#include <QPointer>
 #include <vector>
 
 
@@ -34,12 +35,21 @@ class MainController;
 class BlockInterface;
 class NodeBase;
 
+/**
+ * @brief The BlockManagerConstants namespace contains all constants used in BlockManager.
+ */
 namespace BlockManagerConstants {
 	/**
 	 * @brief undoHistoryLength is the number of deleted blocks to be available for undo
 	 */
 	static const int undoHistoryLength = 5;
-};
+
+    /**
+     * @brief defaultBlockPositionOffset is the amount of pixel to randomly offset new blocks
+     * if not other value is specified
+     */
+    static const int defaultBlockPositionOffset = 400;
+}
 
 
 /**
@@ -48,6 +58,8 @@ namespace BlockManagerConstants {
 class BlockManager : public QObject
 {
     Q_OBJECT
+
+    Q_PROPERTY(int blockInstanceCount READ getBlockInstanceCount NOTIFY blockInstanceCountChanged)
 
 public:
 	/**
@@ -71,6 +83,26 @@ public slots:
 	 */
 	NodeBase* getNodeByUid(QString uid);
 
+    /**
+     * @brief getBlockInstanceCount
+     * @return number of block instances in this project
+     */
+    int getBlockInstanceCount() const { return m_currentBlocks.size(); }
+
+    /**
+     * @brief updateBlockVisibility sets "visible" property of blocks that are not in the
+     * current viewport to false
+     * @param workspace a pointer to the GUI items that represents the viewport
+     */
+    void updateBlockVisibility(QQuickItem* workspace);
+
+    /**
+     * @brief setHideBlocksOutsideViewports defines if blocks outside the viewport should be rendered
+     * or not (can be used to force rendering all blocks before zooming out)
+     * @param value true to hide blocks outside the viewport (prevent rendering them)
+     */
+    void setHideBlocksOutsideViewports(bool value);
+
 	// ---------------- Blocks:
 
 	/**
@@ -79,13 +111,15 @@ public slots:
 	 * @param animated true if the block should "fly" to the right position
 	 * @return a pointer to the created Block
 	 */
-	BlockInterface* restoreBlock(const QJsonObject& blockState, bool animated = true);
+    BlockInterface* restoreBlock(const QJsonObject& blockState, bool animated = true, bool connectOnAdd = false);
 	/**
 	 * @brief addNewBlock creates a new block of the given type
 	 * @param blockType type of the block
+     * @param randomOffset is the amount of pixel (dpi independent) to randomly offset
+     * the position of this block
 	 * @return a pointer to the created block
 	 */
-	BlockInterface* addNewBlock(QString blockType);
+    BlockInterface* addNewBlock(QString blockType, int randomOffset=-1);
 	/**
 	 * @brief addBlockByNameQml calls addNewBlock() but doesn't return a pointer
 	 * @param blockType type of the block
@@ -138,7 +172,7 @@ public slots:
 	 * @brief getCurrentBlocks returns a list of all existing block instances
 	 * @return a list of pointers to blocks
 	 */
-	const std::vector<BlockInterface*>& getCurrentBlocks() const { return m_currentBlocks; }
+	const std::vector<QPointer<BlockInterface>>& getCurrentBlocks() const { return m_currentBlocks; }
 
 	/**
 	 * @brief getBlockByUid returns a pointer to the block with the given uid
@@ -153,7 +187,14 @@ public slots:
 	 * @param block pointer to the block
 	 * @return QJsonObject containing the state information
 	 */
-	QJsonObject getBlockState(BlockInterface* block);
+	QJsonObject getBlockState(BlockInterface* block) const;
+
+    /**
+     * @brief getBlocksMidpoint return the geometric middle point of all blocks
+     * (used to bring blocks back to viewport)
+     * @return a point on the workspace
+     */
+    QPoint getBlocksMidpoint() const;
 
 	// ----------------- Focused Block:
 
@@ -172,12 +213,22 @@ public slots:
 	 * @return a pointer to a Block or nullptr if no block is focused
 	 */
 	BlockInterface* getFocusedBlock() { return m_focusedBlock; }
+	/**
+	 * @brief getFocusedBlock returns a pointer to the focused Block
+	 * @return a pointer to a Block or nullptr if no block is focused
+	 */
+    BlockInterface* getFocusedBlock() const { return m_focusedBlock; }
 
 signals:
 	/**
 	 * @brief focusChanged emitted when the focused block changed (or the focus was released)
 	 */
 	void focusChanged();
+
+    /**
+     * @brief blockInstanceCountChanged emitted when the number of block instances changed
+     */
+    void blockInstanceCountChanged();
 
 private:
 	/**
@@ -190,22 +241,22 @@ private:
 	BlockInterface* createBlockInstance(QString blockType, QString uid = "");
 	/**
 	 * @brief createGuiItem creates the GUI item for a block instance
-	 * and adds it to the "InfinitePlane"
+     * and adds it to the "WorkspacePlane"
 	 * @param block pointer to the block instance
 	 * @return a pointer to the GUI item
 	 */
 	QQuickItem* createGuiItem(BlockInterface* block);
 	/**
 	 * @brief getSpawnPosition returns the preferred creation / spawn position in the GUI
-	 * @return a position on the "InfinitePlane"
+     * @return a position on the "WorkspacePlane"
 	 */
-	QPoint getSpawnPosition();
+    QPoint getSpawnPosition(int randomOffset) const;
 	/**
 	 * @brief getBlockListPosition returns the position of the BlockList drawer in the GUI
-	 * relative to the "InfinitePlane"
-	 * @return a position on the "InfinitePlane"
+     * relative to the "WorkspacePlane"
+     * @return a position on the "WorkspacePlane"
 	 */
-	QPoint getBlockListPosition();
+	QPoint getBlockListPosition() const;
 
 
 protected:
@@ -216,20 +267,20 @@ protected:
 	/**
 	 * @brief m_currentBlocks is the list of all currently existing block instances
 	 */
-	std::vector<BlockInterface*> m_currentBlocks;
+	std::vector<QPointer<BlockInterface>> m_currentBlocks;
 	/**
 	 * @brief m_currentBlocksByUid maps the uid to the pointer of an existing block instance
 	 */
-	std::map<QString, BlockInterface*> m_currentBlocksByUid;
+	std::map<QString, QPointer<BlockInterface>> m_currentBlocksByUid;
 	/**
 	 * @brief m_focusedBlock is a pointer to the currently focused block
 	 * (or nullptr if no block is focused)
 	 */
-	BlockInterface* m_focusedBlock;
+	QPointer<BlockInterface> m_focusedBlock;
 	/**
 	 * @brief m_controller a pointer to the MainController
 	 */
-	MainController*	m_controller;
+	MainController* const m_controller;
 	/**
 	 * @brief m_startChannel is the start channel for the next added device block
 	 */
@@ -244,6 +295,14 @@ protected:
 	 * @brief m_copiedBlockState stores the state of the last copied block (i.e. with Ctrl + C)
 	 */
 	QJsonObject m_copiedBlockState;
+
+    /**
+     * @brief m_hideBlocksOutsideViewports when this is true, blocks outside the viewport
+     * won't be rendered (default)
+     *
+     * Can be disabled to force rendering all blocks (i.e. zoomed out and when scale is < 1)
+     */
+    bool m_hideBlocksOutsideViewports;
 };
 
 #endif // BLOCKMANAGER_H

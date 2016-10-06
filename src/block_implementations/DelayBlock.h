@@ -39,11 +39,11 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Delay";
-		info.category = QStringList {"Logic"};
-		info.helpText = "If the incoming value is above 50% the output will be activated after "
+		info.typeName = "Delay";
+        info.category << "Logic";
+        info.helpText = "If the incoming value is greater than 0 the output will be activated after "
 						"the given On-Delay.\n"
-						"When it falls below 50% the output will be deactivated after "
+                        "When it is 0 the output will be deactivated after "
 						"the given Off-Delay.";
 		info.qmlFile = "qrc:/qml/Blocks/DelayBlock.qml";
 		info.complete<DelayBlock>();

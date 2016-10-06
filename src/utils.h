@@ -69,34 +69,34 @@ void removeUnique(T& vec, E& el) {
     }
 }
 
-namespace HighResTime {
+namespace HighResTime {  // -------------------
 
 typedef std::chrono::time_point<std::chrono::system_clock> time_point_t;
 
 inline time_point_t now() {
-	return std::chrono::system_clock::now();
+    return std::chrono::system_clock::now();
 }
 
 inline double elapsedSecSince(time_point_t start) {
-	time_point_t now = HighResTime::now();
-	std::chrono::duration<double> elapsed_seconds_duration = now - start;
-	double elapsedSeconds = elapsed_seconds_duration.count();
-	return elapsedSeconds;
+    time_point_t now = HighResTime::now();
+    std::chrono::duration<double> elapsed_seconds_duration = now - start;
+    double elapsedSeconds = elapsed_seconds_duration.count();
+    return elapsedSeconds;
 }
 
 inline double diff(time_point_t end, time_point_t start) {
-	std::chrono::duration<double> elapsed_seconds_duration = end - start;
-	return elapsed_seconds_duration.count();
+    std::chrono::duration<double> elapsed_seconds_duration = end - start;
+    return elapsed_seconds_duration.count();
 }
 
 inline double getElapsedSecAndUpdate(time_point_t& lastTime) {
-	time_point_t now = HighResTime::now();
-	double elapsedSeconds = diff(now, lastTime);
-	lastTime = now;
-	return elapsedSeconds;
+    time_point_t now = HighResTime::now();
+    double elapsedSeconds = diff(now, lastTime);
+    lastTime = now;
+    return elapsedSeconds;
 }
 
-}  // end namespace SimpleTime
+}  // end namespace HighResTime -----------------
 
 template<typename T>
 QString serialize(const T& x)

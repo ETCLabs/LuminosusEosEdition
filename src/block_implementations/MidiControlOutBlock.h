@@ -37,9 +37,9 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Control Out";
+		info.typeName = "MIDI Control Out";
 		info.nameInUi = "Control Change Out";
-		info.category = QStringList("Midi");
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "Sends MIDI Control Change messages for the selected control.";
 		info.qmlFile = "qrc:/qml/Blocks/MidiControlOutBlock.qml";

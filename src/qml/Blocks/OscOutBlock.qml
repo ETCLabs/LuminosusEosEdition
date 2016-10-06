@@ -6,8 +6,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: Math.max(oscMessageInput.implicitWidth + 30*dp, 100*dp)
-	height: 60*dp
-	pressed: dragarea.pressed
+    height: 60*dp
 	onWidthChanged: block.positionChanged()
 	settingsComponent: settings
 
@@ -30,9 +29,7 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 			text: "OSC"
 			InputNode {
 				objectName: "inputNode"
@@ -45,9 +42,10 @@ BlockBase {
 				height: 10*dp
 				radius: width / 2
 				anchors.verticalCenter: parent.verticalCenter
-				anchors.left: parent.left
-				anchors.leftMargin: 10*dp
+                anchors.right: parent.right
+                anchors.rightMargin: 10*dp
 				color: ledTimer.running ? "lightgreen" : "#777"
+                antialiasing: false
 
 				Timer {
 					// this timer is triggered when the LED should light up
@@ -112,6 +110,11 @@ BlockBase {
 					}
 				}
 			}
+            BlockRow {
+                StretchText {
+                    text: "(Range not used for BPM values)"
+                }
+            }
 			BlockRow {
 				StretchText {
 					text: "Use Integer Values:"

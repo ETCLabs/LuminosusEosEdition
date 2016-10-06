@@ -1,11 +1,354 @@
 
-	Luminosus Change Log
+    Luminosus Change Log
+
+    Version 0.0.1.1.0.14 - ? October 2016
+
+    + Enhanced Music Playback Block
+
+    Version 0.0.1.1.0.13 - 29 September 2016
+
+    + Workspace can now be moved by scrollwheel and scroll gesture
+
+    * fixed scrolling in ComboBox2 with a trackpad
 
 
-	Version 0.0.1.1.0.4	- 25 May 2016
+    Version 0.0.1.1.0.13 - 13 September 2016
 
-	* MIDI default channel settings will now be saved project-independent
+    * Added "Tempo Detection Block" using BPM Detection Algorithm by Hendrik Noeller
+      based on research by Simon Dixon
 
-	* added author to 'About' area
+    * Added "Volume + Spectral Flux Block" for audio input volume and current spectral flux
 
-	* added example project file (midi_example.lpr)
+    * Added "Eos Effect Speed Block" to control the speed of an Eos effect
+
+    * Added Automatic Gain Control to audio Blocks
+
+    * Improved overall performance of audio Blocks
+
+
+    Version 0.0.1.1.0.12 - 4 September 2016
+
+    * Reimplemented Spectrum visualization in Audio Level Block with OpenGL
+
+    * Removed performance warning for Audio Level Block
+
+    * Changed internal name of Script / Formula Block (may have to be readded)
+
+    * Improved performance of KineticEffects
+
+    * Updated manual
+
+
+    Version 0.0.1.1.0.11 - 3 August 2016
+
+    * Fixed updating data when new show is loaded in Eos Console
+
+    * Added Fire button to Eos Macro Block
+
+    * Changed behavior of input node on Generators. Sets time if absolute, otherwise scales time.
+
+    * Renamed Linear Value Block to Sawtooth Generator Block
+
+    * Fixed orientation of saturation slider on Colorwheel Block
+
+    * Changed Clock Block to 24h time
+
+    - Made ArtNet Output Block hidden
+
+    * Fixed a Connection Timeout problem
+
+    * Fixed issued with Sound2Light on iOS and Mac
+
+
+    Version 0.0.1.1.0.10 - 29 July 2016
+
+    ------- New Features and Major Changes:
+
+    + Added Eos Macro Block
+
+    + Added Stopwatch Block
+
+    + Added Custom QML Block
+
+    + Added Linear Value Block (Generator)
+
+    + Added Sinus Value Block (Generator)
+
+    + Added Tick Generator Block
+
+    + Added Audio Playback Block
+
+    + Added Clock Block
+
+    + Added feature to switch input Nodes between HTP and LTP merging by long clicking on them
+
+    * Reimplemented Script Block. Now has three inputs (x, y, z) and is more formular like.
+
+    + Added zoom out and in animation when centering view with doubleclick on background
+
+    + Added support for Ctrl + X to cut Blocks
+
+    + Added all missing help texts
+
+    * Restyled Projects drawer tab
+
+    + Added check for new version and hint in Settings drawer tab
+
+    + Reenabled Audio Level Block (Sound2Light)
+
+    + Added Tutorial project that is loaded on first start
+
+
+    -------- Bug Fixes and Minor Changes:
+
+    * Eos Group Block can now send hue and saturation values like Eos Channel Block
+
+    * Fixed ComboBox not closing with Esc Key or click on background and added arrow key
+      and scrollwheel support
+
+    * Made EosCueBlock yellow when Cue is active and added output Node
+
+    * Fixed Eos Cue Block not appearing top-most when created with USE button
+
+    * Fixed wrapping of label text on Key Blocks
+
+    * Fixed Logo ring image not centered properly
+
+    * Fixed Eos Channel Parameters Block not being interactive
+
+    * Added factor buttons to BPM Block
+
+    * Added time variation factor to Random Value Block
+
+    * Fixed taskbar icon on Windows
+
+    * Changed drawer open animation
+
+    * Changed order of buttons in Eos Cue List
+
+    * Added support for Tab key in Eos Cue List
+
+    * Made Eos Cmd Block scrollable if text is too long
+
+    * Added saturation slider to Colorwheel Block
+
+    * Added custom label and key name properties to Eos Key Block
+
+
+    Version 0.0.1.1.0.9 - 22 July 2016
+
+    ------- New Features and Major Changes:
+
+    * Changed information flow direction to "left-to-right"
+
+    + One Node can now be connected to multiple other Nodes. Data will be merged in HTP mode.
+
+    * Changed style and editing mode of Eos Cue List Block
+
+    + Added "Follow" mode to Eos Cue List Block to scroll to active cue
+
+    + Added support for new Cue Notes of Eos 2.4 with Eos Cue List Block
+
+    + Up- and Down times are now editable in Eos Cue List Block
+
+    + Added button to refresh the MIDI devices in "Settings" drawer tab
+
+    + Added button to delete all Blocks in "Projects" drawer tab
+
+    + Added support to transmit absolute values with Node connections.
+      - i.e. a BPM value can now be send via OSC with an OSC Output Block
+
+    + Eos Channel Block can now control Hue and Saturation attributes
+
+    + Made Colorwheel working in connection with Eos Channel Block
+
+    + View can now be centered on Blocks with a double click on the background
+
+    -------- Bug Fixes and Minor Changes:
+
+    * Changed style of "Go" and "Back" buttons in Master Playback and Faders
+
+    * Changed text "Channel" to "MIDI Channel" in Block Settings of MIDI Blocks
+
+    * Fixed crash when adding a Block after the Block with a focused Node was deleted
+
+    * Only visible Blocks are now rendered. May improve the performance on some devices.
+
+    * Fixed app not responding or crashing when loading large amount of cues
+
+    * Fixed unintended "Connection Timeout" warnings
+
+    * Fixed bug with more than one touch on background
+
+    * OSC, MIDI and Application Logs are now only updated after a short delay
+      to prevent too many GUI updates
+
+    * Fixed app crashing when sending MIDI events after a MIDI device was disconnected
+
+    * Increased random position offset when adding Blocks
+
+
+    Version 0.0.1.1.0.8 - 13 July 2016
+
+    -------- Fixing Crashes:
+
+    * An empty project is loaded on first start of this version to detect
+      possible problems with previous projects
+
+    * Fixed a crash on startup when no Audio Output device is available caused by RtMidi library
+
+    - Disabled Sound2Light functionality because of possible crashes
+
+    - Disabled Anti-Aliasing because of possible missing support for it
+
+    ------- New / Added:
+
+    + Added "Eos Sub" Block
+
+    + Added "Eos Group" Block
+
+    + Added "Eos Single Fader" Block
+
+    * Changed style of "Eos Channel" Block to a "Tombstone" look
+
+    * Eos Cue Block now displays the label of the selected Cue when possible
+
+    * Added button in CueList to create the corresponing "Eos Cue" Block for a specific Cue
+
+    * Made local settings of most Blocks also appear in the "Block Settings" drawer tab
+
+    ------- Minor Changes and Bug Fixes:
+
+    * Reordered Blocks in the Block List drawer tab
+
+    * Splitted Block creation process when loading a project into multiple chunks
+      to prevent frames being skipped
+
+    * Changed color of active Cue in Cue List Block to yellow
+
+    * Changed bezier line drawing mechanism
+
+    * Fixed Block List not scrollable by Mouse Wheel
+
+
+    Version 0.0.1.1.0.7 - 8 July 2016
+
+    * Fixed problems with Eos 2.4 update:
+        - fixed Cue message interpretation
+        - changed maximum fader page to 100 if connected to Eos 2.4
+        - Go button doesn't work at the moment with 2.4
+
+    * Possibly fixed crashes caused by UI by fixing a wrong depthBufferSize value
+      and changing the loading of advanced effects (i.e. disabled blur effect on Windows)
+
+    * Fixed timeout warnings with multiple luminosus instances connected to the same Eos system
+
+    + Added "Eos Channel Parameters" Block to show active parameters
+      (not yet  interactive)
+
+    + Added "Eos OSC Connection Monitor" Block to see OSC messages sent to Eos
+
+    + Added option to settings to use Eos Connection for custom OSC messages
+      and renamed "OSC" section in settings and block list to "Custom OSC"
+
+    * Changed visual appearance of focused Block and made it be drawn above all others
+
+    * Fixed imported project not being loaded automatically
+
+    * Made Log, Midi Monitor, OSC Monitor and Eos OSC Monitor resizable
+
+    * Added name of Block to BlockSettings
+
+    * Added Qt compile- and runtime version numbers to "Luminosus Version Info" Block
+
+
+    Version 0.0.1.1.0.6	- 28 June 2016
+
+    * Cue and Cue List information is now retrieved from the Eos console
+      and available in Luminosus
+
+    * added "Eos Cue List" Block to display a cue list
+        - the number of the cue list can be specified
+        - there can be more than one of this block to show multiple cue lists
+        - the cue number and label is editable
+        - each cue has buttons to delete or fire it
+        - parts a shown separatly
+        - intensity up- and down time is displayed
+        - the name of the cue list is displayed
+        - active and pending cues are highlighted
+
+    * added "Eos Fader Page" Block that shows one page of 10 faders
+        - multiple Blocks can show different pages
+        - the label of each fader is displayed above it
+        - each fader has a load, stop/back and go button
+        - supports unload function with Shift key
+
+    * added "Eos Master Playback" Block
+        - has a load, stop/back and go button
+        - shows last fired and pending cue
+
+    * added animation when deleting a block
+
+    * fixed keyboard input on NumericInput field
+
+    * added feature to import and export project files
+
+    * Replaced QML MulipointTouchArea and MouseArea with own TouchArea class
+        -> should fix some input bugs
+
+    * right click on block opens its settings
+
+    * Blocks can now be dragged by clicking anywhere on its non-interactive area
+
+    * disabled AudioLevel Block on iOS becauce of random crashs
+
+    * changed "Eos Debug Info" Block style
+
+    * moved debugging Blocks to "Debugging" section
+
+    * added "Luminosus Debug Info" Block
+
+
+    Version 0.0.1.1.0.5	- 9 June 2016
+
+    * simplified connection to Eos Console by adding a second OSC connection specific to this
+
+    * added "Eos Connection" section to app settings, including connection state and Eos version
+
+    * added "Eos Info" Block with basic information about the connected console state
+        - Connection Latency
+        - Eos Software Version
+        - OSC User ID
+        - Show Title
+        - Active Channels
+        - Active Cue + Percent Complete
+        - Pending Cue
+
+    * added "Eos Cmd" Block to show the commandline of a specific Eos user
+
+    * added "Learn" button to MIDI In Blocks
+
+    * added "Log / Console" Block to show the application log
+
+    * reduced threshold to trigger actions in Blocks from 50% to 1/256%
+
+    * added "Value Preview" Block that shows the value between two other Blocks
+
+    * added "Quit" button under "About" section
+
+    * fixed icon on Android
+
+    * fixed NumericInput on platforms that don't support multiple windows (i.e. Android)
+
+    * made QDebug messages appear as "Toast" messages in UI to simplify debugging
+
+    * improved high DPI support (positions are now saved independent of DPI)
+
+
+    Version 0.0.1.1.0.4	- 25 May 2016
+
+    * MIDI default channel settings will now be saved project-independent
+
+    * added author to 'About' area
+
+    * added example project file (midi_example.lpr)

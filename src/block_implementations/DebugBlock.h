@@ -32,10 +32,12 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Debug";
-		info.nameInUi = "Debug Functions";
-		info.category << "Other";
-		info.dependencies = {BlockDependency::Experimental};
+		info.typeName = "Debug";
+        info.nameInUi = "Block Management";
+        info.category << "Debugging";
+        info.dependencies = {BlockDependency::Debugging};
+        info.helpText = "Exists to quickly test if all Blocks work and the program doesn't crash.\n"
+                        "Can also be used to do stress tests with many Blocks.";
 		info.qmlFile = "qrc:/qml/Blocks/DebugBlock.qml";
 		info.complete<DebugBlock>();
 		return info;

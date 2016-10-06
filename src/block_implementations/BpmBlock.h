@@ -25,15 +25,24 @@
 #include "utils.h"
 
 #include "QCircularBuffer.h"
-#include <QElapsedTimer>
 
+/**
+ * @brief The BpmConstants namespace contains all constants used in BpmBlock.
+ */
 namespace BpmConstants {
+	/**
+	 * @brief HISTORY_LENGTH is the length of the beat duration history to evaluate
+	 */
+    static const int HISTORY_LENGTH = 7;
 
-static const int HISTORY_LENGTH = 5;
-
-static const int MIN_BPM = 60;
-static const int MAX_BPM = 160;
-
+	/**
+	 * @brief MIN_BPM is the minimum expected BPM rate
+	 */
+	static const int MIN_BPM = 60;
+	/**
+	 * @brief MAX_BPM is the maximum expected BPM rate
+	 */
+	static const int MAX_BPM = 160;
 }
 
 
@@ -41,15 +50,20 @@ class BpmBlock : public InOutBlock
 {
 	Q_OBJECT
 
-	Q_PROPERTY(qreal bpm READ getBpm WRITE setBpm NOTIFY bpmChanged)
+    Q_PROPERTY(double bpm READ getBpm WRITE setBpm NOTIFY bpmChanged)
+    Q_PROPERTY(double factor READ getFactor WRITE setFactor NOTIFY factorChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "BPM";
-		info.category = QStringList {"Logic"};
-		info.dependencies = {BlockDependency::Experimental};
+		info.typeName = "BPM";
+        info.category << "Logic";
+        info.helpText = "Calculates the Beats Per Minute (BPM) based on the taps on the Block "
+                        "or the beats detected on the input.\n\n"
+                        "Can be connected to generators to control their speed.\n\n"
+                        "Can also be used in connection with OSC Out Block and "
+                        "the string '<bpm>' in its path.";
 		info.qmlFile = "qrc:/qml/Blocks/BpmBlock.qml";
 		info.complete<BpmBlock>();
 		return info;
@@ -62,12 +76,19 @@ public:
 
 signals:
 	void bpmChanged();
+    void factorChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
 
-	qreal getBpm() const { return m_bpm; }
-	void setBpm(qreal value) { m_bpm = value; emit bpmChanged(); }
+    void triggerBeat();
+    void updateOutput();
+
+    double getBpm() const { return m_bpm; }
+    void setBpm(double value);
+
+    double getFactor() const { return m_factor; }
+    void setFactor(double value);
 
 private:
 	void updateBpm();
@@ -79,19 +100,21 @@ protected:
 	/**
 	 * @brief m_bpm current detected BPM value
 	 */
-	qreal			m_bpm;
+    double			m_bpm;
 	/**
-	 * @brief m_timer QElapsedTimer to get the time elapsed since the last beat
+     * @brief m_startTime stores the time when this block was created
 	 */
-	QElapsedTimer	m_timer;
+    HighResTime::time_point_t	m_startTime;
 	/**
 	 * @brief m_lastBeats stores the times of the last beats in seconds since start
 	 */
-	Qt3DCore::QCircularBuffer<qint64> m_lastBeats;
+    Qt3DCore::QCircularBuffer<double> m_lastBeats;
 	/**
 	 * @brief m_lastValue stores the last input value
 	 */
 	double			m_lastValue;
+
+    double m_factor;
 };
 
 #endif // BPMBLOCK_H

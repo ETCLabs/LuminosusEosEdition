@@ -21,164 +21,70 @@
 #ifndef AUDIOENGINE_H
 #define AUDIOENGINE_H
 
+#include "AudioInputAnalyzer.h"
 #include "utils.h"
-#include "ffft/FFTRealFixLen.h"
 
-#include "QCircularBuffer.h"
-#include <QtMultimedia/QAudioInput>
-#include <QtMultimedia/QAudioFormat>
 #include <QObject>
-#include <QtMath>
-#include <QDebug>
+#include <QMap>
+#include <QPointer>
 
-#include <algorithm>
-#include <set>
-#include <vector>
-
-#define LONG_NUM_SAMPLES_EXPONENT 12
-#define LONG_NUM_SAMPLES 4096
-#define SHORT_NUM_SAMPLES_EXPONENT 10
-#define SHORT_NUM_SAMPLES 1024
-#define SIMPLIFIED_SPECTRUM_LENGTH 128
-
-
-class MainController;  // forward declaration
-
-
-class AudioInputAnalyzer : public QObject {
-    Q_OBJECT
-
-public:
-    MainController* controller;
-    std::set<void*> referenceList;
-
-    QAudioInput* audioInput;
-    QIODevice* audioIODevice;
-    QAudioFormat audioFormat;
-    QString deviceName;
-	Qt3DCore::QCircularBuffer<float> circBuffer;
-
-    ffft::FFTRealFixLen<LONG_NUM_SAMPLES_EXPONENT> longFftreal;
-    std::vector<float> longBuffer;
-    std::vector<float> longWindow;
-    std::vector<float> longFftOutput;
-    std::vector<float> longSpectrum;
-
-    ffft::FFTRealFixLen<SHORT_NUM_SAMPLES_EXPONENT> shortFftreal;
-    std::vector<float> shortBuffer;
-    std::vector<float> shortWindow;
-    std::vector<float> shortFftOutput;
-    std::vector<float> shortSpectrum;
-
-    float maxLevel = 0.0;
-    std::vector<double> simplifiedSpectrum;
-
-    explicit AudioInputAnalyzer(QAudioDeviceInfo inputInfo, MainController* controller) : QObject((QObject*)controller)
-      , controller(controller)
-      , deviceName(inputInfo.deviceName())
-      , circBuffer(LONG_NUM_SAMPLES)
-      , longBuffer(LONG_NUM_SAMPLES)
-      , longWindow(LONG_NUM_SAMPLES)
-      , longFftOutput(LONG_NUM_SAMPLES)
-      , longSpectrum(LONG_NUM_SAMPLES / 2)
-      , shortBuffer(SHORT_NUM_SAMPLES)
-      , shortWindow(SHORT_NUM_SAMPLES)
-      , shortFftOutput(SHORT_NUM_SAMPLES)
-      , shortSpectrum(SHORT_NUM_SAMPLES / 2)
-      , simplifiedSpectrum(SIMPLIFIED_SPECTRUM_LENGTH)
-    {
-        calculateWindows();
-        initAudio(inputInfo);
-    }
-
-    /**
-     * @brief AudioInputAnalyzer Used to create an empty / dummy analyzer.
-     * @param controller
-     */
-    explicit AudioInputAnalyzer(MainController* controller) : QObject((QObject*)controller)
-      , controller(controller)
-      , deviceName("No Input")
-      , circBuffer(LONG_NUM_SAMPLES)
-      , simplifiedSpectrum(SIMPLIFIED_SPECTRUM_LENGTH)
-    { }
-
-    void addReference(void* ref);
-
-    void removeReference(void* ref);
-
-private:
-    void calculateWindows();
-    void initAudio(QAudioDeviceInfo info);
-
-private slots:
-    void audioDataReady();
-    void updateSpectrum();
-    void updateSimplifiedSpectrum();
-
-signals:
-
-public slots:
-    std::vector<double>& getSimplifiedSpectrum() {
-        return simplifiedSpectrum;
-    }
-
-    float getMaxLevel() {
-        return maxLevel;
-    }
-
-    float getLevelAtBand(double band) {
-        return simplifiedSpectrum[band*(simplifiedSpectrum.size()-1)];
-    }
-};
-
-
+/**
+ * @brief The AudioEngine class is responsible for managing all AudioInputAnalyzer objects.
+ */
 class AudioEngine : public QObject
 {
+
     Q_OBJECT
+
 public:
-    MainController* controller;
-    std::map<QString, AudioInputAnalyzer*> audioInputs;
 
-    explicit AudioEngine(MainController* controller) : QObject((QObject*)controller), controller(controller) {
-        initInputs();
-    }
-
-    ~AudioEngine() {
-        for (auto entry: audioInputs) {
-            if (entry.second) {
-                entry.second->deleteLater();
-                audioInputs[entry.first] = nullptr;
-            }
-        }
-    }
-
-private:
-    void initInputs();
-
-signals:
+    /**
+     * @brief AudioEngine creates an AudioEngine object
+     * @param controller a pointer to the main controller
+     */
+    explicit AudioEngine(MainController* controller);
+    ~AudioEngine();
 
 public slots:
-    std::map<QString, AudioInputAnalyzer*> getInputs() {
-        return audioInputs;
-    }
-    QStringList getInputList() {
-        QStringList list;
-        for (auto entry: audioInputs) {
-            list.append(QString(entry.first));
-        }
-        return list;
-    }
+    /**
+     * @brief getDeviceNameList returns a list of all input device names
+     * @return a list of names
+     */
+    QStringList getDeviceNameList() const;
 
-    AudioInputAnalyzer* getDefaultInput() {
-        return audioInputs.begin()->second;
-    }
+    /**
+     * @brief getDefaultAnalyzer returns the analyzer object of the default input device
+     * @return a pointer to an AudioInputAnalyzer object
+     */
+    AudioInputAnalyzer* getDefaultAnalyzer() const;
 
-    qreal getMaxLevelByName(QString name) {
-        if (!mapContains(audioInputs, name)) {
-            return 0.0;
-        }
-        return audioInputs[name]->getMaxLevel();
-    }
+    /**
+     * @brief getAnalyzerByName return the analyzer for the input device with the given name,
+     * if this device doesn't exists, a nullpointer is returned
+     * @param name of the input device
+     * @return a pointer to an AudioInputAnalyzer object or null
+     */
+    AudioInputAnalyzer* getAnalyzerByName(QString name) const;
+
+    /**
+     * @brief getMaxLevelOfDevice returns the current level of an input device
+     * @param name of the input device
+     * @return a level between 0 and 1 or 0 if the device doesn't exist
+     */
+    double getMaxLevelOfDevice(QString name) const;
+
+private:
+    /**
+     * @brief initInputs creates AudioInputAnalyzer for all input devices
+     */
+    void initInputs();
+
+protected:
+    MainController* const m_controller;  //!< a pointer to the MainController
+    /**
+     * @brief m_audioInputs a map of device names and their AudioInputAnalyzer objects
+     */
+    QMap<QString, QPointer<AudioInputAnalyzer>> m_audioInputs;
 };
 
 #endif // AUDIOENGINE_H

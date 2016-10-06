@@ -20,14 +20,14 @@
 
 #include "OneOutputBlock.h"
 
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 OneOutputBlock::OneOutputBlock(MainController* controller, QString uid, QString qmlUrl)
 	: BlockBase(controller, uid, qmlUrl)
 {
 	// prepare nodes:
-	m_outputNode = createOutputNodeHsv("outputNode");
+	m_outputNode = createOutputNode("outputNode");
 }
 
 QJsonObject OneOutputBlock::getState() const {
@@ -40,6 +40,6 @@ void OneOutputBlock::setState(const QJsonObject& state) {
 	setValue(state["value"].toDouble());
 }
 
-double OneOutputBlock::getValue() const { return m_outputNode->m_data->getValue(); }
+double OneOutputBlock::getValue() const { return m_outputNode->getValue(); }
 
 void OneOutputBlock::setValue(double value) { m_outputNode->setValue(value); valueChanged(); }

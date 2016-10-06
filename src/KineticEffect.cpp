@@ -20,23 +20,21 @@
 
 #include "KineticEffect.h"
 
-#include <QTimer>
 #include <QDebug>
 
 
-KineticEffect::KineticEffect(QObject* parent)
-	: QObject(parent)
+KineticEffect::KineticEffect(QAbstractAnimation* parent)
+    : QAbstractAnimation(parent)
 	, m_history(KineticEffectConstants::DEFAULT_HISTORY_SIZE)
 	, m_isManual(false)
 	, m_origin(0.0)
 	, m_velocity(0.0)
-	, m_value(0.0)
-	, m_minDistance(0.1)
-	, m_minVelocity(0.5)
-	, m_friction(0.05)
+    , m_value(0.0)
+    , m_minVelocity(3.0)  // min 3 pixel per second
+    , m_friction(0.03)
 	, m_lastUpdate(HighResTime::now())
 	, m_minValue(std::numeric_limits<qreal>::lowest())
-	, m_maxValue(std::numeric_limits<qreal>::max())
+    , m_maxValue(std::numeric_limits<qreal>::max())
 {
 }
 
@@ -78,7 +76,10 @@ void KineticEffect::stop(qreal value) {
 	}
 	qreal totalDistance = newestSample.value - oldestSampleInShortTime.value;
 	qreal durationInSec = HighResTime::diff(newestSample.time, oldestSampleInShortTime.time);
-	m_velocity = totalDistance / qMax(durationInSec, 0.0001);
+    m_velocity = totalDistance / qMax(durationInSec, 0.0001);
+    // m_velocity unit is pixels per second
+    // limit it to 8000 pixels per second initial velocity:
+    m_velocity = limit(-8000, m_velocity, 8000);
 	m_lastUpdate = newestSample.time;
 	triggerVelocityUpdate();
 }
@@ -90,13 +91,15 @@ void KineticEffect::cancel() {
 }
 
 void KineticEffect::setValue(qreal value) {
-	m_value = value;
+    m_value = value;
+}
+
+void KineticEffect::updateCurrentTime(int /*currentTime*/)
+{
+    updateVelocity();
 }
 
 void KineticEffect::applyDistance(qreal distance) {
-	if (qAbs(distance) < m_minDistance) {
-		m_velocity = 0.0;
-	}
 	m_value += distance;
 	// check bounds:
 	if (m_value < m_minValue) {
@@ -111,16 +114,16 @@ void KineticEffect::applyDistance(qreal distance) {
 void KineticEffect::updateVelocity() {
 	if (qAbs(m_velocity) <= m_minVelocity) {
 		m_velocity = 0.0;
+        QAbstractAnimation::stop();
 		return;
 	}
-	m_velocity -= m_velocity * m_friction;
-	qreal timeSinceLastUpdateInSec = HighResTime::getElapsedSecAndUpdate(m_lastUpdate);
-	applyDistance(m_velocity * timeSinceLastUpdateInSec);
-	triggerVelocityUpdate();
-	velocityChanged();
+    double timeSinceLastUpdateInSec = HighResTime::getElapsedSecAndUpdate(m_lastUpdate);
+    m_velocity -= m_velocity * m_friction * (timeSinceLastUpdateInSec / (1.0/50));
+    applyDistance(m_velocity * timeSinceLastUpdateInSec);
+    emit velocityChanged();
 	emit moving(m_value, m_origin, m_isManual);
 }
 
 void KineticEffect::triggerVelocityUpdate() {
-	QTimer::singleShot(1000 / KineticEffectConstants::FPS, this, SLOT(updateVelocity()));
+    QAbstractAnimation::start();
 }

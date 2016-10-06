@@ -6,8 +6,9 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: Math.max(codeInput.implicitWidth + 30*dp, 100*dp)
-    height: 60*dp
-    pressed: dragarea.pressed
+    height: 150*dp
+
+    onWidthChanged: block.positionChanged()
 
 	StretchColumn {
         anchors.fill: parent
@@ -19,6 +20,7 @@ BlockBase {
 			anchors.leftMargin: 4*dp
 			anchors.rightMargin: 4*dp
 			height: 30*dp
+            hintText: "v = "
 			text: block.code
 			onTextChanged: {
 				if (text !== block.code) {
@@ -27,18 +29,37 @@ BlockBase {
 			}
 			color: block.codeIsValid ? "#fff" : "#faa"
 		}
+        BlockRow {
+            InputNode {
+                objectName: "inputX"
+            }
+            StretchText {
+                text: "x = " + block.variableX.toFixed(2)
+            }
+        }
+        BlockRow {
+            InputNode {
+                objectName: "inputY"
+            }
+            StretchText {
+                text: "y = " + block.variableY.toFixed(2)
+            }
+        }
+        BlockRow {
+            InputNode {
+                objectName: "inputZ"
+            }
+            StretchText {
+                text: "z = " + block.variableZ.toFixed(2)
+            }
+        }
 
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
-			text: "Script"
-			OutputNode {
-				objectName: "outputNode"
-			}
-			InputNode {
-				objectName: "inputNode"
-			}
+        DragArea {
+            text: "Script"
+            OutputNode {
+                objectName: "outputNode"
+            }
 		}
     }
 }

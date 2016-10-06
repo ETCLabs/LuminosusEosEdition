@@ -3,7 +3,7 @@
 
 TEMPLATE = app
 
-QT += qml quick multimedia
+QT += qml quick multimedia svg
 
 CONFIG += c++11
 
@@ -12,6 +12,11 @@ QML_IMPORT_PATH =
 
 # Default rules for deployment.
 include(deployment.pri)
+
+DEFINES += QT_MESSAGELOGCONTEXT
+
+# use QtQuick Compiler (only available under commercial license)
+CONFIG += qtquickcompiler
 
 
 # ------------------ Resources (.cpp, .h, .qrc, icons) -----------------------
@@ -24,7 +29,6 @@ SOURCES += main.cpp \
     MainController.cpp \
     Matrix.cpp \
     MidiManager.cpp \
-    NodeBase.cpp \
     OutputManager.cpp \
     block_data/OneOutputBlock.cpp \
     FileSystemManager.cpp \
@@ -70,14 +74,58 @@ SOURCES += main.cpp \
     block_implementations/ButtonBlock.cpp \
     block_implementations/EosKeyBlock.cpp \
     block_implementations/DebugBlock.cpp \
-    SvgIconHelper.cpp \
-    block_implementations/NotesBlock.cpp
+    block_implementations/NotesBlock.cpp \
+    block_implementations/PreviewBlock.cpp \
+    LogManager.cpp \
+    block_implementations/LogBlock.cpp \
+    block_implementations/EosCmdBlock.cpp \
+    block_implementations/EosInfoBlock.cpp \
+    eos_specific/EosOSCManager.cpp \
+    eos_specific/EosOSCMessage.cpp \
+    eos_specific/EosCue.cpp \
+    eos_specific/EosCueList.cpp \
+    eos_specific/EosCueListManager.cpp \
+    block_implementations/EosCueListBlock.cpp \
+    TouchArea.cpp \
+    block_implementations/EosFaderBankBlock.cpp \
+    block_implementations/EosMasterPlaybackBlock.cpp \
+    block_implementations/LuminosusInfoBlock.cpp \
+    eos_specific/EosActiveChannelsManager.cpp \
+    block_implementations/EosWheelsBlock.cpp \
+    block_implementations/EosOscMonitorBlock.cpp \
+    block_implementations/EosSubBlock.cpp \
+    block_implementations/EosGroupBlock.cpp \
+    block_implementations/EosSingleFaderBlock.cpp \
+    Nodes.cpp \
+    NodeConnectionLines.cpp \
+    block_implementations/EosMacroBlock.cpp \
+    block_implementations/StopwatchBlock.cpp \
+    block_implementations/QmlOnlyBlock.cpp \
+    block_implementations/AudioPlaybackBlock.cpp \
+    block_implementations/ClockBlock.cpp \
+    block_implementations/LinearValueBlock.cpp \
+    block_implementations/SinusValueBlock.cpp \
+    block_implementations/TickGeneratorBlock.cpp \
+    UpdateManager.cpp \
+    SpectrumItem.cpp \
+    AudioInputAnalyzer.cpp \
+    block_implementations/BeatDetectionBlock.cpp \
+    SpectralHistoryItem.cpp \
+    AudioSpectrumItem.cpp \
+    block_implementations/AudioVolumeBlock.cpp \
+    block_implementations/EosEffectBlock.cpp \
+    AudioPlayerQt.cpp \
+    AnchorManager.cpp \
+    block_implementations/PageAnchorBlock.cpp \
+    block_implementations/StyledTextBlock.cpp \
+    block_implementations/ImageBlock.cpp
 
 
 RESOURCES += qml.qrc \
     images.qrc \
     fonts.qrc \
-    qmlBlocks.qrc
+    qmlBlocks.qrc \
+    examples.qrc
 
 HEADERS += \
     ffft/Array.h \
@@ -108,7 +156,6 @@ HEADERS += \
     ArtNetSender.h \
     Matrix.h \
     MidiManager.h \
-    NodeBase.h \
     OutputManager.h \
     PowermateListener.h \
     block_data/OneOutputBlock.h \
@@ -158,17 +205,72 @@ HEADERS += \
     block_implementations/EosKeyBlock.h \
     version.h \
     block_implementations/DebugBlock.h \
-    SvgIconHelper.h \
-    block_implementations/NotesBlock.h
+    block_implementations/NotesBlock.h \
+    block_implementations/PreviewBlock.h \
+    LogManager.h \
+    block_implementations/LogBlock.h \
+    block_implementations/EosCmdBlock.h \
+    block_implementations/EosInfoBlock.h \
+    eos_specific/EosOSCManager.h \
+    eos_specific/EosOSCMessage.h \
+    eos_specific/EosCue.h \
+    eos_specific/EosCueList.h \
+    eos_specific/EosCueListManager.h \
+    block_implementations/EosCueListBlock.h \
+    TouchArea.h \
+    block_implementations/EosFaderBankBlock.h \
+    block_implementations/EosMasterPlaybackBlock.h \
+    block_implementations/LuminosusInfoBlock.h \
+    eos_specific/EosActiveChannelsManager.h \
+    block_implementations/EosWheelsBlock.h \
+    block_implementations/EosOscMonitorBlock.h \
+    block_implementations/EosSubBlock.h \
+    block_implementations/EosGroupBlock.h \
+    block_implementations/EosSingleFaderBlock.h \
+    Nodes.h \
+    NodeConnectionLines.h \
+    block_implementations/EosMacroBlock.h \
+    block_implementations/StopwatchBlock.h \
+    block_implementations/QmlOnlyBlock.h \
+    block_implementations/AudioPlaybackBlock.h \
+    block_implementations/ClockBlock.h \
+    block_implementations/LinearValueBlock.h \
+    block_implementations/SinusValueBlock.h \
+    block_implementations/TickGeneratorBlock.h \
+    UpdateManager.h \
+    SpectrumItem.h \
+    AudioInputAnalyzer.h \
+    block_implementations/BeatDetectionBlock.h \
+    SpectralHistoryItem.h \
+    AudioSpectrumItem.h \
+    block_implementations/AudioVolumeBlock.h \
+    block_implementations/EosEffectBlock.h \
+    AudioPlayerQt.h \
+    #AudioPlayerVlc.h
+    AnchorManager.h \
+    block_implementations/PageAnchorBlock.h \
+    block_implementations/StyledTextBlock.h \
+    block_implementations/ImageBlock.h
 
 ICON = images/icon/app_icon_icns.icns
 
 DISTFILES += \
-    Doxyfile \
     CREDITS.txt \
     doc/Changelog.txt \
     LICENSE.txt \
-    README.txt
+    README.md \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat \
+    luminosus.rc \
+    Doxyfile
+
+# Windows .exe icon:
+RC_FILE = luminosus.rc
 
 # ------------------ OS specific -----------------------
 
@@ -189,7 +291,21 @@ linux_specific {
     LIBS += -L/alsa/ -lasound -lpthread
 }
 
-# include winmm lib on Windowsfor RtMidi
+# Temporary add VLC-Qt lib for linux till a solution for the GStreamer bug with Ubuntu is found:
+linux_specific {
+    DEFINES += USE_VLC_LIB
+    LIBS += -lVLCQtCore
+    SOURCES += AudioPlayerVlc.cpp
+    HEADERS += AudioPlayerVlc.h
+}
+
+#DEFINES += USE_VLC_LIB
+#LIBS += -lVLCQtCore
+
+#LIBS       += -L/Users/Tim/Documents/luminosus_qt/vlc-qt/lib -lVLCQtCore
+#INCLUDEPATH += /Users/Tim/Documents/luminosus_qt/vlc-qt/vlc-qt/include
+
+# include winmm lib on Windows for RtMidi
 win32:LIBS += -lwinmm
 win64:LIBS += -lwinmm
 
@@ -203,8 +319,11 @@ macx:LIBS += -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
     HEADERS += RtMidi/RtMidi.h
 }
 
+# Android specific files:
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+
 # ------------------ QmlTricks Submodules -----------------------
 
-include ($$PWD/libQtQmlTricks/SuperMacros/QtSuperMacros.pri)
-include ($$PWD/libQtQmlTricks/SmartDataModels/QtQmlModels.pri)
-include ($$PWD/libQtQmlTricks/UiElements/QtQuickUiElements.pri)
+#include ($$PWD/libQtQmlTricks/SuperMacros/QtSuperMacros.pri)
+#include ($$PWD/libQtQmlTricks/SmartDataModels/QtQmlModels.pri)
+#include ($$PWD/libQtQmlTricks/UiElements/QtQuickUiElements.pri)

@@ -21,11 +21,11 @@
 #ifndef ONEINPUTBLOCK_H
 #define ONEINPUTBLOCK_H
 
-
 #include "BlockBase.h"
+#include <QPointer>
 
 // forward declaration to reduce dependencies
-class InputNodeHsv;
+class NodeBase;
 
 /**
  * @brief The OneInputBlock class is the base of all simple blocks with one input node.
@@ -48,7 +48,7 @@ protected:
 	/**
 	 * @brief m_inputNode is a pointer to the created input node
 	 */
-	InputNodeHsv* m_inputNode;
+    QPointer<NodeBase> m_inputNode;
 
 };
 

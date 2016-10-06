@@ -1,8 +1,8 @@
-import QtQuick 2.0
-import QtGraphicalEffects 1.0
+import QtQuick 2.5
+import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	id: root
 	implicitWidth: -1
 
@@ -55,7 +55,7 @@ TouchArea {
 	property string uid: ""
 	property real externalInput: 0
 	Component.onCompleted: controller.registerGuiControl(this)
-	Component.onDestruction: if (controller) controller.unregisterGuiControl(uid)
+    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
 	onExternalInputChanged: {
 		if (externalInput > 0.) {
 			active = true

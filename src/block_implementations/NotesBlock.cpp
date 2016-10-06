@@ -21,10 +21,16 @@
 #include "NotesBlock.h"
 
 
+NotesBlock::NotesBlock(MainController* controller, QString uid)
+    : BlockBase(controller, uid, info().qmlFile)
+{
+
+}
+
 QJsonObject NotesBlock::getState() const {
-	QJsonObject state;
-	state["text"] = getText();
-	return state;
+    QJsonObject state;
+    state["text"] = getText();
+    return state;
 }
 
 void NotesBlock::setState(const QJsonObject &state) {

@@ -12,8 +12,9 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Slider";
-		info.category = QStringList {"Controls"};
+		info.typeName = "Slider";
+        info.category << "Controls";
+        info.helpText = "A simple slider that outputs values between 0 and 1.";
 		info.qmlFile = "qrc:/qml/Blocks/SliderBlock.qml";
 		info.complete<SliderBlock>();
 		return info;

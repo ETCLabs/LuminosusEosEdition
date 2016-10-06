@@ -21,14 +21,15 @@
 #include "MidiControlInBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 MidiControlInBlock::MidiControlInBlock(MainController *controller, QString uid)
 	: OneOutputBlock(controller, uid, info().qmlFile)
 	, m_target(1)
 	, m_channel(1)
-	, m_useDefaultChannel(true)
+    , m_useDefaultChannel(true)
+    , m_learning(false)
 {
 	connect(m_controller->midi(), SIGNAL(messageReceived(MidiEvent)), this, SLOT(onMidiMessage(MidiEvent)));
 }
@@ -60,5 +61,34 @@ void MidiControlInBlock::onMidiMessage(MidiEvent event) {
 			m_outputNode->setValue(event.value);
 			emit validMessageReceived();
 		}
-	}
+    }
+}
+
+void MidiControlInBlock::startLearning() {
+    // check if already in learning state:
+    if (m_learning) {
+        // yes -> cancel learning:
+        m_controller->midi()->removeNextEventCallback(getUid());
+        setLearning(false);
+        return;
+    }
+    // listen for the next event:
+    setLearning(true);
+    m_controller->midi()->registerForNextEvent(getUid(), [this](MidiEvent event) { this->checkIfEventFits(event); });
+}
+
+void MidiControlInBlock::checkIfEventFits(MidiEvent event) {
+    setLearning(false);
+    // chek if this event was a control change event:
+    if (event.type != MidiConstants::CONTROL_CHANGE) {
+        m_controller->showToast("This was not a Control Change event.");
+        return;
+    }
+    // set attributes to match the event:
+    setUseDefaultChannel(false);
+    setChannel(event.channel);
+    setTarget(event.target);
+    // update output:
+    m_outputNode->setValue(event.value);
+    emit validMessageReceived();
 }

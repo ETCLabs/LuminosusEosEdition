@@ -29,9 +29,6 @@
 #include <QVector>
 #include <map>
 
-
-// TODO: should be a Singleton
-
 /**
  * @brief The BlockList class manages the information about all available block types.
  */
@@ -40,6 +37,9 @@ class BlockList : public QObject {
 	Q_OBJECT
 
 public:
+    /**
+     * @brief BlockList creates a BlockList object and adds all available blocks
+     */
 	BlockList();
 
 public slots:
@@ -55,7 +55,7 @@ public slots:
 	 * @param name type of the block to check
 	 * @return BlockInfo struct
 	 */
-	const BlockInfo& getBlockInfoByName(QString name);
+	const BlockInfo& getBlockInfoByName(QString name) const;
 
 	/**
 	 * @brief getJsonBlockModel creates a JSON array of all available blocks
@@ -114,6 +114,11 @@ protected:
 	 * @brief m_blockNames maps the block type name to its BlockInfo struct
 	 */
 	std::map<QString, BlockInfo> m_blockNames;
+
+    /**
+     * @brief m_orderedBlockList contains all BlockInfos in the order they should appear in the UI
+     */
+    QVector<BlockInfo> m_orderedBlockList;
 
 	/**
 	 * @brief m_jsonBlockModel is the cached result of getJsonBlockModel for all blocks

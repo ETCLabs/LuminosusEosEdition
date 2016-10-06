@@ -23,16 +23,14 @@
 
 #include <QString>
 
-// This file includes the version number of this software.
-
-namespace LumoinosusVersionInfo {
-
 /**
- * @brief VERSION_STRING is the version number of this software
- * @memberof MainController
+ * @brief The LumoinosusVersionInfo namespace defines the version number of this software.
  */
-static const QString VERSION_STRING = "0.0.1.1.0.4";
-
+namespace LuminosusVersionInfo {
+	/**
+	 * @brief VERSION_STRING is the version number of this software
+	 */
+    static const QString VERSION_STRING = "0.0.1.1.0.14";
 }
 
 #endif // VERSION_H

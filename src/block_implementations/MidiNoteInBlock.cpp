@@ -21,7 +21,7 @@
 #include "MidiNoteInBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 MidiNoteInBlock::MidiNoteInBlock(MainController *controller, QString uid)
@@ -29,6 +29,7 @@ MidiNoteInBlock::MidiNoteInBlock(MainController *controller, QString uid)
 	, m_key(60)
 	, m_channel(1)
 	, m_useDefaultChannel(true)
+    , m_learning(false)
 {
 	connect(controller->midi(), SIGNAL(messageReceived(MidiEvent)), this, SLOT(onMidiMessage(MidiEvent)));
 }
@@ -79,4 +80,33 @@ void MidiNoteInBlock::setOctave(int value) {
 	int key = value * 12 + tone;
 	m_key = limit(0, key, 127);
 	emit keyChanged();
+}
+
+void MidiNoteInBlock::startLearning() {
+    // check if already in learning state:
+    if (m_learning) {
+        // yes -> cancel learning:
+        m_controller->midi()->removeNextEventCallback(getUid());
+        setLearning(false);
+        return;
+    }
+    // listen for the next event:
+    setLearning(true);
+    m_controller->midi()->registerForNextEvent(getUid(), [this](MidiEvent event) { this->checkIfEventFits(event); });
+}
+
+void MidiNoteInBlock::checkIfEventFits(MidiEvent event) {
+    setLearning(false);
+    // chek if this event was a control change event:
+    if (event.type != MidiConstants::NOTE_ON) {
+        m_controller->showToast("This was not a Note event.");
+        return;
+    }
+    // set attributes to match the event:
+    setUseDefaultChannel(false);
+    setChannel(event.channel);
+    setKey(event.target);
+    // update output:
+    m_outputNode->setValue(event.value);
+    emit validMessageReceived();
 }

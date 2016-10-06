@@ -20,6 +20,7 @@ TextInput {
 		anchors.rightMargin: 2*dp
 		anchors.verticalCenter: root.verticalCenter
 		anchors.verticalCenterOffset: 12*dp
+        visible: !root.readOnly
     }
 
     Text {

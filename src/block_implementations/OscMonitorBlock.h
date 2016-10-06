@@ -32,21 +32,21 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "OSC Monitor";
-		info.nameInUi = "OSC Monitor";
-		info.category = QStringList("OSC");
-		info.helpText = "With the buttons at the top you can choose if incoming and / or outgoing "
+		info.typeName = "OSC Monitor";
+        info.nameInUi = "OSC Monitor";
+        info.category << "Custom OSC";
+        info.helpText = "Shows the messages of the 'Custom OSC' connection.\n"
+                        "With the buttons at the top you can choose if incoming and / or outgoing "
 						"messages will be logged and displayed.";
 		info.qmlFile = "qrc:/qml/Blocks/OscMonitorBlock.qml";
 		info.complete<OscMonitorBlock>();
 		return info;
 	}
 
-	explicit OscMonitorBlock(MainController* controller, QString uid)
-		: BlockBase(controller, uid, info().qmlFile)
-	{
+    explicit OscMonitorBlock(MainController* controller, QString uid);
 
-	}
+    virtual QJsonObject getState() const override;
+    virtual void setState(const QJsonObject& state) override;
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }

@@ -18,12 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ARTNETSENDER
-#define ARTNETSENDER
+#ifndef ARTNETSENDER_H
+#define ARTNETSENDER_H
 
-#include <stdint.h>
 #include <QObject>
 #include <QUdpSocket>
+
+#include <stdint.h>
+
 
 struct ArtNetUniverse {
     std::vector<uint8_t> message;
@@ -38,17 +40,17 @@ class ArtNetSender : public QObject
 {
     Q_OBJECT
 
-private:
-    QUdpSocket* udpSocket;
-    std::vector<ArtNetUniverse> universes;
-
 public:
     ArtNetSender();
 
 public slots:
     void sendData(std::vector<uint8_t> data);
     void sendValue(int value);
+
+private:
+    QUdpSocket udpSocket;
+    std::vector<ArtNetUniverse> universes;
 };
 
-#endif // ARTNETSENDER
+#endif // ARTNETSENDER_H
 

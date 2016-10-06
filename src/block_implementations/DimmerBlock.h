@@ -22,7 +22,7 @@
 #define DIMMERBLOCK_H
 
 #include "block_data/BlockBase.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 class DimmerBlock : public BlockBase
 {
@@ -35,17 +35,20 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Dimmer";
-		info.category << "Other";
-		info.dependencies = {BlockDependency::NonETC};
+		info.typeName = "Dimmer";
+        info.nameInUi = "ArtNet Output";
+        info.category << "Other";
+        info.dependencies = {BlockDependency::NonETC};
+        info.helpText = "Outputs a value on a specific DMX channel via rudimentary ArtNet.\n\n"
+                        "Exists to test without an Eos console.";
 		info.qmlFile = "qrc:/qml/Blocks/DimmerBlock.qml";
 		info.complete<DimmerBlock>();
 		return info;
 	}
 
     int m_channel = 0;
-    OutputNodeHsv* outputNode = nullptr;
-    InputNodeHsv* inputNode = nullptr;
+    NodeBase* outputNode = nullptr;
+    NodeBase* inputNode = nullptr;
     static int instances;
     QString name = "";
 
@@ -56,7 +59,7 @@ public:
 	virtual void setState(const QJsonObject& state) override;
 
 	double getValue() const;
-    void setValue(double value) { inputNode->data->setValue(value); valueChanged(); }
+    void setValue(double value) { inputNode->getDataToModify().setValue(value); valueChanged(); }
 	int getChannel() const { return m_channel; }
 	void setChannel(int channel);
 

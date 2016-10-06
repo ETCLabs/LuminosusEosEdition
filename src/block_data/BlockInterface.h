@@ -39,6 +39,7 @@ enum BlockDependency {
 	Midi = 0,
 	AudioInput,
 	Experimental,
+    Debugging,
 	NonETC
 };
 
@@ -53,7 +54,7 @@ struct BlockInfo {
 	 *
 	 * This should not change on updates to be backward compatible.
      */
-    QString name = "";
+    QString typeName = "";
 	/**
 	 * @brief nameInUi is the name of the block to be displayed in the UI
 	 *
@@ -101,7 +102,7 @@ struct BlockInfo {
 	template <typename T>
 	void complete() {
 		if (nameInUi.isEmpty()) {
-			nameInUi = name;
+            nameInUi = typeName;
 		}
 		createInstanceOnHeap = [](MainController* controller, QString uid) -> BlockInterface* { return new T(controller, uid); };
 
@@ -119,6 +120,8 @@ class BlockInterface : public QObject {
 public:
     BlockInterface(MainController* controller) : QObject((QObject*)controller) { }
     //virtual ~BlockInterface() = 0;  // virtual destructor makes shure the right destructor is called
+
+    virtual void completeGuiItemCreation() = 0;
 
     /**
      * @brief getState is used to get the current state of the block to persist it
@@ -151,7 +154,8 @@ public:
 	 */
 	virtual const QQuickItem* getGuiItemConst() const = 0;
     /**
-     * @brief mayBeRemoved checks if this block may be removed. It should not be removed for example when it is still part of a group.
+     * @brief mayBeRemoved checks if this block may be removed. It should not be removed for 
+     * example when it is still part of a group.
      * @return true if this block may be safely removed
      */
     virtual bool mayBeRemoved() = 0;
@@ -170,9 +174,32 @@ public:
 	 */
 	virtual NodeBase* getDefaultOutputNode() = 0;
 
+    /**
+     * @brief getNodeMergeModes returns an JSON object that contains information about the
+     * merge mode of each node of this block
+     *
+     * the keys are the node IDs and the value is true if the merge mode is HTP
+     * @return a JSON Object
+     */
+    virtual QJsonObject getNodeMergeModes() const = 0;
+
+    /**
+     * @brief setNodeMergeModes sets the merge mode of all nodes of this block on the base of a
+     * JSON object returned from getNodeMergeModes()
+     * @param state a JSON object returned from getNodeMergeModes()
+     */
+    virtual void setNodeMergeModes(const QJsonObject& state) = 0;
+
+    /**
+     * @brief renderIfNotVisible returns if the block should be rendered even if it is not visible
+     * @return true if it should be rendered always
+     */
+    virtual bool renderIfNotVisible() const = 0;
+
 signals:
     /**
-     * @brief positionChanged is triggered when the position of the block in the UI changes and for example the connecting lines have to be updated
+     * @brief positionChanged is triggered when the position of the block in the UI changes and
+     * for example the connecting lines have to be updated
      */
     void positionChanged();
 
@@ -184,7 +211,7 @@ signals:
 
 public slots:
     /**
-     * @brief getUid
+     * @brief getUid returns the UID of this block
      * @return the unique and persistent ID of the block instance
      */
 	virtual QString getUid() const = 0;
@@ -243,6 +270,22 @@ public slots:
 	 * @return help text string
 	 */
 	virtual QString getHelpText() const = 0;
+
+    /**
+     * @brief deletedByUser removes the block with animations
+     */
+    virtual void deletedByUser() = 0;
+    /**
+     * @brief onDeleteAnimationEnd finally deletes the block after the delete animation
+     */
+    virtual void onDeleteAnimationEnd() = 0;
+
+    /**
+     * @brief makeBlocksConnectedToInputsVisible iterates over blocks that are connected to input
+     * nodes of this block and makes them visible because they provide the connection lines
+     * (they could be invisible because they are not in the window viewport)
+     */
+    virtual void makeBlocksConnectedToInputsVisible() = 0;
 
 };
 

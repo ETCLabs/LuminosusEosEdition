@@ -78,10 +78,88 @@ VerticalScrollView {
 		HorizontalDivider {  // ------------------------------------------------------
 			visible: false
 		}
+        Text {
+            height: 30*dp
+            text: "Connection To Eos"
+            color: "#fff"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignTop
+            font.family: "Quicksand"
+            font.pixelSize: 22*dp
+        }
+        StretchColumn {
+            leftMargin: 15*dp
+            rightMargin: 15*dp
+            defaultSize: 30*dp
+            height: implicitHeight
+
+            BlockRow {
+                Text {
+                    text: "Console IP:"
+                    width: parent.width * 0.5
+                    verticalAlignment: Text.AlignVCenter
+                }
+                TextInput {
+                    width: parent.width * 0.5
+                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                    text: controller.eosConnection().getIpAddressString()
+                    onDisplayTextChanged: controller.eosConnection().setIpAddress(displayText)
+                    font.pixelSize: 16*dp
+                }
+            }
+            BlockRow {
+                Text {
+                    text: "OSC Version:"
+                    width: parent.width * 0.5
+                    verticalAlignment: Text.AlignVCenter
+                }
+                ComboBox2 {
+                    width: parent.width * 0.5
+                    height: 30*dp
+                    values: [false, true]
+                    texts: ["1.0", "1.1"]
+                    property bool initialized: false
+                    Component.onCompleted: {
+                        setValue(controller.eosConnection().getUseOsc_1_1())
+                        initialized = true
+                    }
+                    onValueChanged: {
+                        if (!initialized) return
+                        if (value !== controller.eosConnection().getUseOsc_1_1()) {
+                            controller.eosConnection().setUseOsc_1_1(value);
+                        }
+                    }
+                }
+            }
+            BlockRow {
+                StretchText {
+                    text: "Connection:"
+                }
+                StretchText {
+                    hAlign: Text.AlignHCenter
+                    color: text === "Ok" ? "lightgreen" : "red"
+                    text: controller.eosManager().pingIsSuccessful
+                          ? (controller.eosManager().latency < 200 ? "Ok" : "Slow")
+                          : "Timeout"
+                }
+            }
+            BlockRow {
+                StretchText {
+                    text: "Eos Version:"
+                }
+                StretchText {
+                    hAlign: Text.AlignHCenter
+                    text: controller.eosManager().consoleVersion
+                }
+            }
+        }  // end Eos Connection Column
+
+        HorizontalDivider {  // ------------------------------------------------------
+        }
 
 		Text {
 			height: 30*dp
-			text: "OSC"
+            text: "Custom OSC"
 			color: "#fff"
 			horizontalAlignment: Text.AlignHCenter
 			verticalAlignment: Text.AlignTop
@@ -93,8 +171,26 @@ VerticalScrollView {
 			rightMargin: 15*dp
 			defaultSize: 30*dp
 			height: implicitHeight
+            BlockRow {
+                Text {
+                    text: "Use Connection to Eos"
+                    width: parent.width - 30*dp
+                    verticalAlignment: Text.AlignVCenter
+                }
+                CheckBox {
+                    id: customToEosCheckbox
+                    width: 30*dp
+                    active: controller.sendCustomOscToEos
+                    onActiveChanged: {
+                        if (active !== controller.sendCustomOscToEos) {
+                            controller.sendCustomOscToEos = active
+                        }
+                    }
+                }
+            }
 
 			BlockRow {
+                visible: !controller.sendCustomOscToEos
 				Text {
 					text: "IP Address"
 					width: parent.width * 0.5
@@ -104,18 +200,19 @@ VerticalScrollView {
 					width: parent.width * 0.5
 					inputMethodHints: Qt.ImhFormattedNumbersOnly
 					text: controller.osc().getIpAddressString()
-					onTextChanged: controller.osc().setIpAddress(text)
+                    onDisplayTextChanged: controller.osc().setIpAddress(displayText)
 					font.pixelSize: 16*dp
 				}
 			}
 			BlockRow {
+                visible: !controller.sendCustomOscToEos
 				Text {
 					text: "Protocol"
 					width: parent.width * 0.5
 					verticalAlignment: Text.AlignVCenter
 				}
-				ComboBox2 {
-					id: protocolComboBox
+                ComboBox2 {
+                    id: protocolComboBox
 					width: parent.width * 0.5
 					height: 30*dp
 					values: controller.osc().getProtocolNames()
@@ -133,7 +230,7 @@ VerticalScrollView {
 				}
 			}
 			BlockRow {
-				visible: protocolComboBox.currentIndex === 0
+                visible: (protocolComboBox.currentIndex === 0) && !controller.sendCustomOscToEos
 				Text {
 					text: "Tx Port"
 					width: parent.width / 2
@@ -152,7 +249,7 @@ VerticalScrollView {
 				}
 			}
 			BlockRow {
-				visible: protocolComboBox.currentIndex === 0
+                visible: (protocolComboBox.currentIndex === 0) && !controller.sendCustomOscToEos
 				Text {
 					text: "Rx Port"
 					width: parent.width / 2
@@ -171,7 +268,7 @@ VerticalScrollView {
 				}
 			}
 			BlockRow {
-				visible: protocolComboBox.currentIndex !== 0
+                visible: (protocolComboBox.currentIndex !== 0) && !controller.sendCustomOscToEos
 				Text {
 					text: "Port"
 					width: parent.width / 2
@@ -276,6 +373,10 @@ VerticalScrollView {
 					}
 				}
 			}
+            ButtonBottomLine {
+                text: "Refresh Devices"
+                onClick: controller.midi().refreshDevices()
+            }
 		}  // MIDI column end
 
 		HorizontalDivider {  // ------------------------------------------------------
@@ -306,7 +407,7 @@ VerticalScrollView {
 				}
 				Switch {
 					onActiveChanged: {
-						active ? mainWindow.showFullScreen() : mainWindow.showNormal()
+                        active ? controller.getMainWindow().showFullScreen() : controller.getMainWindow().showNormal()
 					}
 				}
 			}
@@ -363,6 +464,29 @@ VerticalScrollView {
 					}
 				}
 			}
+            BlockRow {
+                Text {
+                    text: "Background:"
+                    width: parent.width * 0.4
+                    verticalAlignment: Text.AlignVCenter
+                }
+                ComboBox2 {
+                    width: parent.width * 0.6
+                    values: ["blueprint_grey_tiled.jpg", "blueprint_tiled.jpg", "polygon_grey.jpg", "solid_grey.jpg", "gradient_grey.jpg"]
+                    texts: ["Greyprint", "Blueprint", "Polygon", "Grey", "Gradient"]
+                    property bool initialized: false
+                    Component.onCompleted: {
+                        setValue(controller.getBackgroundName())
+                        initialized = true
+                    }
+                    onValueChanged: {
+                        if (!initialized) return
+                        if (value !== controller.getBackgroundName()) {
+                            controller.setBackgroundName(value);
+                        }
+                    }
+                }
+            }
 			BlockRow {
 				ButtonBottomLine {
 					width: parent.width
@@ -414,8 +538,33 @@ VerticalScrollView {
 					text: controller.getVersionString()
 					width: parent.width / 2
 					verticalAlignment: Text.AlignVCenter
+                    color: controller.updateManager().updateIsAvailable ? "red" : "#fff"
 				}
 			}
+            StretchText {
+                text: "No Update Available"
+                visible: !controller.updateManager().updateIsAvailable
+            }
+
+            BlockRow {
+                visible: controller.updateManager().updateIsAvailable
+                Text {
+                    text: "Available:"
+                    width: parent.width / 2
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Text {
+                    text: controller.updateManager().newestStableVersionNumber
+                    width: parent.width / 2
+                    verticalAlignment: Text.AlignVCenter
+                    color: "lightgreen"
+                }
+            }
+            ButtonBottomLine {
+                text: "Get Update"
+                onPress: Qt.openUrlExternally("http://www.luminosus.org/download")
+                visible: controller.updateManager().updateIsAvailable
+            }
 
 			BlockRow {
 				Text {
@@ -452,12 +601,20 @@ VerticalScrollView {
 					width: parent.width
 					verticalAlignment: Text.AlignVCenter
 					font.underline: true
-					MouseArea {
+                    CustomTouchArea {
 						anchors.fill: parent
-						onClicked: Qt.openUrlExternally("http://www.etcconnect.com")
+                        onClick: Qt.openUrlExternally("http://www.etcconnect.com")
 					}
 				}
 			}
+
+            BlockRow {
+                ButtonBottomLine {
+                    text: "QUIT"
+                    onPress: Qt.quit()
+                    color: "red"
+                }
+            }
 		}  // end About column
 	}  // end main Column
 }  // end Flickable

@@ -31,9 +31,10 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Controls Test";
-		info.category << "Other";
-		info.dependencies = {BlockDependency::Experimental};
+		info.typeName = "Controls Test";
+        info.category << "Debugging";
+        info.dependencies = {BlockDependency::Debugging};
+        info.helpText = "Exists to test if the custom controls work as expected.";
 		info.qmlFile = "qrc:/qml/Blocks/ControlsTestBlock.qml";
 		info.complete<ControlsTestBlock>();
 		return info;

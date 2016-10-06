@@ -21,7 +21,7 @@
 #include "MidiNoteInRangeBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 MidiNoteInRangeBlock::MidiNoteInRangeBlock(MainController *controller, QString uid)
@@ -127,4 +127,62 @@ void MidiNoteInRangeBlock::setOctave2(int value) {
 		setKey(m_key2);
 	}
 	emit key2Changed();
+}
+
+void MidiNoteInRangeBlock::startLearning() {
+    // check if already in learning state:
+    if (m_learning) {
+        // yes -> cancel learning:
+        m_controller->midi()->removeNextEventCallback(getUid());
+        setLearning(false);
+        return;
+    }
+    // listen for the next event:
+    setLearning(true);
+    m_controller->midi()->registerForNextEvent(getUid(), [this](MidiEvent event) { this->checkIfEventFits(event); });
+}
+
+void MidiNoteInRangeBlock::checkIfEventFits(MidiEvent event) {
+    setLearning(false);
+    // chek if this event was a control change event:
+    if (event.type != MidiConstants::NOTE_ON) {
+        m_controller->showToast("This was not a Note event.");
+        return;
+    }
+    // set attributes to match the event:
+    setUseDefaultChannel(false);
+    setChannel(event.channel);
+    setKey(event.target);
+    // update output:
+    m_outputNode->setValue(event.value);
+    emit validMessageReceived();
+}
+
+void MidiNoteInRangeBlock::startLearning2() {
+    // check if already in learning state:
+    if (m_learning2) {
+        // yes -> cancel learning:
+        m_controller->midi()->removeNextEventCallback(getUid() + "2");
+        setLearning2(false);
+        return;
+    }
+    // listen for the next event:
+    setLearning2(true);
+    m_controller->midi()->registerForNextEvent(getUid() + "2", [this](MidiEvent event) { this->checkIfEventFits2(event); });
+}
+
+void MidiNoteInRangeBlock::checkIfEventFits2(MidiEvent event) {
+    setLearning2(false);
+    // chek if this event was a control change event:
+    if (event.type != MidiConstants::NOTE_ON) {
+        m_controller->showToast("This was not a Note event.");
+        return;
+    }
+    // set attributes to match the event:
+    setUseDefaultChannel(false);
+    setChannel(event.channel);
+    setKey2(event.target);
+    // update output:
+    m_outputNode->setValue(event.value);
+    emit validMessageReceived();
 }

@@ -1,8 +1,10 @@
 import QtQuick 2.5
+import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
 	property bool active: false
+    property bool light: false
 
 	Rectangle {
 		width: 20*dp
@@ -10,7 +12,7 @@ TouchArea {
 		anchors.centerIn: parent
 		color: "transparent"
 		border.width: 1*dp
-		border.color: "#555"
+        border.color: light ? "#888" : "#555"
 
 		Rectangle {
 			color: Qt.rgba(0.3, 0.6, 1, 1)
@@ -24,8 +26,8 @@ TouchArea {
 		}
 	}
 
-	onTouchDown: {
-		active = !active
+    onClick: {
+        controller.setPropertyWithoutChangingBindings(this, "active", !active)
 	}
 
 }

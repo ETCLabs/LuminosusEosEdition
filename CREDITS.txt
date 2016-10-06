@@ -1,6 +1,12 @@
-Using some code from Thomas BOUTROUE - Qt QML Tricks
+Using some code from Thomas BOUTROUE - Qt QML Tricks ("super-open" license)
     http://gitlab.unique-conception.org/qt-qml-tricks/
-Settings Icon (Sliders) by Marek Polakovic
-QML JSONListModel by:
+QML JSONListModel (MIT License) by:
     Copyright (c) 2007 Stefan Goessner (goessner.net)
     Copyright (c) 2012 Romain Pokrzywka (KDAB) (romain@kdab.com)
+Settings Icon (Sliders) by Marek Polakovic
+Edit Icon by Julia Simplicio
+BluePrint Background by MediaLoot http://medialoot.com/item/seamless-blueprint-textures/
+
+BPM and Onset detection algorithm by Hendrik Noeller
+    based on "Automatic Extraction of Tempo and beat from Expressive Performances" by Simon Dixon (2001)
+    and "Evaluation of the Audio Beat Tracking System BeatRoot" by Simon Dixon (in Journal of New Music Research, 36, 2007/8)

@@ -24,9 +24,14 @@
 #include "KineticEffect.h"
 #include "KineticEffect2D.h"
 #include "StretchLayouts.h"
-#include "SvgIconHelper.h"
+#include "TouchArea.h"
+#include "NodeConnectionLines.h"
+#include "SpectrumItem.h"
+#include "AudioSpectrumItem.h"
+#include "SpectralHistoryItem.h"
 
 #include <QtGui>
+#include <QApplication>
 #include <QtQuick>
 #include <QSysInfo>
 #include <QFontDatabase>
@@ -34,7 +39,11 @@
 
 // amount and complexity of graphical effects (i.e. blur and shadows):
 enum TGraphicalEffectsLevel { MIN_EFFECTS = 1, MID_EFFECTS = 2, MAX_EFFECTS = 3 };
+#ifdef Q_OS_WIN
+static const TGraphicalEffectsLevel GRAPHICAL_EFFECTS_LEVEL = MID_EFFECTS;
+#else
 static const TGraphicalEffectsLevel GRAPHICAL_EFFECTS_LEVEL = MAX_EFFECTS;
+#endif
 
 
 // checks if additional scaling is needed (i.e. for HiDPI displays)
@@ -59,20 +68,24 @@ void setDpProperty(QQmlApplicationEngine& engine) {
 		scaleFactor = 1;
 	}
 	// round scale factor to one decimal position:
-	scaleFactor = int(scaleFactor * 10 + 0.5) / 10.0;
+    scaleFactor = int(scaleFactor * 10 + 0.5) / 10.0;
 	// set QML context property "dp" that can be accessed anywhere from QML:
 	engine.rootContext()->setContextProperty("dp", scaleFactor);
 
-	qDebug() << "Device Pixel Ratio (provided by Qt): " << QGuiApplication::primaryScreen()->devicePixelRatio();
-	qDebug() << "Custom GUI scale factor (dp unit): " << scaleFactor;
+    qInfo() << "Device Pixel Ratio (provided by Qt): " << QGuiApplication::primaryScreen()->devicePixelRatio();
+    qInfo() << "Custom GUI scale factor (dp unit): " << scaleFactor;
 }
 
 
 int main(int argc, char *argv[])
 {
-	// prepare Qt application:
-    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-    QGuiApplication app(argc, argv);
+    // prepare Qt application:
+    // (using QApplication instead of smaller QGuiApplication to support QWidget based
+    // FileDialogs on Linux)
+    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    QApplication::setAttribute(Qt::AA_SynthesizeTouchForUnhandledMouseEvents, false);
+    QApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, false);
+    QApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/images/icon/app_icon_512.png"));
     QFontDatabase::addApplicationFont(":/fonts/Quicksand-Regular.otf");
     QFontDatabase::addApplicationFont(":/fonts/Quicksand-Italic.otf");
@@ -81,7 +94,7 @@ int main(int argc, char *argv[])
     QFontDatabase::addApplicationFont(":/fonts/Quicksand-Bold.otf");
     QFontDatabase::addApplicationFont(":/fonts/Quicksand-BoldItalic.otf");
     // QFontDatabase::addApplicationFont(":/fonts/Quicksand_Dash.otf");
-	QFontDatabase::addApplicationFont(":/fonts/breeze-icons.ttf");
+    QFontDatabase::addApplicationFont(":/fonts/breeze-icons.ttf");
 	QFontDatabase::addApplicationFont(":/fonts/BPmono.ttf");
 	QFontDatabase::addApplicationFont(":/fonts/BPmonoBold.ttf");
 	QFontDatabase::addApplicationFont(":/fonts/BPmonoItalic.ttf");
@@ -91,8 +104,14 @@ int main(int argc, char *argv[])
     qmlRegisterType<KineticEffect>("CustomElements", 1, 0, "KineticEffect");
 	qmlRegisterType<KineticEffect2D>("CustomElements", 1, 0, "KineticEffect2D");
 	qmlRegisterType<StretchColumn>("CustomElements", 1, 0, "StretchColumn");
-	qmlRegisterType<StretchRow>("CustomElements", 1, 0, "StretchRow");
-	qmlRegisterType<SvgIconHelper>("CustomElements", 1, 0, "SvgIconHelper");
+    qmlRegisterType<StretchRow>("CustomElements", 1, 0, "StretchRow");
+    qmlRegisterType<NodeConnectionLines>("CustomElements", 1, 0, "NodeConnectionLines");
+    qmlRegisterType<SpectrumItem>("CustomElements", 1, 0, "SpectrumItem");
+    qmlRegisterType<AudioSpectrumItem>("CustomElements", 1, 0, "AudioSpectrumItem");
+    qmlRegisterType<SpectralHistoryItem>("CustomElements", 1, 0, "SpectralHistoryItem");
+    qRegisterMetaType<TouchAreaEvent>();
+    qmlRegisterType<TouchAreaEvent>();
+    qmlRegisterType<TouchArea>("CustomElements", 1, 0, "CustomTouchArea");
     QQmlApplicationEngine engine;
 	engine.addImportPath("qrc:/");
 	setDpProperty(engine);
@@ -101,6 +120,7 @@ int main(int argc, char *argv[])
 	// MainController will take care of initalizing GUI, output etc.:
     MainController controller(engine);
 	QObject::connect(&app, SIGNAL(aboutToQuit()), &controller, SLOT(onExit()));
+    QObject::connect(&engine, SIGNAL(quit()), &app, SLOT(quit())); // to make Qt.quit() to work
 
     return app.exec();
 }

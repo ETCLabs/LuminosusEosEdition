@@ -7,113 +7,88 @@ import "../CustomControls"
 BlockBase {
     id: root
     width: 256*dp
-    height: 140*dp
-    pressed: dragarea.pressed
+    height: width*0.5
     settingsComponent: settings
 
 	StretchColumn {
         anchors.fill: parent
 
-        Item {
-			height: 100*dp
-            Canvas {
-                id: canvas
-                property real scaling: Screen.devicePixelRatio
-                height: parent.height*scaling
-                width: parent.width*scaling
-                scale: 1 / scaling
-                x: -parent.width * (1 - (1 / scaling))
-                y: -parent.height * (1 - (1 / scaling))
-                onPaint: {
-                    // --- Prepare ---
-                    var points = block.getSpectrumPoints()
-                    var pointCount = points.length;
-                    var pointWidth = width / pointCount
-                    var ctx = canvas.getContext('2d');
-                    ctx.clearRect (0, 0, width, height);
+        Item {  // Spectrum Area
+            implicitHeight: -1
 
-                    // --- Spectrum Geometry ---
-                    ctx.beginPath();
-                    ctx.moveTo(0, height);
-                    for (var i=0; i<pointCount; i++) {
-                        ctx.lineTo(pointWidth*i, height * (1 - points[i]))
-                        //ctx.lineTo(pointWidth*i, height * (1 - Math.random()))
-                    }
-                    ctx.lineTo(width, height);
+            AudioSpectrumItem {
+                id: spectrum
+                anchors.fill: parent
+                color: Qt.rgba(0.25, 0.45, 0.8, 1)
 
-                    // --- Fill and Stroke Spectrum ---
-                    var gradient = ctx.createLinearGradient(0, 0, 0, height);
-                    gradient.addColorStop(0., '#517EA8');  // top
-                    gradient.addColorStop(1., '#365470');  // bottom
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
-                    ctx.lineWidth = 1*dp*scaling
-                    ctx.lineJoin = "bevel"
-                    ctx.strokeStyle = "#ddd"
-                    ctx.stroke();
+                analyzer: block.analyzer
+                agcEnabled: block.agcEnabled
+            }
 
-                    // --- Band Marker ---
-                    ctx.beginPath();
-                    ctx.moveTo(width*block.getCurrentBand(), 0);
-                    ctx.lineTo(width*block.getCurrentBand(), height);
-                    gradient = ctx.createLinearGradient(0, 0, 0, height);
-                    gradient.addColorStop(0., '#e00');  // top
-                    gradient.addColorStop(0.5, '#f44');  // mid
-                    gradient.addColorStop(1., '#b00');  // bottom
-                    ctx.strokeStyle = gradient;
-                    ctx.stroke();
+            Image {
+                source: "qrc:/images/spectrum_gradient.png"
+                anchors.fill: parent
+            }
+
+            Item {  // Legend at the bottom
+                height: 10*dp
+                anchors.bottom: parent.bottom
+                Text {
+                    text: "20"
+                    font.pixelSize: 10*dp
+                    x: root.width * 0.05
+                    y: -1*dp
                 }
-                Timer {
-                    interval: 20; running: true; repeat: true
-                    onTriggered: canvas.requestPaint()
+                Text {
+                    text: "200"
+                    font.pixelSize: 10*dp
+                    x: root.width * 0.38
+                    y: -1*dp
+                }
+                Text {
+                    text: "1k"
+                    font.pixelSize: 10*dp
+                    x: root.width * 0.6
+                    y: -1*dp
+                }
+                Text {
+                    text: "10k"
+                    font.pixelSize: 10*dp
+                    x: root.width * 0.9
+                    y: -1*dp
                 }
             }
-            TouchArea {
+
+            Rectangle {  // Red Line, Band Marker
+                width: 1*dp
+                height: parent.height
+                x: block.currentBand * parent.width
+                color: "red"
+            }
+            CustomTouchArea {  // Band Marker Interaction
                 anchors.fill: parent
                 onTouchDown: {
-                    var band = touch.x / width
+                    var band = touch.itemX / width
                     block.setCurrentBand(band)
                 }
                 onTouchMove: {
-                    var band = touch.x / width
+                    var band = touch.itemX / width
                     block.setCurrentBand(band)
                 }
             }
         }
 
-        Rectangle {
-			height: 10*dp
-            color: "#365470"
-            //color: "transparent"
-            Text {
-                text: "20"
-                font.pixelSize: 10*dp
-                y: -1*dp
-            }
-            Text {
-                text: "200"
-                font.pixelSize: 10*dp
-                x: 70*dp
-                y: -1*dp
-            }
-            Text {
-                text: "1k"
-                font.pixelSize: 10*dp
-                x: 137*dp
-                y: -1*dp
-            }
-            Text {
-                text: "10k"
-                font.pixelSize: 10*dp
-                x: 220*dp
-                y: -1*dp
-            }
-        }
-
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
+            height: 30*dp
+            implicitHeight: 0  // do not stretch
 			text: "Audio"
+
+            WidthResizeAreaLeft {
+                target: root
+                minSize: 250*dp
+                maxSize: 700*dp
+            }
+
 			OutputNode {
 				objectName: "outputNode"
 			}
@@ -129,6 +104,22 @@ BlockBase {
 
             BlockRow {
                 Text {
+                    text: "Automatic Gain:"
+                    width: parent.width - 30*dp
+                }
+                CheckBox {
+                    width: 30*dp
+                    active: block.agcEnabled
+                    onActiveChanged: {
+                        if (active !== block.agcEnabled) {
+                            block.agcEnabled = active
+                        }
+                    }
+                }
+            }
+
+            BlockRow {
+                Text {
                     text: "Inputs:"
                     width: parent.width
                 }
@@ -137,7 +128,9 @@ BlockBase {
                 id: list
                 width: parent.width
                 height: count * 30*dp
-                model: controller.audioEngine().getInputList()
+                model: controller.audioEngine().getDeviceNameList()
+                // prevent async buffering that can cause segfaults:
+                cacheBuffer: 0
                 delegate: Row {
                     width: parent.width
                     height: 30*dp
@@ -172,7 +165,7 @@ BlockBase {
                             id: timer
                             interval: 50; running: true; repeat: true
                             onTriggered: {
-                                var factor = controller.audioEngine().getMaxLevelByName(modelData)
+                                var factor = controller.audioEngine().getMaxLevelOfDevice(modelData)
                                 bar.width = parent.width * factor
                             }
                         }

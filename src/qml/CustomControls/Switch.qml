@@ -1,8 +1,8 @@
-import QtQuick 2.0
-import QtGraphicalEffects 1.0
+import QtQuick 2.5
+import CustomElements 1.0
 import "../CustomBasics"
 
-TouchArea {
+CustomTouchArea {
     id: root
 	height: 30*dp
 	implicitWidth: -1
@@ -55,7 +55,7 @@ TouchArea {
         color: "transparent"
     }
 
-    onTouchDown: {
+    onClick: {
         controller.checkForExternalInputConnection(uid)
         active = !active
     }
@@ -64,7 +64,7 @@ TouchArea {
     property real externalInput: 0
     property real lastExternalInput: 0
     Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(uid)
+    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
     onExternalInputChanged: {
         if ((lastExternalInput < 0.5) && (externalInput > 0.5)) {
             active = !active

@@ -7,7 +7,6 @@ BlockBase {
     id: root
     width: 90*dp
     height: 60*dp
-    pressed: dragarea.pressed
 
 	StretchColumn {
         anchors.fill: parent
@@ -15,13 +14,10 @@ BlockBase {
         Switch {
             objectName: "switch"
 			uid: block.getUid() + "switch"
-			onActiveChanged: root.block.value = (active ? 1 : 0)
+            onActiveChanged: root.block.value = (active ? 1.0 : 0.0)
         }
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
-
+        DragArea {
 			OutputNode {
 				objectName: "outputNode"
 			}

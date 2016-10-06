@@ -20,6 +20,8 @@
 
 #include "ButtonBlock.h"
 
+#include "MainController.h"
+
 
 ButtonBlock::ButtonBlock(MainController* controller, QString uid)
 	: OneOutputBlock(controller, uid, info().qmlFile)
@@ -31,16 +33,18 @@ ButtonBlock::ButtonBlock(MainController* controller, QString uid)
 
 QJsonObject ButtonBlock::getState() const {
 	QJsonObject state;
+    double dp = m_controller->getGuiScaling();
 	state["toggleMode"] = getToggleMode();
 	state["labelText"] = getLabelText();
-	state["guiItemWidth"] = getGuiItemConst()->width();
+    state["guiItemWidth"] = getGuiItemConst()->width() / dp;
 	return state;
 }
 
 void ButtonBlock::setState(const QJsonObject &state) {
+    double dp = m_controller->getGuiScaling();
 	setToggleMode(state["toggleMode"].toBool());
 	setLabelText(state["labelText"].toString());
 	if (state["guiItemWidth"].toDouble() > 0) {
-		getGuiItem()->setWidth(state["guiItemWidth"].toDouble());
+        getGuiItem()->setWidth(state["guiItemWidth"].toDouble() * dp);
 	}
 }

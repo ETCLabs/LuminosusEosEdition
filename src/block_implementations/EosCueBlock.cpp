@@ -21,16 +21,20 @@
 #include "EosCueBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 EosCueBlock::EosCueBlock(MainController *controller, QString uid)
-	: OneInputBlock(controller, uid, info().qmlFile)
-	, m_cueList(1)
-	, m_cueNumber(1)
+    : InOutBlock(controller, uid, info().qmlFile)
+    , m_cueNumber(1, 1, 0)
 	, m_lastValue(0.0)
+    , m_cueObject(nullptr)
+    , m_isActive(false)
 {
-	connect(m_inputNode, SIGNAL(dataChanged()), this, SLOT(onValueChanged()));
+    connect(m_controller->eosManager(), SIGNAL(cueInfoChanged()), this, SLOT(onActiveCueChanged()));
+    connect(this, SIGNAL(cueObjectChanged()), this, SLOT(onActiveCueChanged()));
+    connect(m_inputNode, SIGNAL(dataChanged()), this, SLOT(onValueChanged()));
+    updateCueObject();
 }
 
 QJsonObject EosCueBlock::getState() const {
@@ -46,17 +50,71 @@ void EosCueBlock::setState(const QJsonObject &state) {
 }
 
 void EosCueBlock::onValueChanged() {
-	double value = m_inputNode->data->getValue();
-	if (value >= 0.5 && m_lastValue < 0.5) {
+    double value = m_inputNode->getValue();
+	if (value >= LuminosusConstants::triggerThreshold && m_lastValue < LuminosusConstants::triggerThreshold) {
 		QString message = "/eos/cue/%1/%2/fire";
-		message = message.arg(QString::number(m_cueList), QString::number(m_cueNumber, 'g', 2));
-		m_controller->osc()->sendMessage(message);
+        message = message.arg(QString::number(m_cueNumber.list), m_cueNumber.number);
+        m_controller->eosConnection()->sendMessage(message);
 	}
-	m_lastValue = value;
+    m_lastValue = value;
+}
+
+void EosCueBlock::onActiveCueChanged() {
+    if (!m_cueObject) {
+        m_isActive = false;
+        return;
+    }
+    if (m_cueObject->getIsActive()) {
+        if (!m_isActive) {
+            m_outputNode->setValue(1.0);
+            QTimer::singleShot(500, this, SLOT(onImpulseEnd()));
+        }
+        m_isActive = true;
+    } else {
+        m_isActive = false;
+    }
+}
+
+void EosCueBlock::onImpulseEnd() {
+    m_outputNode->setValue(0.0);
+}
+
+void EosCueBlock::setCueList(int value) {
+    if (value == m_cueNumber.list) return;
+    m_cueNumber.list = limit(1, value, 999);
+    emit cueListChanged();
+    setCueObject(nullptr);
+    updateCueObject();
 }
 
 void EosCueBlock::setCueNumber(double value) {
-	// round to two decimals:
-	value = qRound(value * 100) / 100.0;
-	m_cueNumber = limit(1, value, 9999); emit cueNumberChanged();
+    // round to two decimals:
+    value = qRound(value * 100) / 100.0;
+    value = limit(1, value, 9999.99);
+    if (value == m_cueNumber.numberAsInt / 100) return;
+    m_cueNumber = EosCueNumber(m_cueNumber.list, value, 0);
+    emit cueNumberChanged();
+    setCueObject(nullptr);
+    updateCueObject();
+}
+
+void EosCueBlock::setCueNumber(const EosCueNumber& value) {
+    m_cueNumber = value;
+    emit cueNumberChanged();
+    emit cueListChanged();
+    setCueObject(nullptr);
+    updateCueObject();
+}
+
+void EosCueBlock::updateCueObject() {
+    EosCueList* cueList = m_controller->cueListManager()->getCueList(m_cueNumber.list);
+    if (cueList && cueList->isValid()) {
+        EosCue* cue = cueList->getCue(m_cueNumber);
+        if (cue && cue->isValid()) {
+            setCueObject(cue);
+            return;
+        }
+    }
+    // could not find Cue -> retry in 5s:
+    QTimer::singleShot(5000, this, SLOT(updateCueObject()));
 }

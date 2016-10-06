@@ -20,57 +20,84 @@
 
 #include "BpmBlock.h"
 
-#include "NodeBase.h"
+#include "Nodes.h"
+#include "MainController.h"  // for LuminosusConstants
 
 BpmBlock::BpmBlock(MainController* controller, QString uid)
 	: InOutBlock(controller, uid, info().qmlFile)
 	, m_bpm(120)
 	, m_lastBeats(BpmConstants::HISTORY_LENGTH)
 	, m_lastValue(0)
+    , m_factor(1)
 {
-	m_timer.start();
+    m_startTime = HighResTime::now();
 	connect(m_inputNode, SIGNAL(dataChanged()), this, SLOT(onInputChanged()));
+    setBpm(120);
 }
 
 QJsonObject BpmBlock::getState() const {
 	QJsonObject state;
 	state["bpm"] = getBpm();
+    state["factor"] = getFactor();
 	return state;
 }
 
 void BpmBlock::setState(const QJsonObject &state) {
-	setBpm(state["bpm"].toDouble());
+    setBpm(state["bpm"].toDouble());
+    setFactor(state["factor"].toDouble());
+}
+
+void BpmBlock::triggerBeat() {
+    double beatTime = HighResTime::elapsedSecSince(m_startTime);
+    // check if history should be discarded:
+    if (!m_lastBeats.isEmpty()) {
+        double secSinceLast = beatTime - m_lastBeats.last();
+        if (secSinceLast > 60. / BpmConstants::MIN_BPM) {
+            // yes last beat is too old -> discard history:
+            m_lastBeats.clear();
+        }
+    }
+    m_lastBeats.append(beatTime);
+    updateBpm();
+}
+
+void BpmBlock::updateOutput() {
+    double realBpm = m_bpm * m_factor;
+    if (realBpm > 0) {
+        m_outputNode->setAbsoluteValue(60.0 / realBpm);
+    }
+}
+
+void BpmBlock::setFactor(double value) {
+    m_factor = limit(0.1, value, 10);
+    emit factorChanged();
+    updateOutput();
+}
+
+void BpmBlock::setBpm(qreal value) {
+    m_bpm = value;
+    emit bpmChanged();
+    updateOutput();
 }
 
 void BpmBlock::updateBpm() {
-	// check if there are at least 2 values:
-	if (m_lastBeats.size() < 2) return;
+    // check if there are at least 2 values:
+    if (m_lastBeats.size() < 2) return;
 
-	qint64 sumBeatDuration = 0;  // in ms
+    double sumBeatDuration = 0;  // in sec
 	for (int i=1; i<m_lastBeats.size(); ++i) {
 		sumBeatDuration += m_lastBeats[i] - m_lastBeats[i-1];
 	}
-	// averageBeatDuration is in ms
-	qreal averageBeatDuration = sumBeatDuration / (m_lastBeats.size() - 1);
-	setBpm((1000 / averageBeatDuration) * 60);
+    // averageBeatDuration is in sec
+    double averageBeatDuration = sumBeatDuration / (m_lastBeats.size() - 1);
+    setBpm((1 / averageBeatDuration) * 60);
 }
 
 void BpmBlock::onInputChanged() {
-	double value = m_inputNode->data->getValue();
-	if (value >= 0.5 && m_lastValue < 0.5) {
+    double value = m_inputNode->getValue();
+	if (value >= LuminosusConstants::triggerThreshold && m_lastValue < LuminosusConstants::triggerThreshold) {
 		// this is a "beat"
-		qint64 beatTime = m_timer.elapsed();
-		// check if history should be discarded:
-		if (!m_lastBeats.isEmpty()) {
-			qint64 sinceLast = beatTime - m_lastBeats.last();
-			qreal secSinceLast = sinceLast / 1000.0;
-			if (secSinceLast > 60. / BpmConstants::MIN_BPM) {
-				// yes last beat is too old -> discard history:
-				m_lastBeats.clear();
-			}
-		}
-		m_lastBeats.append(beatTime);
-		updateBpm();
+        triggerBeat();
 	}
 	m_lastValue = value;
 }

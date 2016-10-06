@@ -6,8 +6,7 @@ import "../CustomControls"
 BlockBase {
 	id: root
 	width: 450*dp
-	height: 300*dp
-	pressed: dragarea.pressed
+    height: 300*dp
 	onWidthChanged: block.positionChanged()
 
 	StretchColumn {
@@ -34,6 +33,11 @@ BlockBase {
 				text: "Clear"
 				onPress: controller.midi().clearLog()
 			}
+            HeightResizeArea {
+                width: 30*dp
+                target: root
+                maxSize: 1000*dp
+            }
 
 			Component.onCompleted: {
 				// initialize checkbox values:
@@ -57,19 +61,21 @@ BlockBase {
 				anchors.leftMargin: 5*dp
 				visible: logList.count !== 0
 				delegate: Text {
-					height: contentHeight + 3*dp
-					width: parent.width
+                    height: contentHeight + 3*dp
+                    anchors.left: parent.left
+                    anchors.right: parent.right
 					wrapMode: Text.Wrap
 					text: modelData
 					color: (modelData.indexOf("[In]") !== -1) ? "#5d82dd" : "#aaa"
 					font.pixelSize: 14*dp
 					font.family: "BPmono"
-				}  // end delegate
+                }  // end delegate
 
-				onCountChanged: {
-					// emit contentYChanged signal, otherwise scrollbar position will be wrong
-					contentYChanged()
-				}
+                // the default cacheBuffer value is greater than zero
+                // but a value greater than zeros causes the application to crahs because of
+                // the asynchronous creation of delegates and a possible race condition with
+                // the debugger
+                cacheBuffer: 0
 
 				Connections {
 					target: controller.midi()
@@ -86,10 +92,14 @@ BlockBase {
 			}
 		}
 
-		DragArea {
-			id: dragarea
-			guiBlock: root
+        DragArea {
 			text: "MIDI Monitor"
+
+            WidthResizeArea {
+                target: root
+                minSize: 450*dp
+                maxSize: 1100*dp
+            }
 		}
 	}
 }

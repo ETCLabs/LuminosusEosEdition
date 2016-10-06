@@ -39,9 +39,9 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Note Out";
+		info.typeName = "MIDI Note Out";
 		info.nameInUi = "Note Out";
-		info.category = QStringList("Midi");
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "Sends MIDI Note On messages for the selected note.\n"
 						"The middle C is here C5.";

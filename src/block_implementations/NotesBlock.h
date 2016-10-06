@@ -34,19 +34,16 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "Notes";
+		info.typeName = "Notes";
 		info.nameInUi = "Notes";
 		info.category << "Other";
+        info.helpText = "Can be used to take notes or to create informative labels.";
 		info.qmlFile = "qrc:/qml/Blocks/NotesBlock.qml";
 		info.complete<NotesBlock>();
 		return info;
 	}
 
-	explicit NotesBlock(MainController* controller, QString uid)
-		: BlockBase(controller, uid, info().qmlFile)
-	{
-
-	}
+    explicit NotesBlock(MainController* controller, QString uid);
 
 	virtual QJsonObject getState() const override;
 	virtual void setState(const QJsonObject& state) override;

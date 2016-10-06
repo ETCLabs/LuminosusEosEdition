@@ -87,8 +87,16 @@ Rectangle {
 			title: "Settings"
 			SettingsDrawerContent {}
 		}
-	}
+    }
 
+    Connections {
+        target: controller
+        onOpenBlockSettings: {
+            if (tabView.currentIndex !== 1) {
+                tabView.currentIndex = 1
+            }
+        }
+    }
 
 }
 

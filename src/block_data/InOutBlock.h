@@ -22,10 +22,10 @@
 #define INOUTBLOCK_H
 
 #include "BlockBase.h"
+#include <QPointer>
 
 // forward declaration to reduce dependencies
-class OutputNodeHsv;
-class InputNodeHsv;
+class NodeBase;
 
 /**
  * @brief The InOutBlock class is the base of all simple blocks with one in- and one output node.
@@ -48,11 +48,11 @@ protected:
 	/**
 	 * @brief m_outputNode is a pointer to the created output node
 	 */
-	OutputNodeHsv* m_outputNode;
+    QPointer<NodeBase> m_outputNode;
 	/**
 	 * @brief m_inputNode is a pointer to the created input node
 	 */
-	InputNodeHsv* m_inputNode;
+    QPointer<NodeBase> m_inputNode;
 
 };
 

@@ -37,12 +37,12 @@ public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Program Out";
+		info.typeName = "MIDI Program Out";
 		info.nameInUi = "Program Change Out";
-		info.category = QStringList("Midi");
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "Sends a MIDI Program Change messages for the selected program "
-						"when the input is above 50%.";
+                        "when the input is greater than 0.";
 		info.qmlFile = "qrc:/qml/Blocks/MidiProgramOutBlock.qml";
 		info.complete<MidiProgramOutBlock>();
 		return info;

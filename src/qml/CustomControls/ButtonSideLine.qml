@@ -3,6 +3,16 @@ import "../CustomBasics"
 
 Button {
     property bool marked: false
+
+    mouseOverEnabled: true
+    Rectangle {
+        id: mouseOverFeedback
+        anchors.fill: parent
+        color: "white"
+        opacity: 0.05
+        visible: parent.mouseOver
+    }
+
     Rectangle {
         color: marked ? "yellow" : Qt.rgba(0.3, 0.5, 1, 0.7)
         height: parent.height - 8*dp
@@ -22,4 +32,5 @@ Button {
            NumberAnimation { duration: 100 }
        }
     }
+
 }

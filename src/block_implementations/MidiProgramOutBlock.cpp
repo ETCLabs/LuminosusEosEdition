@@ -21,7 +21,7 @@
 #include "MidiProgramOutBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 MidiProgramOutBlock::MidiProgramOutBlock(MainController* controller, QString uid)
@@ -49,8 +49,8 @@ void MidiProgramOutBlock::setState(const QJsonObject &state) {
 }
 
 void MidiProgramOutBlock::onValueChanged() {
-	double value = m_inputNode->data->getValue();
-	if (value >= 0.5 && m_lastValue < 0.5) {
+    double value = m_inputNode->getValue();
+	if (value >= LuminosusConstants::triggerThreshold && m_lastValue < LuminosusConstants::triggerThreshold) {
 		int type = MidiConstants::PROGRAM_CHANGE;
 		int channel = m_useDefaultChannel ? m_controller->midi()->getDefaultOutputChannel() : m_channel;
 		int target = m_target - 1;

@@ -21,6 +21,7 @@
 #ifndef HSV_ARRAY
 #define HSV_ARRAY
 
+#include <QSize>
 #include <vector>
 #include <cmath>
 
@@ -67,7 +68,7 @@ struct ColorMatrix {
 	 */
 	std::size_t getSX() const {
 		// FIXME: hsv could be invalid
-        return hsvData.size();
+        return m_hsvData.size();
     }
 
 	/**
@@ -76,8 +77,18 @@ struct ColorMatrix {
 	 */
     std::size_t getSY() const {
 		// FIXME: hsv could be invalid
-        return hsvData[0].size();
+        return m_hsvData[0].size();
     }
+
+    QSize getSize() const {
+        return QSize(getSX(), getSY());
+    }
+
+    /**
+     * @brief mixHtp merges this marix with another one using HTP mode
+     * @param other another ColorMatrix object
+     */
+    void mixHtp(const ColorMatrix& other);
 
     // ---------- HSV -------------
 
@@ -94,10 +105,10 @@ struct ColorMatrix {
 	 * @param newHsv an array of HSV values  [0-1]
 	 */
     void setHsv(const colorData2d& newHsv) {
-        hsvData = newHsv;
-        hsvValid = true;
-        rgbValid = false;
-        valueValid = false;
+        m_hsvData = newHsv;
+        m_hsvIsValid = true;
+        m_rgbIsValid = false;
+        m_valueIsValid = false;
     }
 
 	/**
@@ -116,8 +127,8 @@ struct ColorMatrix {
 	 * @return array of HSV values
 	 */
 	colorData2d getHsv() const {
-        if (!hsvValid) updateHsv();
-        return hsvData;
+        if (!m_hsvIsValid) updateHsv();
+        return m_hsvData;
     }
 
 	/**
@@ -127,8 +138,8 @@ struct ColorMatrix {
 	 * @return HSV values
 	 */
 	colorVector getHsvAt(std::size_t x, std::size_t y) const {
-        if (!hsvValid) updateHsv();
-        return hsvData[x][y];
+        if (!m_hsvIsValid) updateHsv();
+        return m_hsvData[x][y];
 	}
 
     // ---------- RGB -------------
@@ -163,8 +174,8 @@ struct ColorMatrix {
 	 * @return array of HSV values
 	 */
 	colorData2d getRgb() const {
-        if (!rgbValid) updateRgb();
-        return rgbData;
+        if (!m_rgbIsValid) updateRgb();
+        return m_rgbData;
     }
 
 	/**
@@ -174,8 +185,8 @@ struct ColorMatrix {
 	 * @return RGB values
 	 */
 	colorVector getRgbAt(std::size_t x, std::size_t y) const {
-        if (!rgbValid) updateRgb();
-        return rgbData[x][y];
+        if (!m_rgbIsValid) updateRgb();
+        return m_rgbData[x][y];
 	}
     // ---------- Value -------------
 
@@ -191,6 +202,37 @@ struct ColorMatrix {
 	 * @return value [0-1]
 	 */
 	double getValue() const;
+
+    /**
+     * @brief setAbsoluteMaximum sets the absolute maximum value used to multiply the relative
+     * values with to get the absolute values
+     * @param value absolute maximum value
+     */
+    void setAbsoluteMaximum(double value);
+
+    /**
+     * @brief setAbsoluteValue sets an absolute value
+     * @param v an arbitrary value
+     */
+    void setAbsoluteValue(double v);
+
+    /**
+     * @brief getAbsoluteValue returns the absolute value of this matrix
+     * @param defaultMax default absolute maximum value if no one is set (default = 1)
+     * @return an absolute value
+     */
+    double getAbsoluteValue(double defaultMax = 1) const;
+
+    /**
+     * @brief absoluteMaximumIsProvided return if an absolute maximum value is provided
+     * @return true if absolute maximum value is provided
+     */
+    bool absoluteMaximumIsProvided() const { return m_absoluteMaximumIsProvided; }
+
+    /**
+     * @brief resetAbsoluteMaximum resets absolute maximum value
+     */
+    void resetAbsoluteMaximum() { m_absoluteMaximumIsProvided = false; }
 
 protected:
 	/**
@@ -213,31 +255,44 @@ protected:
 	 */
 	void hsvToRgb() const;
 
+    // -------------- member attributes ----------------
+
 	/**
-	 * @brief hsvData stores the data as HSV values (this is not always up to date)
+     * @brief m_hsvData stores the data as HSV values (this is not always up to date)
 	 */
-	mutable colorData2d hsvData;
+    mutable colorData2d m_hsvData;
 	/**
-	 * @brief hsvValid is true, if the HSV values are up to date
+     * @brief m_hsvIsValid is true, if the HSV values are up to date
 	 */
-	mutable bool hsvValid;
+    mutable bool m_hsvIsValid;
 	/**
-	 * @brief rgbData stores the data as RGB values (this is not always up to date)
+     * @brief m_rgbData stores the data as RGB values (this is not always up to date)
 	 */
-	mutable colorData2d rgbData;
+    mutable colorData2d m_rgbData;
 	/**
-	 * @brief rgbValid is true, if the RGB values are up to date
+     * @brief m_rgbIsValid is true, if the RGB values are up to date
 	 */
-	mutable bool rgbValid;
+    mutable bool m_rgbIsValid;
 	/**
-	 * @brief value stores the first value of the data (because it is very often used)
+     * @brief m_value stores the first value of the data (because it is very often used)
 	 * (this is not always up to date)
 	 */
-	mutable double value;
+    mutable double m_value;
 	/**
-	 * @brief valueValid is true, if "value" is up to date
+     * @brief m_valueIsValid is true, if "m_value" is up to date
 	 */
-	mutable bool valueValid;
+    mutable bool m_valueIsValid;
+
+    /**
+     * @brief m_absoluteMaximum stores the maximum absolute value to be multiplied with
+     * the relative values (it is only valid if m_absoluteMaximumProvided is true)
+     */
+    mutable double m_absoluteMaximum;
+
+    /**
+     * @brief m_absoluteMaximumIsProvided is true, if the absoluteValue is set and valid
+     */
+    mutable bool m_absoluteMaximumIsProvided;
 };
 
 

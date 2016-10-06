@@ -22,9 +22,10 @@
 #define ONEOUTPUTBLOCK_H
 
 #include "BlockBase.h"
+#include <QPointer>
 
 // forward declaration to reduce dependencies
-class OutputNodeHsv;
+class NodeBase;
 
 /**
  * @brief The OneOutputBlock class is the base of all simple blocks with one output node.
@@ -72,7 +73,7 @@ protected:
 	/**
 	 * @brief m_outputNode is a pointer to the created output node
 	 */
-	OutputNodeHsv* m_outputNode;
+    QPointer<NodeBase> m_outputNode;
 
 };
 

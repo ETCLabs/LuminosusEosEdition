@@ -29,18 +29,19 @@ class MidiProgramInBlock : public OneOutputBlock
 {
 	Q_OBJECT
 
-	Q_PROPERTY(int target READ getTarget WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(int program READ getProgram WRITE setProgram NOTIFY programChanged)
 	Q_PROPERTY(int channel READ getChannel WRITE setChannel NOTIFY channelChanged)
 	Q_PROPERTY(bool useDefaultChannel READ getUseDefaultChannel WRITE setUseDefaultChannel NOTIFY useDefaultChannelChanged)
 	Q_PROPERTY(bool programIsActive MEMBER m_programIsActive NOTIFY programIsActiveChanged)
+    Q_PROPERTY(bool learning READ getLearning NOTIFY learningChanged)
 
 public:
 
 	static BlockInfo info() {
 		static BlockInfo info;
-		info.name = "MIDI Program In";
+		info.typeName = "MIDI Program In";
 		info.nameInUi = "Program Change In";
-		info.category = QStringList("Midi");
+        info.category << "Midi";
 		info.dependencies = {BlockDependency::Midi};
 		info.helpText = "Sets the output to on if a matching MIDI Program Change message has been received.\n\n"
 						"If a Program Change message for a different program is received, the output is set to off.";
@@ -55,19 +56,25 @@ public:
 	virtual void setState(const QJsonObject& state) override;
 
 signals:
-	void targetChanged();
+    void programChanged();
 	void channelChanged();
 	void useDefaultChannelChanged();
 	void validMessageReceived();
 	void programIsActiveChanged();
+    void learningChanged();
 
 public slots:
 	virtual BlockInfo getBlockInfo() const override { return info(); }
 
 	void onMidiMessage(MidiEvent event);
 
-	int getTarget() const { return m_target; }
-	void setTarget(int value);
+    void startLearning();
+    void checkIfEventFits(MidiEvent event);
+
+    // ------------------------- Getter + Setter -----------------------------
+
+    int getProgram() const { return m_program; }
+    void setProgram(int value);
 
 	int getChannel() const { return m_channel; }
 	void setChannel(int value) { m_channel = limit(1, value, 16); emit channelChanged(); }
@@ -75,11 +82,15 @@ public slots:
 	bool getUseDefaultChannel() const { return m_useDefaultChannel; }
 	void setUseDefaultChannel(bool value) { m_useDefaultChannel = value; emit useDefaultChannelChanged(); }
 
+    bool getLearning() const { return m_learning; }
+    void setLearning(bool value) { m_learning = value; emit learningChanged(); }
+
 protected:
-	int m_target;
+    int m_program;
 	int m_channel;
 	bool m_useDefaultChannel;
 	bool m_programIsActive;
+    bool m_learning;
 };
 
 #endif // MIDIPROGRAMINBLOCK_H

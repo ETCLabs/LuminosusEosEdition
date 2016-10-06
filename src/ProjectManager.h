@@ -22,29 +22,33 @@
 #define PROJECTMANAGER_H
 
 #include <QObject>
+#include <QVector>
+#include <QJsonObject>
+#include <QJsonArray>
 
-// forward declaration to prevent dependency on it
+// forward declaration to prevent dependency loop
 class MainController;
 
-
+/**
+ * @brief The ProjectManagerConstants namespace contains all constants used in ProjectManager.
+ */
 namespace ProjectManagerConstants {
-/**
- * @brief formatVersion is the version of the format used to save projects
- */
-static const double formatVersion = 0.1;
-/**
- * @brief fileEnding is the file suffix of project files as a string
- */
-static const QString fileEnding = ".lpr";
-/**
- * @brief subdirectory is the name of the dir to save the projects in inside the app data dir
- */
-static const QString subdirectory = "projects";
-/**
- * @brief defaultProjectName is the name of the default project (i.e. that is created on first start)
- */
-static const QString defaultProjectName = "default";
-
+	/**
+	 * @brief formatVersion is the version of the format used to save projects
+	 */
+	static const double formatVersion = 0.1;
+	/**
+	 * @brief fileEnding is the file suffix of project files as a string
+	 */
+	static const QString fileEnding = ".lpr";
+	/**
+	 * @brief subdirectory is the name of the dir to save the projects in inside the app data dir
+	 */
+	static const QString subdirectory = "projects";
+	/**
+	 * @brief defaultProjectName is the name of the default project (i.e. that is created on first start)
+	 */
+	static const QString defaultProjectName = "default";
 }
 
 /**
@@ -55,13 +59,14 @@ class ProjectManager : public QObject
 	Q_OBJECT
 
 	Q_PROPERTY(QStringList projectList READ getProjectList NOTIFY projectListChanged)
+    Q_PROPERTY(QString currentProjectName READ getCurrentProjectName NOTIFY projectChanged)
 
 public:
 	/**
 	 * @brief ProjectManager creates an instance and initializes the attributes
 	 * @param controller a pointer to the MainController
 	 */
-	ProjectManager(MainController* controller);
+    explicit ProjectManager(MainController* controller);
 
 signals:
 	/**
@@ -120,27 +125,73 @@ public slots:
 	 */
 	QStringList getProjectList() const;
 
+    /**
+     * @brief importProjectFile imports a JSON project file from the filesystem to the app data dir
+     * @param filename path to the file
+     * @param load true to instantly load the imported file (default = true)
+     */
+    void importProjectFile(QString filename, bool load=true);
 
-private:
+    /**
+     * @brief exportCurrentProjectTo exports the currently loaded project as a JSON file to the
+     * filesystem
+     * @param filename path to the new file
+     */
+    void exportCurrentProjectTo(QString filename) const;
+
+    /**
+     * @brief getFilenameFilters returns the list of filename filters for the im- and export dialogs
+     * @return a list of filename filters matching project files
+     */
+    QStringList getFilenameFilters() const;
+
+    /**
+     * @brief centerViewOnBlocks centers the view on the geometric middle point of all blocks
+     */
+    void centerViewOnBlocks();
+
+    /**
+     * @brief setPlanePosition sets the position of the WorkspacePlane
+     * @param x position in px
+     * @param y position in px
+     */
+    void setPlanePosition(int x, int y) const;
+
+
+private slots:
 	/**
 	 * @brief loadProjectState loads a project from a file (internal, use setCurrentProject() instead)
 	 * @param name of the project (filename without fileending)
 	 * @param animated true to animate the loading of the blocks
 	 */
 	void loadProjectState(QString name, bool animated = true);
+
+    /**
+     * @brief createChunckOfBlocks creates as much blocks from m_blocksToBeCreated as possible
+     * in 12ms, the remaining blocks are created in the next chunk
+     * @param animated true if the creation should be animated
+     */
+    void createChunckOfBlocks(bool animated);
+
+    /**
+     * @brief completeProjectLoading called wehn all blocks have been created, restores connections
+     */
+    void completeProjectLoading();
+
 	/**
 	 * @brief setLoadingStateFor activates the "loading state" for a given number of milliseconds
 	 *  - the "loading state" prevents other projects from being saved or loaded
 	 * @param ms number of milliseconds after wich to release the loading state
 	 */
-	void setLoadingStateFor(int ms);
+    void releaseLoadingStateAfter(int ms);
 
+private:
 	/**
 	 * @brief saveStateAsProject saves the current state in a project file
 	 * (internal, use saveCurrentProject() instead)
 	 * @param name of the project (filename without fileending)
 	 */
-	void saveStateAsProject(QString name);
+	void saveStateAsProject(QString name) const;
 
 	/**
 	 * @brief correctCaseIfPossible tries to find an existing project with the same letters as
@@ -149,21 +200,14 @@ private:
 	 * @return the name of an existing project or the name parameter if there is no
 	 * matching existing project
 	 */
-	QString correctCaseIfPossible(QString name);
-
-	/**
-	 * @brief setPlanePosition sets the position of the InfinitePlane
-	 * @param x position in px
-	 * @param y position in px
-	 */
-	void setPlanePosition(int x, int y);
+    QString correctCaseIfPossible(QString name) const;
 
 
 protected:
 	/**
 	 * @brief m_controller a pointer to the MainController
 	 */
-	MainController* m_controller;
+	MainController* const m_controller;
 
 	/**
 	 * @brief m_currentProjectName the name of the currently loaded project
@@ -174,6 +218,18 @@ protected:
 	 *  - the "loading state" prevents other projects from being saved or loaded
 	 */
 	bool m_loadingIsInProgress;
+
+    /**
+     * @brief m_blocksToBeCreated a list of blocks to be created to restore a project,
+     * only used while loading a project to create the blocks in multiple chunks
+     */
+    QVector<QJsonObject> m_blocksToBeCreated;
+
+    /**
+     * @brief m_connectionsToBeMade list of connections to be made as soon as all blocks in
+     * m_blocksToBeCreated have been created
+     */
+    QJsonArray m_connectionsToBeMade;
 
 };
 

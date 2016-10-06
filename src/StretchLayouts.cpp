@@ -20,6 +20,9 @@
 
 #include "StretchLayouts.h"
 
+#include <QPointer>
+
+
 StretchLayoutBase::StretchLayoutBase(QQuickItem* parent)
 	: QQuickItem(parent)
 	, m_spacing(0)
@@ -50,16 +53,6 @@ void StretchLayoutBase::setDefaultSize(int defaultSize) {
 	}
 }
 
-void StretchLayoutBase::classBegin() {
-	connect(this, &StretchRow::childrenChanged, this, &StretchRow::polish);
-	connect(this, &StretchRow::visibleChanged, this, &StretchRow::polish);
-	connect(this, &StretchRow::widthChanged, this, &StretchRow::polish);
-	connect(this, &StretchRow::heightChanged, this, &StretchRow::polish);
-	connect(this, &StretchRow::spacingChanged, this, &StretchRow::polish);
-	connect(this, &StretchRow::leftMarginChanged, this, &StretchRow::polish);
-	connect(this, &StretchRow::rightMarginChanged, this, &StretchRow::polish);
-}
-
 void StretchLayoutBase::componentComplete() {
 	polish();
 }
@@ -78,6 +71,12 @@ void StretchLayoutBase::updatePolish() {
     }
 }
 
+void StretchLayoutBase::polishIfNoDefaultSize() {
+    if (m_defaultSize <= 0) {
+        polish();
+    }
+}
+
 
 // ---------------------------------- StretchColumn ----------------------------------
 
@@ -85,6 +84,19 @@ StretchColumn::StretchColumn(QQuickItem* parent)
 	: StretchLayoutBase(parent)
 {
 
+}
+
+void StretchColumn::classBegin() {
+    connect(this, &StretchRow::childrenChanged, this, &StretchRow::polish);
+    // is polish really required when visibility changes?!
+    //connect(this, &StretchRow::visibleChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::widthChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::spacingChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::leftMarginChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::rightMarginChanged, this, &StretchRow::polish);
+    // only request polish because of height change if no defaultSize is set
+    // othwerwise polish doesn't depend on height:
+    connect(this, &StretchRow::heightChanged, this, &StretchLayoutBase::polishIfNoDefaultSize);
 }
 
 void StretchColumn::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData & value) {
@@ -103,7 +115,7 @@ void StretchColumn::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 					this,  &StretchColumn::polish, Qt::UniqueConnection);  // add | Qt::QueuedConnection?
             }
 		}
-	}
+    }
 }
 
 void StretchColumn::layoutChildrenWithProportions() {
@@ -135,8 +147,8 @@ void StretchColumn::layoutChildrenWithProportions() {
 	// remove spacing from available space:
 	availableForStretch -= m_spacing * (visibleItems - 1);
 
-	int contentWidth = width() - m_leftMargin - m_rightMargin;
-	QQuickItem* lastStretchItem = nullptr;
+    const int contentWidth = width() - m_leftMargin - m_rightMargin;
+    QPointer<QQuickItem> lastStretchItem = nullptr;
     qreal currY = 0;
 	for (QList<QQuickItem *>::const_iterator it = childrenList.constBegin(); it != childrenList.constEnd(); it++) {
 		QQuickItem* child = (*it);
@@ -172,8 +184,8 @@ void StretchColumn::layoutChildrenWithProportions() {
 	// (can happen because of rounding mistakes)
 	if (lastStretchItem) {
 		double pxMissing = height() - currY;
-		if (pxMissing > 0) {
-			qWarning() << "StretchColumn layout mismatch: " << pxMissing;
+        if (pxMissing > 0.0001) {
+            // qInfo() << "StretchColumn layout mismatch: " << pxMissing;
 			// it does not -> adjust it:
 			lastStretchItem->setHeight(lastStretchItem->height() + pxMissing);
 		}
@@ -188,7 +200,7 @@ void StretchColumn::layoutChildrenWithDefaultSize() {
 	const QList<QQuickItem *> childrenList = childItems();
 	if (childrenList.isEmpty()) return;
 
-	int contentWidth = width() - m_leftMargin - m_rightMargin;
+    const int contentWidth = width() - m_leftMargin - m_rightMargin;
     qreal currY = 0;
 	for (QList<QQuickItem *>::const_iterator it = childrenList.constBegin(); it != childrenList.constEnd(); it++) {
 		QQuickItem* child = (*it);
@@ -226,9 +238,22 @@ StretchRow::StretchRow(QQuickItem* parent)
 
 }
 
+void StretchRow::classBegin() {
+    connect(this, &StretchRow::childrenChanged, this, &StretchRow::polish);
+    // is polish really required when visibility changes?!
+    //connect(this, &StretchRow::visibleChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::heightChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::spacingChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::leftMarginChanged, this, &StretchRow::polish);
+    connect(this, &StretchRow::rightMarginChanged, this, &StretchRow::polish);
+    // only request polish because of width change if no defaultSize is set
+    // othwerwise polish doesn't depend on width:
+    connect(this, &StretchRow::widthChanged, this, &StretchLayoutBase::polishIfNoDefaultSize);
+}
+
 void StretchRow::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData & value) {
 	if (change == QQuickItem::ItemChildAddedChange) {
-		QQuickItem * child = value.item;
+        QQuickItem* child = value.item;
 		if (child != Q_NULLPTR) {
 			connect(child, &QQuickItem::visibleChanged,
 					this,  &StretchRow::polish, Qt::UniqueConnection);
@@ -242,7 +267,7 @@ void StretchRow::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
                     this,  &StretchRow::polish, Qt::UniqueConnection);
             }
 		}
-	}
+    }
 }
 
 void StretchRow::layoutChildrenWithProportions() {
@@ -274,8 +299,8 @@ void StretchRow::layoutChildrenWithProportions() {
 	// remove spacing from available space:
 	availableForStretch -= m_spacing * (visibleItems - 1);
 
-    int layoutHeight = height();
-	QQuickItem* lastStretchItem = nullptr;
+    const int layoutHeight = height();
+    QPointer<QQuickItem> lastStretchItem = nullptr;
     qreal currX = m_leftMargin;
 	for (QList<QQuickItem *>::const_iterator it = childrenList.constBegin(); it != childrenList.constEnd(); it++) {
 		QQuickItem* child = (*it);
@@ -311,8 +336,8 @@ void StretchRow::layoutChildrenWithProportions() {
 	// (can happen because of rounding mistakes)
 	if (lastStretchItem) {
 		double pxMissing = width() - currX;
-		if (pxMissing > 0) {
-			qWarning() << "StretchRow layout mismatch: " << pxMissing;
+        if (pxMissing > 0.0001) {
+            // qInfo() << "StretchRow layout mismatch: " << pxMissing;
 			// it does not -> adjust it:
 			lastStretchItem->setWidth(lastStretchItem->width() + pxMissing);
 		}
@@ -327,7 +352,7 @@ void StretchRow::layoutChildrenWithDefaultSize() {
 	const QList<QQuickItem *> childrenList = childItems();
 	if (childrenList.isEmpty()) return;
 
-	int layoutHeight = height();
+    const int layoutHeight = height();
 	qreal currX = m_leftMargin;
 	for (QList<QQuickItem *>::const_iterator it = childrenList.constBegin(); it != childrenList.constEnd(); it++) {
 		QQuickItem* child = (*it);

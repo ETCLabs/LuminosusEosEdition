@@ -21,13 +21,18 @@
 #include "PowermateListener.h"
 #include "utils.h"
 
+#include <QDebug>
+
 #if defined(Q_OS_LINUX)
     #include <linux/input.h>
 #endif
 
 #if defined(Q_OS_LINUX)  // LINUX
 
-PowermateListener::PowermateListener(QObject *parent) : QThread(parent), device_out("/dev/input/by-id/usb-Griffin_Technology__Inc._Griffin_PowerMate-event-if00") {
+PowermateListener::PowermateListener(QObject *parent)
+    : QThread(parent)
+    , device_out("/dev/input/by-id/usb-Griffin_Technology__Inc._Griffin_PowerMate-event-if00")
+{
     if(!device_out.open(QIODevice::WriteOnly | QIODevice::Unbuffered)) {
         if (device_out.error() != QFileDevice::OpenError) {
             // QFileDevice::OpenError often means PowerMate is not connected -> not interesting

@@ -20,7 +20,8 @@
 
 #include "DecayBlock.h"
 
-#include "NodeBase.h"
+#include "Nodes.h"
+#include "MainController.h"  // for LuminosusConstants
 
 
 DecayBlock::DecayBlock(MainController* controller, QString uid)
@@ -47,17 +48,16 @@ void DecayBlock::setState(const QJsonObject &state) {
 }
 
 void DecayBlock::onValueChanged() {
-	double value = m_inputNode->data->getValue();
+    double value = m_inputNode->getValue();
 	// check for trigger:
-	if (value >= 0.5 && m_lastValue < 0.5) {
+	if (value >= LuminosusConstants::triggerThreshold && m_lastValue < LuminosusConstants::triggerThreshold) {
 		// activate trigger:
 		triggerOn();
-	} else if (value < 0.5 && m_lastValue >= 0.5) {
+	} else if (value < LuminosusConstants::triggerThreshold && m_lastValue >= LuminosusConstants::triggerThreshold) {
 		// release trigger:
 		triggerOff();
 	}
 	m_lastValue = value;
-
 }
 
 void DecayBlock::triggerOn() {

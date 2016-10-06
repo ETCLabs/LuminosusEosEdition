@@ -21,7 +21,7 @@
 #include "OscOutBlock.h"
 
 #include "MainController.h"
-#include "NodeBase.h"
+#include "Nodes.h"
 
 
 OscOutBlock::OscOutBlock(MainController *controller, QString uid)
@@ -52,24 +52,54 @@ void OscOutBlock::setState(const QJsonObject &state) {
 }
 
 void OscOutBlock::onValueChanged() {
-	double value = m_inputNode->data->getValue();
-	if (value == m_lastValue) return;
+    double value = m_inputNode->getValue();
+    double absoluteValue = m_inputNode->getAbsoluteValue();
+    if (absoluteValue == m_lastValue) return;
 	QString message = m_message;
 	if (message.isEmpty()) return;
 	if (message.contains("<value>")) {
-		double scaledValue = m_minValue + (value * (m_maxValue - m_minValue));
+        double scaledValue = 0;
+        if (m_inputNode->getDataToRead().absoluteMaximumIsProvided()) {
+            scaledValue = absoluteValue;
+        } else {
+            scaledValue = m_minValue + (value * (m_maxValue - m_minValue));
+        }
 		if (m_useInteger) {
 			message.replace("<value>", QString::number(int(scaledValue)));
 		} else {
 			message.replace("<value>", QString::number(scaledValue, 'g', 4));
 		}
-		m_controller->osc()->sendMessage(message);
-		emit messageSent();
-	} else if (value >= 0.5 && m_lastValue < 0.5) {
-		m_controller->osc()->sendMessage(message);
+        if (m_controller->getSendCustomOscToEos()) {
+            m_controller->eosConnection()->sendMessage(message);
+        } else {
+            m_controller->osc()->sendMessage(message);
+        }
+        emit messageSent();
+    } else if (message.contains("<bpm>")) {
+        if (absoluteValue <= 0) {
+            absoluteValue = 0.1;
+        }
+        double scaledValue = 60.0 / absoluteValue;
+        if (m_useInteger) {
+            message.replace("<bpm>", QString::number(int(scaledValue)));
+        } else {
+            message.replace("<bpm>", QString::number(scaledValue, 'g', 4));
+        }
+        if (m_controller->getSendCustomOscToEos()) {
+            m_controller->eosConnection()->sendMessage(message);
+        } else {
+            m_controller->osc()->sendMessage(message);
+        }
+        emit messageSent();
+    } else if (value >= LuminosusConstants::triggerThreshold && m_lastValue < LuminosusConstants::triggerThreshold) {
+        if (m_controller->getSendCustomOscToEos()) {
+            m_controller->eosConnection()->sendMessage(message);
+        } else {
+            m_controller->osc()->sendMessage(message);
+        }
 		emit messageSent();
 	}
-	m_lastValue = value;
+    m_lastValue = absoluteValue;
 }
 
 void OscOutBlock::setMinValue(double value) {
