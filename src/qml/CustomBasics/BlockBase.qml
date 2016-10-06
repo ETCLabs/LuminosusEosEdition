@@ -53,7 +53,7 @@ Rectangle {
 	Component {
 		id: noSettings
 		Item {
-			height: 60*dp
+            implicitHeight: 60*dp
 
 			Text {
 				anchors.centerIn: parent

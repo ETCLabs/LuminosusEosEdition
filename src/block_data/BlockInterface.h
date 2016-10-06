@@ -207,7 +207,7 @@ signals:
 	 * @brief positionChangedExternal is emitted when the position was changed but not by the DragArea.
 	 * This is used by the DragArea to update the values in the kineticEffect.
 	 */
-	void positionChangedExternal();
+    void positionChangedExternal();
 
 public slots:
     /**
@@ -286,6 +286,17 @@ public slots:
      * (they could be invisible because they are not in the window viewport)
      */
     virtual void makeBlocksConnectedToInputsVisible() = 0;
+
+    /**
+     * @brief getLabel returns the user-chosen label text
+     * @return label text to show in DragArea
+     */
+    virtual QString getLabel() const = 0;
+    /**
+     * @brief setLabel sets the label text
+     * @param value the new label text
+     */
+    virtual void setLabel(QString value) = 0;
 
 };
 

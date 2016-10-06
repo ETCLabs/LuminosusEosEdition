@@ -108,6 +108,7 @@ BlockInterface* BlockManager::restoreBlock(const QJsonObject& blockState, bool a
 		qWarning() << "Could not create block instance of type: " << blockType;
 		return nullptr;
 	}
+    block->setLabel(blockState["label"].toString());
 	block->setState(blockState["internalState"].toObject());
 	QQuickItem* guiItem = createGuiItem(block);
 	if (!guiItem) {
@@ -320,6 +321,7 @@ QJsonObject BlockManager::getBlockState(BlockInterface* block) const {
     blockState["posY"] = block->getGuiItem()->y() / dp;
 	blockState["focused"] = getFocusedBlock() == block;
     blockState["nodeMergeModes"] = block->getNodeMergeModes();
+    blockState["label"] = block->getLabel();
 	blockState["internalState"] = block->getState();
     return blockState;
 }

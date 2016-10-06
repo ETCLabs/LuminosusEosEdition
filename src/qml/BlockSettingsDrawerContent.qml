@@ -1,14 +1,16 @@
 import QtQuick 2.5
 
+import CustomElements 1.0
 import "CustomControls"
 import "CustomBasics"
 
 VerticalScrollView {
 	contentItem: root
-	Column {
+    StretchColumn {
 		id: root
 		width: parent.width
 		height: implicitHeight
+        defaultSize: 30*dp
 		Text {
 			width: parent.width
             height: 30*dp
@@ -43,11 +45,13 @@ VerticalScrollView {
 				if (focusedBlock) {
 					blockSettings.sourceComponent = focusedBlock.getSettingsComponent()
                     blockTypeLabel.text = focusedBlock.getBlockName()
+                    labelRow.visible = true
+                    labelInput.text = focusedBlock.label
 				} else {
 					blockSettings.sourceComponent = noFocusedBlockDummy;
                     blockTypeLabel.text = ""
-				}
-				//gc()
+                    labelRow.visible = false
+                }
 			}
 
 			Connections {
@@ -81,6 +85,32 @@ VerticalScrollView {
 				}
 			}
 		}
+        BlockRow {
+            id: labelRow
+            implicitHeight: 0  // do not stretch
+            height: 30*dp
+            leftMargin: 15*dp
+            rightMargin: 15*dp
+
+            Text {
+                text: "Label:"
+                width: 90*dp
+            }
+            TextInput {
+                id: labelInput
+                text: ""
+                width: parent.width - 120*dp
+                inputMethodHints: Qt.ImhPreferLatin
+                onDisplayTextChanged: {
+                    var focusedBlock = controller.blockManager().getFocusedBlock()
+                    if (focusedBlock) {
+                        if (focusedBlock.label !== displayText) {
+                            focusedBlock.label = displayText
+                        }
+                    }
+                }
+            }
+        }
 
 		HorizontalDivider {  // ------------------------------------------------------
 		}

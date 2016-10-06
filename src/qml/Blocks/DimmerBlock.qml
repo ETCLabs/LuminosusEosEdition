@@ -79,22 +79,8 @@ BlockBase {
 		StretchColumn {
 			leftMargin: 15*dp
 			rightMargin: 15*dp
-			defaultSize: 30*dp
+            defaultSize: 30*dp
 
-            BlockRow {
-                Text {
-                    text: "Name:"
-                    width: parent.width / 2
-                }
-                TextInput {
-                    text: block.getName()
-                    width: parent.width / 2
-                    inputMethodHints: Qt.ImhPreferLatin
-                    onDisplayTextChanged: {
-                        block.setName(displayText)
-                    }
-                }
-            }
             BlockRow {
                 StretchText {
                     text: "Channel:"

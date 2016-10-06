@@ -10,7 +10,7 @@ Item {
     z: -1
 
     // public
-    property alias text: text.text
+    property string text: ""
     default property alias content: contentItem.data
 
     // -------------------------- Visuals -----------------------------------
@@ -29,7 +29,6 @@ Item {
     }
 
     Text {
-        id: text
         color: block.focused ? Qt.rgba(0.9, 0.8, 0.0, 0.5) : "#999"
         font.family: "Quicksand"
         font.weight: Font.Bold
@@ -38,6 +37,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
         fontSizeMode: Text.Fit
+        text: block.label || root.text
     }
 
     Item {

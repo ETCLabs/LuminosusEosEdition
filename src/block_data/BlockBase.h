@@ -49,6 +49,7 @@ class BlockBase : public BlockInterface
 	Q_OBJECT
 
     Q_PROPERTY(bool focused MEMBER m_focused NOTIFY focusedChanged)
+    Q_PROPERTY(QString label READ getLabel WRITE setLabel NOTIFY labelChanged)
 
 public:
     // constructor etc:
@@ -112,6 +113,11 @@ signals:
      */
     void focusedChanged();
 
+    /**
+     * @brief labelChanged is emitted when the user changed the label text
+     */
+    void labelChanged();
+
 public slots:
 	QString getUid() const override { return m_uid; }
 	void setUid(QString id) override { m_uid = id; }
@@ -131,6 +137,8 @@ public slots:
     void deletedByUser() override;
     void onDeleteAnimationEnd() override;
     void makeBlocksConnectedToInputsVisible() override;
+    virtual QString getLabel() const override { return m_label; }
+    virtual void setLabel(QString value) override { m_label = value; emit labelChanged(); }
 
 protected:
 	/**
@@ -168,6 +176,11 @@ protected:
      * completeGuiItemCreation() should be called before accessing it
      */
     bool m_guiItemCompleted;
+
+    /**
+     * @brief m_label the user-chosen label text
+     */
+    QString m_label;
 
 };
 

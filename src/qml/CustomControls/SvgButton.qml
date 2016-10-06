@@ -1,4 +1,5 @@
 import QtQuick 2.5
+import QtQuick.Window 2.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -36,6 +37,9 @@ CustomTouchArea {
         source: "qrc:/images/svg/" + iconName + ".svg"
         fillMode: Image.PreserveAspectFit
         smooth: true
+
+        // render in double resolution to be antialiased and smooth:
+        sourceSize.width: width * Screen.devicePixelRatio * 2
     }
 
 	Rectangle {
