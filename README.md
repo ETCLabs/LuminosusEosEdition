@@ -1,4 +1,4 @@
-# Luminosus (ETC Eos Edition) - Inofficial Companion App
+# Luminosus (Eos Edition) - Unofficial Eos Companion App
 
 Luminosus (ETC Eos Edition) is the project title for a "companion app" for consoles of the ETC Eos family.
 It can display and edit cue list, fire and react to cues and show fader banks including their labels.
