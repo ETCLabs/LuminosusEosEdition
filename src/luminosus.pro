@@ -18,6 +18,8 @@ DEFINES += QT_MESSAGELOGCONTEXT
 # use QtQuick Compiler (only available under commercial license)
 CONFIG += qtquickcompiler
 
+# Google Test
+LIBS += -L/usr/local/lib -lgtest -gmock
 
 # ------------------ Resources (.cpp, .h, .qrc, icons) -----------------------
 
@@ -118,7 +120,8 @@ SOURCES += main.cpp \
     AnchorManager.cpp \
     block_implementations/PageAnchorBlock.cpp \
     block_implementations/StyledTextBlock.cpp \
-    block_implementations/ImageBlock.cpp
+    block_implementations/ImageBlock.cpp \
+    tests/Demo.cpp
 
 
 RESOURCES += qml.qrc \
