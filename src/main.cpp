@@ -37,7 +37,7 @@
 #include <QFontDatabase>
 
 #ifdef QT_DEBUG
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #endif
 
 
@@ -128,6 +128,7 @@ int main(int argc, char *argv[])
 
 #ifdef QT_DEBUG
     testing::InitGoogleTest(&argc, argv);
+    testing::InitGoogleMock(&argc, argv);
     int testResult = RUN_ALL_TESTS();
     if (testResult != 0) {
         qDebug() << "Tests failed!";

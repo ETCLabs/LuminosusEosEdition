@@ -19,7 +19,7 @@ DEFINES += QT_MESSAGELOGCONTEXT
 CONFIG += qtquickcompiler
 
 # Google Test
-LIBS += -L/usr/local/lib -lgtest -gmock
+LIBS += -L/usr/local/lib -lgtest -lgmock
 
 # ------------------ Resources (.cpp, .h, .qrc, icons) -----------------------
 
