@@ -121,7 +121,8 @@ SOURCES += main.cpp \
     block_implementations/PageAnchorBlock.cpp \
     block_implementations/StyledTextBlock.cpp \
     block_implementations/ImageBlock.cpp \
-    tests/Demo.cpp
+    tests/Demo.cpp \
+    tests/MatrixTest.cpp
 
 
 RESOURCES += qml.qrc \
