@@ -21,6 +21,7 @@
 #include <cmath>
 
 #include "Matrix.h"
+#include "utils.h"
 
 ColorMatrix::ColorMatrix()
     : m_hsvData(1, std::vector<std::vector<double>>(1, std::vector<double>(3, 0)))
@@ -149,7 +150,7 @@ void ColorMatrix::setRgbAt(std::size_t x, std::size_t y, double r, double g, dou
 }
 
 void ColorMatrix::setValue(double v) {
-    m_value = v;
+    m_value = limit(0, v, 1);
     m_hsvIsValid = false;
     m_rgbIsValid = false;
     m_valueIsValid = true;
