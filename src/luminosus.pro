@@ -117,7 +117,8 @@ SOURCES += main.cpp \
     AnchorManager.cpp \
     block_implementations/PageAnchorBlock.cpp \
     block_implementations/StyledTextBlock.cpp \
-    block_implementations/ImageBlock.cpp
+    block_implementations/ImageBlock.cpp \
+    PrepareStart.cpp
 
 
 RESOURCES += qml.qrc \
@@ -248,7 +249,8 @@ HEADERS += \
     AnchorManager.h \
     block_implementations/PageAnchorBlock.h \
     block_implementations/StyledTextBlock.h \
-    block_implementations/ImageBlock.h
+    block_implementations/ImageBlock.h \
+    PrepareStart.h
 
 ICON = images/icon/app_icon_icns.icns
 
