@@ -1,10 +1,18 @@
 #include <QtTest>
+
 #include "MatrixTest.h"
+#include "OscNetworkManagerTest.h"
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
 
-    MatrixTest matrixTest;
+    QList<QObject*> testCases;
+    testCases << new MatrixTest();
+    testCases << new OscNetworkManagerTest();
 
-    return QTest::qExec(&matrixTest, argc, argv);
+    int returnValue = 0;
+    for (QObject* testCase: testCases) {
+        returnValue |= QTest::qExec(testCase, argc, argv);
+    }
+    return returnValue;
 }

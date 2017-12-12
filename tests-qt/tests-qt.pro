@@ -5,22 +5,27 @@ TEMPLATE = app
 
 QT += qml quick multimedia svg testlib
 
-CONFIG += c++11
+CONFIG += c++11 qtestlib
 
 DEFINES += QT_MESSAGELOGCONTEXT
-
-# Google Test
-LIBS += -L/usr/local/lib -lgtest -lgmock
 
 # ------------------ Resources (.cpp, .h, .qrc, icons) -----------------------
 
 SOURCES += \
     main.cpp \
-    ../src/Matrix.cpp
+    ../src/Matrix.cpp \
+    OscNetworkManagerTest.cpp \
+    ../src/OSCNetworkManager.cpp \
+    ../src/OSCParser.cpp \
+    ../src/OSCMessage.cpp
 
 HEADERS += \
     ../src/Matrix.h \
-    MatrixTest.h
+    MatrixTest.h \
+    OscNetworkManagerTest.h \
+    ../src/OSCNetworkManager.h \
+    ../src/OSCParser.h \
+    ../src/OSCMessage.h
 
 # ------------------ OS specific -----------------------
 
