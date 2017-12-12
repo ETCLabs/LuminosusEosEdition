@@ -18,7 +18,6 @@ DEFINES += QT_MESSAGELOGCONTEXT
 # use QtQuick Compiler (only available under commercial license)
 CONFIG += qtquickcompiler
 
-
 # ------------------ Resources (.cpp, .h, .qrc, icons) -----------------------
 
 SOURCES += main.cpp \
@@ -246,7 +245,6 @@ HEADERS += \
     block_implementations/AudioVolumeBlock.h \
     block_implementations/EosEffectBlock.h \
     AudioPlayerQt.h \
-    #AudioPlayerVlc.h
     AnchorManager.h \
     block_implementations/PageAnchorBlock.h \
     block_implementations/StyledTextBlock.h \
@@ -321,9 +319,3 @@ macx:LIBS += -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
 
 # Android specific files:
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
-
-# ------------------ QmlTricks Submodules -----------------------
-
-#include ($$PWD/libQtQmlTricks/SuperMacros/QtSuperMacros.pri)
-#include ($$PWD/libQtQmlTricks/SmartDataModels/QtQmlModels.pri)
-#include ($$PWD/libQtQmlTricks/UiElements/QtQuickUiElements.pri)

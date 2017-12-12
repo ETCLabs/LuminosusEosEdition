@@ -36,7 +36,6 @@
 #include <QSysInfo>
 #include <QFontDatabase>
 
-
 // amount and complexity of graphical effects (i.e. blur and shadows):
 enum TGraphicalEffectsLevel { MIN_EFFECTS = 1, MID_EFFECTS = 2, MAX_EFFECTS = 3 };
 #ifdef Q_OS_WIN
@@ -58,7 +57,7 @@ void setDpProperty(QQmlApplicationEngine& engine) {
 	} else if (QSysInfo::productType() == "osx") {
 		float normDPI = 72;
 		scaleFactor = (int(QGuiApplication::primaryScreen()->logicalDotsPerInch()) / QGuiApplication::primaryScreen()->devicePixelRatio()) / normDPI;
-	}else {
+    } else {
 		float normDPI = 96;
 		scaleFactor = (int(QGuiApplication::primaryScreen()->logicalDotsPerInch()) / QGuiApplication::primaryScreen()->devicePixelRatio()) / normDPI;
 	}

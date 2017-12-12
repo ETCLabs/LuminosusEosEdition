@@ -21,6 +21,7 @@
 #include <cmath>
 
 #include "Matrix.h"
+#include "utils.h"
 
 ColorMatrix::ColorMatrix()
     : m_hsvData(1, std::vector<std::vector<double>>(1, std::vector<double>(3, 0)))
@@ -34,10 +35,10 @@ ColorMatrix::ColorMatrix()
 {}
 
 void ColorMatrix::rescaleTo(std::size_t sx, std::size_t sy) {
-	// FIXME: is this correct?
-    if (m_hsvData.size() != sx || m_hsvData[0].size() != sy
-            || m_rgbData.size() != sx || m_rgbData[0].size() != sy
-			|| sx < 1 || sy < 1) {
+    if (sx == getSX() && sy == getSY()) {
+        return;
+    }
+    if (sx < 1 || sy < 1) {
 		return;
 	}
 	// change width:
@@ -149,7 +150,7 @@ void ColorMatrix::setRgbAt(std::size_t x, std::size_t y, double r, double g, dou
 }
 
 void ColorMatrix::setValue(double v) {
-    m_value = v;
+    m_value = limit(0, v, 1);
     m_hsvIsValid = false;
     m_rgbIsValid = false;
     m_valueIsValid = true;
