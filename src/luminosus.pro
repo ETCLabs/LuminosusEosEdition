@@ -18,9 +18,6 @@ DEFINES += QT_MESSAGELOGCONTEXT
 # use QtQuick Compiler (only available under commercial license)
 CONFIG += qtquickcompiler
 
-# Google Test
-LIBS += -L/usr/local/lib -lgtest -lgmock
-
 # ------------------ Resources (.cpp, .h, .qrc, icons) -----------------------
 
 SOURCES += main.cpp \
@@ -120,9 +117,7 @@ SOURCES += main.cpp \
     AnchorManager.cpp \
     block_implementations/PageAnchorBlock.cpp \
     block_implementations/StyledTextBlock.cpp \
-    block_implementations/ImageBlock.cpp \
-    tests/Demo.cpp \
-    tests/MatrixTest.cpp
+    block_implementations/ImageBlock.cpp
 
 
 RESOURCES += qml.qrc \
@@ -250,7 +245,6 @@ HEADERS += \
     block_implementations/AudioVolumeBlock.h \
     block_implementations/EosEffectBlock.h \
     AudioPlayerQt.h \
-    #AudioPlayerVlc.h
     AnchorManager.h \
     block_implementations/PageAnchorBlock.h \
     block_implementations/StyledTextBlock.h \
@@ -325,9 +319,3 @@ macx:LIBS += -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
 
 # Android specific files:
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
-
-# ------------------ QmlTricks Submodules -----------------------
-
-#include ($$PWD/libQtQmlTricks/SuperMacros/QtSuperMacros.pri)
-#include ($$PWD/libQtQmlTricks/SmartDataModels/QtQmlModels.pri)
-#include ($$PWD/libQtQmlTricks/UiElements/QtQuickUiElements.pri)

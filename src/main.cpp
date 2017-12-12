@@ -36,11 +36,6 @@
 #include <QSysInfo>
 #include <QFontDatabase>
 
-#ifdef QT_DEBUG
-#include <gmock/gmock.h>
-#endif
-
-
 // amount and complexity of graphical effects (i.e. blur and shadows):
 enum TGraphicalEffectsLevel { MIN_EFFECTS = 1, MID_EFFECTS = 2, MAX_EFFECTS = 3 };
 #ifdef Q_OS_WIN
@@ -125,16 +120,6 @@ int main(int argc, char *argv[])
     MainController controller(engine);
 	QObject::connect(&app, SIGNAL(aboutToQuit()), &controller, SLOT(onExit()));
     QObject::connect(&engine, SIGNAL(quit()), &app, SLOT(quit())); // to make Qt.quit() to work
-
-#ifdef QT_DEBUG
-    testing::InitGoogleTest(&argc, argv);
-    testing::InitGoogleMock(&argc, argv);
-    int testResult = RUN_ALL_TESTS();
-    if (testResult != 0) {
-        qDebug() << "Tests failed!";
-        return 0;
-    }
-#endif
 
     return app.exec();
 }
