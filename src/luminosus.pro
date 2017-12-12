@@ -250,7 +250,8 @@ HEADERS += \
     block_implementations/PageAnchorBlock.h \
     block_implementations/StyledTextBlock.h \
     block_implementations/ImageBlock.h \
-    PrepareStart.h
+    PrepareStart.h \
+    ../tests-qt/BlockCreationTest.h
 
 ICON = images/icon/app_icon_icns.icns
 
