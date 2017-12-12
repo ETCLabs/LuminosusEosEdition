@@ -319,3 +319,35 @@ macx:LIBS += -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
 
 # Android specific files:
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+
+
+# ------------------ Tests -----------------------
+
+tests-qt {
+    message(Building Qt Tests)
+    QT += testlib
+    TARGET = UnitTestsQt
+
+    SOURCES -= main.cpp
+
+    HEADERS += ../tests-qt/MatrixTest.h \
+        ../tests-qt/OscNetworkManagerTest.h
+
+    SOURCES += \
+        ../tests-qt/main-tests-qt.cpp
+}
+
+tests-google {
+    message(Building Google Tests)
+    # Google Test
+    LIBS += -L/usr/local/lib -lgtest -lgmock
+
+    TARGET = UnitTestsGoogle
+
+    SOURCES -= main.cpp
+
+    SOURCES += \
+        ../tests-google/main-tests-google.cpp \
+        ../tests-google/Demo.cpp \
+        ../tests-google/MatrixTest.cpp
+}
