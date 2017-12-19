@@ -80,6 +80,99 @@ private slots:
         QCOMPARE(m.getRgb().at(0).size(), 1);
     }
 
+    void testRescaleNodeCoverage() {
+        ColorMatrix m;
+
+        // path: 0, 1
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 3
+        m.rescaleTo(0, 0);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 4, 5, 6, 7, 8, 7, 9, 5, 10
+        m.rescaleTo(2, 2);
+        QCOMPARE(m.getSize(), QSize(2, 2));
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+    }
+
+    void testRescaleEdgeCoverage() {
+        ColorMatrix m;
+
+        // path: 0, 1
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 3
+        m.rescaleTo(0, 0);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 4, 5, 6, 7, 8, 7, 9, 5, 10
+        m.rescaleTo(2, 2);
+        QCOMPARE(m.getSize(), QSize(2, 2));
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+    }
+
+    void testRescaleEdgePairCoverage() {
+        ColorMatrix m;
+
+        // path: 0, 1
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 3
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+        m.rescaleTo(0, 0);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 4, 5, 10 -> unfeasible
+
+        // path: 0, 2, 4, 5, 6, 7, 8, 7, 8, 7, 9, 5, 6, 7, 8, 7, 8, 7, 9, 5, 10
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+        m.rescaleTo(2, 2);
+        QCOMPARE(m.getSize(), QSize(2, 2));
+    }
+
+    void testRescalePrimePathCoverage() {
+        ColorMatrix m;
+
+        // path: 0, 1
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 3
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+        m.rescaleTo(0, 0);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 4, 5, 10 -> unfeasible
+
+        // path: 0, 2, 4, 5, 6, 7, 8, 7, 9, 5, 10
+        m.rescaleTo(2, 2);
+        QCOMPARE(m.getSize(), QSize(2, 2));
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+
+        // path: 0, 2, 4, 5, 6, 7, 8, 7, 8, 7, 9, 5, 10
+        m.rescaleTo(2, 1);
+        QCOMPARE(m.getSize(), QSize(2, 1));
+        m.rescaleTo(1, 2);
+        QCOMPARE(m.getSize(), QSize(1, 2));
+
+        // path: [0,2,4,5,6,7,9,5,6,7,8,7,9,5,6,7,9,5,10] -> unfeasible
+        // alternative path?: 0, 2, 4, 5, 6, 7, 8, 7, 8, 7, 9, 5, 6, 7, 8, 7, 8, 7, 9, 5, 10
+        m.rescaleTo(1, 1);
+        QCOMPARE(m.getSize(), QSize(1, 1));
+        m.rescaleTo(2, 2);
+        QCOMPARE(m.getSize(), QSize(2, 2));
+    }
+
     void testSetHsv() {
         ColorMatrix m;
         m.rescaleTo(2, 2);
