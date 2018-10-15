@@ -20,4 +20,4 @@ The current release for Windows, Mac and Android and more information including 
 
 # Screenshot
 
-![screenshot](https://www.luminosus.org/img/main_screenshot.png)
+![screenshot](https://www.luminosus.org/img/all_blocks.png)
