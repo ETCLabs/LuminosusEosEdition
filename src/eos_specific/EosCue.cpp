@@ -1,7 +1,7 @@
 #include "EosCue.h"
 
-#include "MainController.h"
-#include "block_implementations/EosCueBlock.h"
+#include "core/MainController.h"
+#include "block_implementations/Eos/EosCueBlock.h"
 
 #include <QDebug>
 
@@ -33,7 +33,7 @@ EosCueNumber::EosCueNumber(QString list, QString number, QString part) {
 
 EosCueNumber::EosCueNumber(int list, double number, int part) {
     this->list = list;
-    this->number = QString::number(number, 'g', 2);
+    this->number = QString::number(number, 'f', 2);
     this->numberAsInt = qRound(number * 100);
     this->part = part;
 }
@@ -151,7 +151,7 @@ void EosCue::update(const EosOSCMessage& msg)
 void EosCue::fire() {
     QString message = "/eos/cue/%1/%2/%3/fire";
     message = message.arg(QString::number(m_cueNumber.list), m_cueNumber.number, QString::number(m_cueNumber.part));
-    m_controller->eosConnection()->sendMessage(message);
+    m_controller->lightingConsole()->sendMessage(message);
 }
 
 void EosCue::deleteCue() {
@@ -165,13 +165,14 @@ void EosCue::deleteCue() {
 
     QString message = "/eos/newcmd=Delete Cue %1##";
     message = message.arg(number);
-    m_controller->eosConnection()->sendMessage(message);
+    m_controller->lightingConsole()->sendMessage(message);
 }
 
 void EosCue::createCueBlock() {
     EosCueBlock* block = qobject_cast<EosCueBlock*>(m_controller->blockManager()->addNewBlock("Eos Cue"));
     if (!block) {
         qWarning() << "Could not create Cue Block.";
+        return;
     }
     block->setCueNumber(m_cueNumber);
     block->focus();
@@ -185,7 +186,7 @@ void EosCue::setLabel(QString value) {
     // change in console:
     QString message = "/eos/set/cue/%1/%2/%3/label";
     message = message.arg(QString::number(m_cueNumber.list), m_cueNumber.number, QString::number(m_cueNumber.part));
-    m_controller->eosConnection()->sendMessage(message, value);
+    m_controller->lightingConsole()->sendMessage(message, value);
 }
 
 QString EosCue::getCueNumber() const {
@@ -215,7 +216,7 @@ void EosCue::setCueNumberByString(QString value) {
     }
     QString msg = "/eos/newcmd=Cue %1 Move_To Cue %2##";
     msg = msg.arg(oldNumber, newNumber);
-    m_controller->eosConnection()->sendMessage(msg);
+    m_controller->lightingConsole()->sendMessage(msg);
 }
 
 void EosCue::setUpTimeDuration(double value) {
@@ -239,12 +240,12 @@ void EosCue::setUpTimeDuration(double value) {
         // reset time to default value:
         QString msg = "/eos/newcmd=Cue %1 Time#";
         msg = msg.arg(cueString);
-        m_controller->eosConnection()->sendMessage(msg);
+        m_controller->lightingConsole()->sendMessage(msg);
     } else {
         // set cue time:
         QString msg = "/eos/newcmd=Cue %1 Time %2#";
         msg = msg.arg(cueString, secToEosDuration(value));
-        m_controller->eosConnection()->sendMessage(msg);
+        m_controller->lightingConsole()->sendMessage(msg);
     }
 }
 
@@ -269,12 +270,12 @@ void EosCue::setDownTimeDuration(double value) {
         // reset time to default value:
         QString msg = "/eos/newcmd=Cue %1 Down Time#";
         msg = msg.arg(cueString);
-        m_controller->eosConnection()->sendMessage(msg);
+        m_controller->lightingConsole()->sendMessage(msg);
     } else {
         // set cue time:
         QString msg = "/eos/newcmd=Cue %1 Down Time %2#";
-        msg = msg.arg(cueString, QString::number(value, 'g', 3));
-        m_controller->eosConnection()->sendMessage(msg);
+        msg = msg.arg(cueString, QString::number(value, 'f', 3));
+        m_controller->lightingConsole()->sendMessage(msg);
     }
 }
 
@@ -282,7 +283,7 @@ QString EosCue::secToEosDuration(double totalSecs) {
     int secs = fmod(totalSecs, 60);
     int mins = fmod((totalSecs / 60), 60);
     mins = qMin(mins, 59);
-    QString duration = QString("%1:%2").arg(mins).arg(secs, 2, 'g', 2, '0');
+    QString duration = QString("%1:%2").arg(mins).arg(secs, 2, 'f', 2, '0');
     return duration;
 }
 
@@ -302,5 +303,5 @@ void EosCue::setNotes(QString value) {
     // change in console:
     QString message = "/eos/set/cue/%1/%2/%3/notes";
     message = message.arg(QString::number(m_cueNumber.list), m_cueNumber.number, QString::number(m_cueNumber.part));
-    m_controller->eosConnection()->sendMessage(message, value);
+    m_controller->lightingConsole()->sendMessage(message, value);
 }

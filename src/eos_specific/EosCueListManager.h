@@ -24,7 +24,7 @@ public:
      * @brief EosCueListManager creates an EosCueListManager object
      * @param controller a pointer to the MainController
      */
-    EosCueListManager(MainController* controller);
+    explicit EosCueListManager(MainController* controller);
 
 signals:
     /**

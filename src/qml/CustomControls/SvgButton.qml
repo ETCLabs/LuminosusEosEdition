@@ -1,5 +1,6 @@
 import QtQuick 2.5
 import QtQuick.Window 2.0
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -44,7 +45,7 @@ CustomTouchArea {
 
 	Rectangle {
 		id: bottomLine
-		color: "#2C89E1"
+        color: Style.primaryActionColor
 		height: 2*dp
 		width: Math.min(parent.height, parent.width) - 8*dp
 		y: parent.height - height
@@ -53,7 +54,7 @@ CustomTouchArea {
 
 	Rectangle {
 		property real ratio: parent.active ? 1 : 0
-		color: "yellow"
+        color: Style.primaryHighlightColor
 		height: 2*dp
 		width: bottomLine.width * ratio
 		y: parent.height - height
@@ -64,7 +65,8 @@ CustomTouchArea {
 	}
 
 	onTouchDown: {
-		controller.checkForExternalInputConnection(uid)
+        controller.playClickSound()
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
 		if (toggle) {
 			active= !active
 		} else {
@@ -81,17 +83,21 @@ CustomTouchArea {
 		}
 	}
 
-	property string uid: ""
-	property real externalInput: 0
-	Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
+    // ------------------------- External Input ------------------------
+
+	property string mappingID: ""
+    property real externalInput: -1
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
 	onExternalInputChanged: {
 		if (externalInput > 0.) {
 			active = true
 			touchFeedbackEffect.start()
+            press()
 		} else {
 			active = false
 		}
 	}
+    onActiveChanged: controller.midiMapping().sendFeedback(mappingID, active ? 1.0 : 0.0)
 }
 

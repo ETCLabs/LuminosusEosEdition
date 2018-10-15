@@ -24,13 +24,13 @@
 #include <QString>
 
 /**
- * @brief The LumoinosusVersionInfo namespace defines the version number of this software.
+ * @brief The LuminosusVersionInfo namespace defines the version number of this software.
  */
 namespace LuminosusVersionInfo {
 	/**
 	 * @brief VERSION_STRING is the version number of this software
 	 */
-    static const QString VERSION_STRING = "0.0.1.1.0.14";
+	static const QString VERSION_STRING = "1.3.0";
 }
 
 #endif // VERSION_H

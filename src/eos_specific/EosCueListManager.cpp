@@ -1,6 +1,6 @@
 #include "EosCueListManager.h"
 
-#include "MainController.h"
+#include "core/MainController.h"
 
 #include <QTimer>
 
@@ -37,11 +37,11 @@ void EosCueListManager::onIncomingEosMessage(const EosOSCMessage& msg) {
             // request details for each cuelists:
             for (int i=0; i<cueListCount; ++i) {
                 QString message = "/eos/get/cuelist/index/" + QString::number(i);
-                m_controller->eosConnection()->sendMessage(message);
+                m_controller->lightingConsole()->sendMessage(message);
             }
         } else if (msg.pathPart(3) == "links") {
             // this message contains information about linked cue lists
-            // TODO
+            // NOTE: not implemented yet
         } else {
             // this message contains detailed information about a cuelist
             int cueListNumber = msg.pathPart(2).toInt();
@@ -60,7 +60,7 @@ void EosCueListManager::onIncomingEosMessage(const EosOSCMessage& msg) {
         for (int i=1; i<msg.arguments().size(); ++i) {
             int changedCueList = msg.arguments().at(i).toInt();
             QString message = "/eos/get/cuelist/" + QString::number(changedCueList);
-            m_controller->eosConnection()->sendMessage(message);
+            m_controller->lightingConsole()->sendMessage(message);
         }
     }
 }
@@ -83,7 +83,7 @@ EosCueList* EosCueListManager::getCueList(int cueListNumber) const {
 
 void EosCueListManager::requestCueListCount() {
     QString message = "/eos/get/cuelist/count";
-    m_controller->eosConnection()->sendMessage(message);
+    m_controller->lightingConsole()->sendMessage(message);
 }
 
 void EosCueListManager::clear() {

@@ -1,4 +1,5 @@
 import QtQuick 2.5
+import CustomStyle 1.0
 
 
 TextInput {
@@ -12,7 +13,7 @@ TextInput {
     selectByMouse: true
 
 	Rectangle {  // thin blue line under text
-        color: Qt.rgba(0.3, 0.5, 1, 0.7)
+        color: Style.primaryActionColor
         height: 1*dp
 		anchors.left: parent.left
 		anchors.right: parent.right
@@ -25,12 +26,14 @@ TextInput {
 
     Text {
         height: parent.height
+        width: parent.width
         text: hintText
         visible: parent.displayText === ""
         color: "#aaa"
         font.pixelSize: 18*dp
         font.family: "Quicksand"
 		verticalAlignment:  Text.AlignVCenter
+        horizontalAlignment: root.horizontalAlignment
     }
 }
 

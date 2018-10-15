@@ -4,7 +4,7 @@ import "CustomBasics"
 import "CustomControls"
 
 Rectangle {
-    height: notesVisible ? 60*dp : 30*dp
+    height: (notesVisible ? 60*dp : 30*dp) + (modelData.scene ? 30*dp : 0)
     color: modelData.isActive ? Qt.rgba(0.8, 0.65, 0.3, 0.5)
                            : ((modelData.isPending) ? Qt.rgba(1, 1, 1, 0.1) : "transparent")
     anchors.left: parent.left
@@ -14,7 +14,16 @@ Rectangle {
     property bool editMode: false
 
     Loader {
+        id: sceneNameLoader
         height: 30*dp
+        anchors.left: parent.left
+        anchors.right: parent.right
+        sourceComponent: sceneNameComponent
+        active: modelData.scene
+    }
+    Loader {
+        height: 30*dp
+        y: sceneNameLoader.active ? 30*dp : 0
         anchors.left: parent.left
         anchors.right: parent.right
         sourceComponent: viewModeView
@@ -22,10 +31,49 @@ Rectangle {
     }
     Loader {
         height: 30*dp
+        y: sceneNameLoader.active ? 30*dp : 0
         anchors.left: parent.left
         anchors.right: parent.right
         sourceComponent: editModeView
         active: editMode
+    }
+
+    // ---------------------------- Scene Name ------------------------------
+    Component {
+        id: sceneNameComponent
+        StretchRow {
+            Item {  // green line next to scene name
+                implicitWidth: -1
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 10*dp
+                    anchors.rightMargin: 10*dp
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 4*dp
+                    color: "#080"
+                }
+            }
+            Text {
+                id: sceneNameText
+                text: modelData.scene
+                width: implicitWidth
+            }
+            Item {  // green line next to scene name
+                implicitWidth: -1
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 10*dp
+                    anchors.rightMargin: 10*dp
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 4*dp
+                    color: "#080"
+                }
+            }
+        }
     }
 
     // ---------------------------- View Only ------------------------------
@@ -200,9 +248,9 @@ Rectangle {
                 width: 40*dp
                 iconName: "trash_icon"
                 clickDurationEnabled: true
-                onShortClick: controller.showToast("Long Click to Delete Cue")
+                onShortClick: guiManager.showToast("Long Click to Delete Cue")
                 onLongClick: {
-                    controller.showToast("Deleting Cue...")
+                    guiManager.showToast("Deleting Cue...")
                     modelData.deleteCue()
                 }
             }
@@ -228,7 +276,7 @@ Rectangle {
 
     Loader {
         height: 30*dp
-        y: 30*dp
+        y: sceneNameLoader.active ? 60*dp : 30*dp
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.leftMargin: 30*dp

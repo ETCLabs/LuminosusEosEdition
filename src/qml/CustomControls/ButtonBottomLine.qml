@@ -1,4 +1,5 @@
 import QtQuick 2.5
+import CustomStyle 1.0
 import "../CustomBasics"
 import "../."
 
@@ -7,7 +8,7 @@ Button {
     // ------------------ Blue / Yellow Line at the bottom -----------------------
 
     Rectangle {
-        color: Qt.rgba(0.3, 0.5, 1, 0.7)
+        color: Style.primaryActionColor
         height: 1*dp
         anchors.left: parent.left
         anchors.right: parent.right
@@ -19,7 +20,7 @@ Button {
 
     Rectangle {
         property real ratio: parent.active ? 1 : 0
-        color: "yellow"
+        color: Style.primaryHighlightColor
         height: 1*dp
         width: (parent.width - 12*dp) * ratio
         x: 6*dp + (1 - ratio) * (parent.width / 2 - 6*dp)
@@ -32,10 +33,12 @@ Button {
 
     // ------------------- Touch Feedback Effect ------------------------------
 
-    RippleEffect {
-        id: rippleEffect
+    mouseOverEnabled: true
+    Rectangle {
+        id: mouseOverFeedback
         anchors.fill: parent
+        color: "white"
+        opacity: 0.05
+        visible: parent.mouseOver
     }
-    onTouchDown: rippleEffect.touchStart(touch.itemX, touch.itemY)
-    onTouchUp: rippleEffect.touchEnd()
 }

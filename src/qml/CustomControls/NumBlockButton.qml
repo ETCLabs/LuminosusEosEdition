@@ -50,7 +50,12 @@ Button {
 			easing.type: Easing.OutCubic
 		}
 	}
-	onPressedChanged: if (pressed) triggerFeedback.restart()
+    onPressedChanged: {
+        if (pressed) {
+            controller.playClickSound()
+            triggerFeedback.restart()
+        }
+    }
 
 	function simulatePress() {
 		clicked()

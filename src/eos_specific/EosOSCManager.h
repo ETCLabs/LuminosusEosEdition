@@ -2,13 +2,15 @@
 #define EOSCONSOLE_H
 
 #include "eos_specific/EosOSCMessage.h"
-#include "OSCMessage.h"
+#include "osc/OSCMessage.h"
 #include "EosCue.h"
+#include "OSCDiscovery.h"
 #include "utils.h"
 
 #include <QObject>
 #include <QTimer>
 #include <QDebug>
+#include <QJsonArray>
 
 // forward declaration to prevent dependency loop
 class MainController;
@@ -25,14 +27,14 @@ namespace EosOSCManagerConstants {
     /**
      * @brief latencyTimeout the time until a timout in the connection occures in ms
      */
-    static const int latencyTimeout = 1.5 * 1000;  // in ms
+    static const int latencyTimeout = 1500;  // in ms
 }
 
 
 /**
  * @brief The EosOSCManager class manages the connection to the Eos console with OSC messages.
  */
-class EosOSCManager : public QObject
+class EosOSCManager : public QObject, OSCDiscoveryClient::Client
 {
 
     Q_OBJECT
@@ -45,14 +47,17 @@ class EosOSCManager : public QObject
     Q_PROPERTY(QString cueInfo READ getCueInfo NOTIFY cueInfoChanged)
     Q_PROPERTY(double activeCuePercentComplete MEMBER m_activeCuePercentComplete NOTIFY cueInfoChanged)
     Q_PROPERTY(bool pingIsSuccessful READ getPingIsSuccessful NOTIFY latencyChanged)
+    Q_PROPERTY(QJsonArray discoveredConsoles READ getDiscoveredConsoles NOTIFY discoveredConsolesChanged)
 
 public:
     /**
      * @brief EosOSCManager creates an EosOSCManager object
      * @param controller a pointer to the MainController
      */
-    EosOSCManager(MainController* controller);
+    explicit EosOSCManager(MainController* controller);
 
+    virtual void OSCDiscoveryClientClient_Log(const QString &) override {}
+    virtual void OSCDiscoveryClientClient_Found(const OSCDiscoveryClient::sDiscoveryServer& server) override;
 
 signals:
     /**
@@ -98,6 +103,8 @@ signals:
      * @brief consoleVersionChanged is emitted when the information about the console version changed
      */
     void consoleVersionChanged();
+
+    void discoveredConsolesChanged();
 
 
 public slots:
@@ -247,6 +254,9 @@ public slots:
      */
     int getNewFaderBankNumber();
 
+    void startDiscovery();
+    void stopDiscovery();
+    QJsonArray getDiscoveredConsoles() const { return m_discoveredConsoles; }
 
 protected:
     MainController* const m_controller;  //!< a pointer to the MainController
@@ -273,6 +283,11 @@ protected:
     QString m_consoleVersion;  //!< detected console version
 
     int m_faderBankCount;  //!< count of created fader banks
+
+    int m_timeouts;  //!< number of timeouts after the connection was lost
+
+    OSCDiscoveryClient m_discoveryClient;
+    QJsonArray m_discoveredConsoles;
 };
 
 #endif // EOSCONSOLE_H

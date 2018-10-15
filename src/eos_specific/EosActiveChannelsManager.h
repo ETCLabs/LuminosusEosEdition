@@ -31,7 +31,7 @@ public:
      * @brief EosActiveChannelsManager creates an EosActiveChannelsManager object
      * @param controller apointer to the MainController
      */
-    EosActiveChannelsManager(MainController* controller);
+    explicit EosActiveChannelsManager(MainController* controller);
 
 signals:
     /**

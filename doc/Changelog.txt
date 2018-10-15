@@ -1,18 +1,233 @@
 
     Luminosus Change Log
 
-    Version 0.0.1.1.0.14 - ? October 2016
 
-    + Enhanced Music Playback Block
+Version 1.3.0 - 22 August 2018
 
-    Version 0.0.1.1.0.13 - 29 September 2016
+
+    + Replace 'Eos Connection' with list of OSC connections to lighting consoles
+      -> multiple connections can be stored
+
+    + Add welcome screen with options to connect a console and view tutorials
+
+    + Add 8 tutorials explaining the basic usage of Luminosus and more advanced use cases
+
+    + Add support for OSC connections to Hog 4
+
+    + Add Hog4 Playback Master Block
+
+    + Add sACN In Block to receive streaming ACN data
+
+    + Add Virtual Fixture and Slot (DMX Range) Blocks to control Luminosus functions
+      from a lighting console
+
+    + Add Projector Control (PJLink) Block to turn projectors on and off
+      and control the shutter
+
+    + Add PowerPoint Slide + Control Blocks to show specific slides or go back and forth
+
+    + Add DMX Value -> Slide Number Block to interpret a DMX value as a slide number
+
+    + Add Eos Speed Master Block and improve BPM Tap Block
+
+    + Add block to simulate keyboard presses
+
+
+    + Showing suggestions of suitable blocks after clicking on in- or output
+
+    + Add help and settings buttons that are displayed right below the currently focused block
+
+    + Add support for importing template files by drag'n'dropping them to the application window
+      or opening them with Luminosus from the File Explorer
+
+    + Add support for drag'n'drop music, image and text files in application window
+      and creating the corresponding blocks automatically
+
+    + Add option to send BPM value regularly in Eos Effect Speed and Speed Master Block
+
+    + Add option to disable OSC connections
+
+
+    * Simplify block categories and renamed some blocks
+
+    * Improve help texts
+
+    * Make time-nodes rectangular instead round
+
+    * Show list of MIDI in- and outputs in settings
+
+    * Move MIDI Mapping controls to own settings section
+
+    * Fix and improve block grouping
+
+    * Make Value Preview Block collapsable and rename it to Value Inspector
+
+    - Remove "Send Custom OSC to Eos" settings, create a second connection to Eos instead
+
+
+Version 1.1.1 - 07 January 2018
+
+    * Fixes a problem where MIDI mappings could get lost when blocks
+      were not visible
+
+
+Version 1.1.0 - 27 November 2017
+
+    + Added Eos Encoder Block for encoders on MIDI controllers
+    + Added Group Block to hierarchically structure blocks, improves clarity a lot
+    + Added Audio Streaming Block to play back live audio (i.e. Internet radio stations)
+    + Added (optional) click sounds to buttons for improved feedback on touchscreens
+
+    * Made OscInputBlock send 0 if received string is empty and 1 if not,
+        can be used for MIDI feedback on Fader Bank labels
+    * OSC Output Block can now send negative values (click on the "+" sign in block settings)
+
+    * Fixed some Eos blocks sometimes not working because
+        of wrong OSC user by enforcing user 1 (Encoder, Fader Bank, Key, Macro, MasterPlayback)
+
+    * Added setting to Eos Macro Block and Eos Key Block
+        to run their actions in background (user 0) or not (user 1)
+
+    * Fixed Eos Fader Bank not being reset on page change
+    * Fixed Load button on Eos Fader Bank not working with MIDI
+
+    * Added waveform display of .wav files to Audio Playback Block
+    * Hid fullscreen switch on mobile platforms
+    * Improved performance with many blocks
+
+
+Version 1.0.2 - 06 March 2017
+
+    + Official iOS support
+
+    + Added easy mapping of MIDI controllers to sliders and buttons in the UI
+        (including feedback for motorized faders and LED rings)
+
+    + Added Multiply Block
+    + Added Spectrogram Mode to Audio Level Block
+    + Added Snap To Grid mode that aligns Block positions to a grid
+
+    * Input nodes on new blocks are now in HTP merging mode by default
+    * Settings are now organized in collapsible categories
+    * Scrollwheel is now reserved to move workspace
+
+    * Fixed some Eos connection problems
+    * Fixed Eos Cues with more than two digits handled incorrectly
+    * Fixed Eos Master Playback Block not working with Eos 2.5
+    * Fixed items in the drawer sometimes not responding to touches
+    * Fixed Sequencer Block not forwarding values in hold phase
+
+    * Fixed crash when OSC message with BLOB data was received
+    * Fixed crash when incorrect Eos Cues are received
+    * Fixed crash on Android 6+ shortly after startup
+    * Fixed Android 6+ permission problems (i.e. Sound2Light not working)
+
+
+    --- Paid / Complete Version:
+
+    + Added Behringer X32 / X Air digital audio console support
+    + Added X32 Channel Block (and two helper Blocks)
+
+    + Added Preset Block
+    + Added Cue List Block
+    + Added White Light Block with Preset / Cue List support
+    + Added RGB Light Block with Preset / Cue List support
+    + Added Extra Scene Value Block with Preset / Cue List support
+
+    + Added experimental Recorder / Looper Block
+
+
+Version 1.0.0.1.0.1 - 27 December 2016
+
+    + Added Scene Names to Eos Cue List Block
+
+    + Added output node to Eos Channel Block
+      -> Channel Blocks can now be 'daisy-chained'
+        and linear effects can be applied to them
+
+    + Added Scale / Invert Block
+
+    + Added Crossfade Block
+
+    + Added Sequencer Block
+
+    + Added Smooth / Lowpass Block
+
+    + Added Change Project Block
+
+    + Added Combine Hue + Sat + Val Block
+
+    + Added special Blocks for effects on groups / matrices of fixtures:
+      - Bar / Dot (i.e. for visualizing audio volume with row of lights)
+      - Pixel Control
+      - Gradient
+      - Rotate / Mirror
+      - Offset
+      - Join Rows (join rows of Eos Channel Blocks to a matrix)
+
+    + Added manual gain setting to Audio Level Block
+
+    + Added frequency mode to Audio Level Block that outputs the relative position
+      of the loudest frequency in a specific range
+
+    + Left and right channel of Audio Inputs can now be selected individually
+
+    * Fixed not responding to project change commands over OSC from Eos console
+
+    * Adjusted most Blocks to work better with multiple fixtures
+
+    * Improved Spectrum in Audio Level Block
+
+    * Added basic syntax highlighting in Script / Formula Block
+
+    * Added Value History Diagram in Preview Block
+
+    * Improved experimental Presentation Blocks
+
+    * Fixed Eos Single Fader Block not storing slider position
+
+    * Added developer mode that makes experimental Blocks visible
+
+
+Version 0.0.1.1.0.16 - 13 October 2016
+
+    + Added bandwidth and upper limit setting to Audio Level Block
+
+    * Overhauled Settings tab and added link to manual
+
+    * Added settings to permanently override automatic GUI scaling and graphics level
+
+    * Added FPS info to Version Info Block
+
+
+Version 0.0.1.1.0.15 - 6 October 2016
+
+    * Fixed crash when opening Block Settings
+
+    * Fixed crash with Sound2Light Blocks and no audio inputs
+
+
+Version 0.0.1.1.0.14 - 6 October 2016
+
+    + Enhanced Audio Playback Block
+
+    + Enabled QtQuick compiler to improve startup time and performance with iOS
+
+    + Added Presentation Blocks (Page Anchor, Styled Text and Image Block)
 
     + Workspace can now be moved by scrollwheel and scroll gesture
 
-    * fixed scrolling in ComboBox2 with a trackpad
+    + Background texture can now be changed (per project)
+
+    + Added option to set a "Label" for each block that is displayed instead of the
+        blocks type name
+
+    * Changed Android package name -> settings will be lost and old version has to be removed
+
+    * Fixed scrolling in ComboBox2 with a trackpad
 
 
-    Version 0.0.1.1.0.13 - 13 September 2016
+Version 0.0.1.1.0.13 - 13 September 2016
 
     * Added "Tempo Detection Block" using BPM Detection Algorithm by Hendrik Noeller
       based on research by Simon Dixon
@@ -26,7 +241,7 @@
     * Improved overall performance of audio Blocks
 
 
-    Version 0.0.1.1.0.12 - 4 September 2016
+Version 0.0.1.1.0.12 - 4 September 2016
 
     * Reimplemented Spectrum visualization in Audio Level Block with OpenGL
 
@@ -39,7 +254,7 @@
     * Updated manual
 
 
-    Version 0.0.1.1.0.11 - 3 August 2016
+Version 0.0.1.1.0.11 - 3 August 2016
 
     * Fixed updating data when new show is loaded in Eos Console
 
@@ -60,7 +275,7 @@
     * Fixed issued with Sound2Light on iOS and Mac
 
 
-    Version 0.0.1.1.0.10 - 29 July 2016
+Version 0.0.1.1.0.10 - 29 July 2016
 
     ------- New Features and Major Changes:
 
@@ -135,7 +350,7 @@
     * Added custom label and key name properties to Eos Key Block
 
 
-    Version 0.0.1.1.0.9 - 22 July 2016
+Version 0.0.1.1.0.9 - 22 July 2016
 
     ------- New Features and Major Changes:
 
@@ -188,7 +403,7 @@
     * Increased random position offset when adding Blocks
 
 
-    Version 0.0.1.1.0.8 - 13 July 2016
+Version 0.0.1.1.0.8 - 13 July 2016
 
     -------- Fixing Crashes:
 
@@ -231,7 +446,7 @@
     * Fixed Block List not scrollable by Mouse Wheel
 
 
-    Version 0.0.1.1.0.7 - 8 July 2016
+Version 0.0.1.1.0.7 - 8 July 2016
 
     * Fixed problems with Eos 2.4 update:
         - fixed Cue message interpretation
@@ -262,7 +477,7 @@
     * Added Qt compile- and runtime version numbers to "Luminosus Version Info" Block
 
 
-    Version 0.0.1.1.0.6	- 28 June 2016
+Version 0.0.1.1.0.6 - 28 June 2016
 
     * Cue and Cue List information is now retrieved from the Eos console
       and available in Luminosus
@@ -309,7 +524,7 @@
     * added "Luminosus Debug Info" Block
 
 
-    Version 0.0.1.1.0.5	- 9 June 2016
+Version 0.0.1.1.0.5 - 9 June 2016
 
     * simplified connection to Eos Console by adding a second OSC connection specific to this
 
@@ -345,7 +560,7 @@
     * improved high DPI support (positions are now saved independent of DPI)
 
 
-    Version 0.0.1.1.0.4	- 25 May 2016
+Version 0.0.1.1.0.4 - 25 May 2016
 
     * MIDI default channel settings will now be saved project-independent
 

@@ -9,6 +9,8 @@ Item {
 	property alias hAlign: label.horizontalAlignment
 	property alias vAlign: label.verticalAlignment
     property alias textWidth: label.implicitWidth
+    property alias textFormat: label.textFormat
+    property alias elide: label.elide
 	implicitHeight: -1
 	implicitWidth: -1
 

@@ -2,12 +2,13 @@ import QtQuick 2.5
 import QtGraphicalEffects 1.0
 import CustomElements 1.0
 
-Rectangle {
+Item {
 	id: root
     property var block
     property alias pressed: touchArea.pressed
-    property Component settingsComponent: noSettings
     property bool showShadows: true
+    property Component settingsComponent: noSettings
+    property alias color: background.color
 
 	onXChanged: block.positionChanged()
 	onYChanged: block.positionChanged()
@@ -15,9 +16,49 @@ Rectangle {
     z: block.focused ? 1 : 0
     antialiasing: false
 
+    Component {
+        id: noSettings
+        Item {
+            implicitHeight: 60*dp
 
-	// background color of all blocks:
-	color: "#444"
+            Text {
+                anchors.centerIn: parent
+                text: "No settings available\nfor " + block.getBlockName() + "."
+                color: "#fff"
+                horizontalAlignment: Text.AlignHCenter
+                font.family: "Quicksand"
+                font.pixelSize: 16*dp
+            }
+        }
+    }
+
+    // Help and Settings buttons:
+    BlockOptionButton {
+        id: helpButton
+        anchors.left: parent.left
+        anchors.leftMargin: root.width > 80*dp ? 20*dp : 5*dp
+        z: -3
+        text: "?"
+        enabled: !settingsButton.active
+        content: Text {
+            width: 270*dp
+            height: contentHeight
+            font.pixelSize: 13*dp
+            textFormat: Text.AutoText
+            wrapMode: Text.Wrap
+            color: "white"
+            text: block.getHelpText()
+        }
+    }
+    BlockOptionButton {
+        id: settingsButton
+        anchors.left: helpButton.right
+        anchors.leftMargin: 10*dp
+        z: -3
+        icon: "gear_icon"
+        enabled: !helpButton.active && settingsComponent !== noSettings
+        content: settingsComponent
+    }
 
     // shadow behind block:
     RectangularGlow {
@@ -50,21 +91,12 @@ Rectangle {
         visible: block.focused && showShadows
     }
 
-	Component {
-		id: noSettings
-		Item {
-            implicitHeight: 60*dp
-
-			Text {
-				anchors.centerIn: parent
-				text: "No settings available\nfor " + block.getBlockName() + "."
-				color: "#fff"
-				horizontalAlignment: Text.AlignHCenter
-				font.family: "Quicksand"
-				font.pixelSize: 16*dp
-			}
-		}
-	}
+    Rectangle {
+        id: background
+        anchors.fill: parent
+        // background color of all blocks:
+        color: "#444"
+    }
 
 	function moveAnimatedTo(newX, newY) {
 		xAnimator.from = x
@@ -176,9 +208,14 @@ Rectangle {
             kineticEffect.stop(touch.x, touch.y)
 
             // check if it is released in trash area:
-            var isInTrash = controller.pointIsInTrashArea(touch.sceneX, touch.sceneY)
+            var isInTrash = guiManager.pointIsInTrashArea(touch.sceneX, touch.sceneY)
             if (isInTrash) {
                 block.deletedByUser()
+            }
+
+            if (guiManager.snapToGrid) {
+                kineticEffect.stopMovement()
+                guiManager.moveToGrid(root)
             }
         }
 
@@ -188,7 +225,7 @@ Rectangle {
         }
 
         onRightClick: {
-            controller.openBlockSettings()
+            guiManager.openBlockSettings()
         }
     }
 

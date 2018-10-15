@@ -1,6 +1,6 @@
 #include "EosActiveChannelsManager.h"
 
-#include "MainController.h"
+#include "core/MainController.h"
 
 
 EosActiveChannelsManager::EosActiveChannelsManager(MainController* controller)
@@ -65,11 +65,11 @@ void EosActiveChannelsManager::onIncomingEosMessage(const EosOSCMessage& msg) {
 void EosActiveChannelsManager::startChangeParameter(int index, double tickValue) {
     QString message = "/eos/active/switch/%1";
     message = message.arg(QString::number(index + 1));
-    m_controller->eosConnection()->sendMessage(message, tickValue);
+    m_controller->lightingConsole()->sendMessage(message, tickValue);
 }
 
 void EosActiveChannelsManager::stopChangeParameter(int index) {
     QString message = "/eos/active/switch/%1";
     message = message.arg(QString::number(index + 1));
-    m_controller->eosConnection()->sendMessage(message, 0.0);
+    m_controller->lightingConsole()->sendMessage(message, 0.0);
 }

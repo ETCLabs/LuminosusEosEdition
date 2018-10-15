@@ -14,6 +14,8 @@ CustomTouchArea {
     property bool toggle: false
     property alias text_area: text_area
     property alias color: text_area.color
+    property bool wrap: false
+    property bool sendActiveMidiFeedback: true
 
     signal press
 
@@ -34,11 +36,13 @@ CustomTouchArea {
         font.bold: true
         fontSizeMode: Text.Fit
         elide: Text.ElideRight
-        maximumLineCount: 1
+        maximumLineCount: wrap ? 3 : 1
+        wrapMode: wrap ? Text.WrapAnywhere : Text.NoWrap
     }
 
     onTouchDown: {
-        controller.checkForExternalInputConnection(uid)
+        controller.blockManager().playClickSound()
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
         if (toggle) {
 			active = !active
         } else {
@@ -55,17 +59,21 @@ CustomTouchArea {
         }
     }
 
-    property string uid: ""
-    property real externalInput: 0
-    Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
+    // ---------------------- External Input Handling ----------------------
+
+    property string mappingID: ""
+    property real externalInput: -1
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
     onExternalInputChanged: {
         if (externalInput > 0.) {
             active = true
             touchFeedbackEffect.start()
+            press()
         } else {
             active = false
         }
     }
+    onActiveChanged: if (sendActiveMidiFeedback) controller.midiMapping().sendFeedback(mappingID, active ? 1.0 : 0.0)
 }
 

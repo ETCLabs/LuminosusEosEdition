@@ -1,48 +1,60 @@
 import QtQuick 2.5
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
 CustomTouchArea {
 	id: root
+    implicitHeight: -1  // stretch height by default
+
+    // public attributes:
     property int padding: 20*dp
     property real value: 0.0
 	property real indicator: 0.0
     property bool useIndicator: false
-	implicitHeight: -1
+    property bool midiMappingEnabled: true
 
-    Rectangle {
+
+    Rectangle {  // grey BG line
         width: 2*dp
         color: "#666"
-        height: parent.height - 2 * padding
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: padding
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: padding
     }
 
-    Rectangle {
+    Rectangle {  // lightgrey BG line below cursor (if not useIndicator)
         width: 2*dp
         color: "#999"
         height: (parent.height - 2 * padding) * value
         anchors.horizontalCenter: parent.horizontalCenter
-        y: padding + (parent.height - 2 * padding) * (1 - value)
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: padding
 		visible: !useIndicator
     }
 
-	Rectangle {
+    Rectangle {  // lightblue indicator line (if useIndicator)
 		width: 2*dp
-		color: Qt.rgba(0.3, 0.6, 1, 0.7)
+        color: Style.primaryActionColor
 		height: (parent.height - 2 * padding) * indicator
-		anchors.horizontalCenter: parent.horizontalCenter
-		y: padding + (parent.height - 2 * padding) * (1 - indicator)
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: padding
 		visible: useIndicator
 	}
 
-    Image {
-        width: 32*dp
-        height: 32*dp
-		smooth: false
-        source: (width <= 32) ? "qrc:/images/slider_cursor.png" : "qrc:/images/slider_cursor@2x.png"
-        x: parent.width / 2 - width / 2
-        y: padding + (parent.height - 2*padding) * (1 - value) - height / 2
+    Image {  // cursor
+        id: cursor
+        width: Math.round(32*dp)
+        height: Math.round(32*dp)
+        source: (dp <= 1) ? "qrc:/images/slider_cursor.png" : "qrc:/images/slider_cursor@2x.png"
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: Math.round(padding + (parent.height - 2*padding) * (1 - value) - height / 2)
     }
+
+    // ------------------------- Touch Logic ------------------------------
 
     KineticEffect {
         id: kineticEffect
@@ -53,7 +65,7 @@ CustomTouchArea {
     }
 
     onTouchDown: {
-        controller.checkForExternalInputConnection(uid)
+        if (midiMappingEnabled) controller.midiMapping().guiControlHasBeenTouched(mappingID)
         kineticEffect.setValue(touch.itemY)
         kineticEffect.start(touch.itemY)
         setValueByPosition(touch.itemY)
@@ -69,16 +81,18 @@ CustomTouchArea {
 
 	function setValueByPosition(position) {
 		var val = 1 - Math.max(0.0, Math.min(1.0, (position - padding) / (height - 2*padding)))
-		controller.setPropertyWithoutChangingBindings(root, "value", val)
+        guiManager.setPropertyWithoutChangingBindings(root, "value", val)
 		// "this" as first parameter does not work, bug in QML?
 	}
 
-    property string uid: ""
-    property real externalInput: 0
-    Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
-    onExternalInputChanged: {
-		controller.setPropertyWithoutChangingBindings(this, "value", externalInput)
-    }
-}
+    // ---------------------- External Input Handling ----------------------
 
+    property string mappingID: ""
+    property real externalInput: -1
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
+    onExternalInputChanged: {
+        guiManager.setPropertyWithoutChangingBindings(this, "value", externalInput)
+    }
+    onValueChanged: controller.midiMapping().sendFeedback(mappingID, value)
+}

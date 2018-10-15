@@ -1,4 +1,5 @@
 import QtQuick 2.5
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -15,7 +16,7 @@ CustomTouchArea {
         border.color: light ? "#888" : "#555"
 
 		Rectangle {
-			color: Qt.rgba(0.3, 0.6, 1, 1)
+            color: Style.primaryActionColor
 			anchors.fill: parent
 			anchors.margins: active ? 3*dp : 10*dp
 			Behavior on anchors.margins {
@@ -27,7 +28,23 @@ CustomTouchArea {
 	}
 
     onClick: {
-        controller.setPropertyWithoutChangingBindings(this, "active", !active)
+        controller.playClickSound()
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
+        guiManager.setPropertyWithoutChangingBindings(this, "active", !active)
 	}
 
+    // ---------------------- External Input Handling ----------------------
+
+    property string mappingID: ""
+    property real externalInput: -1
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
+    onExternalInputChanged: {
+        if (externalInput > 0.) {
+            guiManager.setPropertyWithoutChangingBindings(this, "active", true)
+        } else {
+            guiManager.setPropertyWithoutChangingBindings(this, "active", false)
+        }
+    }
+    onActiveChanged: controller.midiMapping().sendFeedback(mappingID, active ? 1.0 : 0.0)
 }

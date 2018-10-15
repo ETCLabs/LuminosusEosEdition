@@ -24,6 +24,8 @@
 #include <QtMath>
 #include <QDataStream>
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include <algorithm>
 #include <chrono>
@@ -120,6 +122,57 @@ T deserialize(const QString& str)
 inline bool isEqualInsensitive(const QString& str1, const QString& str2) {
 	int result = str1.compare(str2, Qt::CaseInsensitive);
 	return result == 0;
+}
+
+// ((a % base) + base) % base;
+
+template<typename T>
+T realMod(T value, T base) {
+    return std::fmod(std::fmod(value, base) + base, base);
+}
+
+inline double stringToDouble(QString text) {
+    if (text.toDouble() > 0.0) {
+        return text.toDouble();
+    } else if (text == "one") {
+        return 1.0;
+    } else if (text == "two") {
+        return 2.0;
+    } else if (text == "three") {
+        return 3.0;
+    } else if (text == "four") {
+        return 4.0;
+    } else if (text == "five") {
+        return 5.0;
+    } else if (text == "six") {
+        return 6.0;
+    } else if (text == "seven") {
+        return 7.0;
+    } else if (text == "eight") {
+        return 8.0;
+    } else if (text == "nine") {
+        return 9.0;
+    } else if (text == "ten") {
+        return 10.0;
+    } else if (text == "eleven") {
+        return 11.0;
+    } else if (text == "twelve") {
+        return 12.0;
+    } else {
+        return 0.0;
+    }
+}
+
+inline QDataStream& operator<<(QDataStream& out, const QJsonObject& obj) {
+    out << QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    return out;
+}
+
+inline QDataStream& operator>>(QDataStream& in, QJsonObject& obj) {
+    QByteArray json;
+    in >> json;
+    obj = QJsonDocument::fromJson(json).object();
+    return in;
 }
 
 #endif // UTILS_H

@@ -1,5 +1,6 @@
 import QtQuick 2.5
 import QtGraphicalEffects 1.0
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -31,7 +32,7 @@ CustomTouchArea {
     // ------------------ Blue / Yellow Line at the bottom -----------------------
 
     Rectangle {
-        color: Qt.rgba(0.3, 0.5, 1, 0.7)
+        color: Style.primaryActionColor
         height: 1*dp
         anchors.left: parent.left
         anchors.right: parent.right
@@ -43,7 +44,7 @@ CustomTouchArea {
 
     Rectangle {
         property real ratio: parent.active ? 1 : 0
-        color: "yellow"
+        color: Style.primaryHighlightColor
         height: 1*dp
         width: (parent.width - 12*dp) * ratio
         x: 6*dp + (1 - ratio) * (parent.width / 2 - 6*dp)
@@ -57,7 +58,8 @@ CustomTouchArea {
     // ---------------------------- Logic ------------------------------------
 
     onTouchDown: {
-        controller.checkForExternalInputConnection(uid)
+        controller.playClickSound()
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
         if (toggle) {
             active= !active
         } else {
@@ -74,10 +76,12 @@ CustomTouchArea {
         }
     }
 
-    property string uid: ""
-    property real externalInput: 0
-    Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
+    // ---------------------- External Input Handling ----------------------
+
+    property string mappingID: ""
+    property real externalInput: -1
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
     onExternalInputChanged: {
         if (externalInput > 0.) {
             active = true
@@ -86,5 +90,6 @@ CustomTouchArea {
             active = false
         }
     }
+    onActiveChanged: controller.midiMapping().sendFeedback(mappingID, active ? 1.0 : 0.0)
 }
 

@@ -1,6 +1,7 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
 import QtGraphicalEffects 1.0
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -24,7 +25,7 @@ CustomTouchArea {
 	function setValue(value) {
 		var index = values.indexOf(value)
 		if (index == -1) index = 0
-		controller.setPropertyWithoutChangingBindings(root, "currentIndex", index)
+        guiManager.setPropertyWithoutChangingBindings(root, "currentIndex", index)
 	}
 
 	function getValue() {
@@ -45,7 +46,13 @@ CustomTouchArea {
 		width: 10*dp
 		source: "qrc:/images/combobox_arrows_blue.png"
 		anchors.centerIn: parent
-	}
+    }
+
+    ColorOverlay {
+        anchors.fill: arrows
+        source: arrows
+        color: Style.primaryActionColor
+    }
 
 	Text {  // text
 		id: displayedText
@@ -57,6 +64,7 @@ CustomTouchArea {
 		verticalAlignment: Text.AlignVCenter
 		horizontalAlignment: Text.AlignHCenter
 		color: root.enabled ? "lightgrey" : "#555"
+        elide: Text.ElideMiddle
 
 		text: root.texts[currentIndex]
 		Component.onCompleted: {
@@ -107,7 +115,8 @@ CustomTouchArea {
 		newIndex = ((newIndex%len)+len)%len
 		// set if it changed:
 		if (newIndex != currentIndex) {
-			controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
+            controller.playClickSound()
+            guiManager.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
 			indexChangedDuringTouch = true
 		}
 	}
@@ -162,6 +171,7 @@ CustomTouchArea {
 						verticalAlignment: Text.AlignVCenter
 						horizontalAlignment: displayedText.horizontalAlignment
 						color: "#fff"
+                        elide: Text.ElideMiddle
 
 						text: modelData
 					}
@@ -174,7 +184,7 @@ CustomTouchArea {
 				width: parent.width
 				color: "transparent"
 				border.width: 1*dp
-				border.color: "yellow"
+                border.color: Style.primaryHighlightColor
 			}
 
             CustomTouchArea {
@@ -204,14 +214,15 @@ CustomTouchArea {
 				anchors.fill: parent
 
                 onTouchDown: {
+                    controller.playClickSound()
 					// this is called when the DropDown was opened by a tap
 					// and the user clicked on an option
 
 					// calculate Index of clicked option:
                     var newIndex = Math.floor(touch.itemY / (30*dp))
 					// set if it is not the current index:
-					if (newIndex != currentIndex) {
-						controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
+                    if (newIndex != currentIndex) {
+                        guiManager.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
 					}
 					// destroy DropDown:
 					dropDown.destroy()
@@ -229,13 +240,13 @@ CustomTouchArea {
             function nextItem() {
                 var len = texts.length
                 var newIndex = (((currentIndex + 1)%len)+len)%len
-                controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
+                guiManager.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
             }
 
             function previousItem() {
                 var len = texts.length
                 var newIndex = (((currentIndex - 1)%len)+len)%len
-                controller.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
+                guiManager.setPropertyWithoutChangingBindings(root, "currentIndex", newIndex)
             }
 
             Keys.onUpPressed: {

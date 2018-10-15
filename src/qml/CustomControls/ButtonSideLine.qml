@@ -1,8 +1,12 @@
 import QtQuick 2.0
+import CustomStyle 1.0
 import "../CustomBasics"
 
 Button {
     property bool marked: false
+    sendActiveMidiFeedback: false
+    onMarkedChanged: controller.midiMapping().sendFeedback(mappingID, marked ? 1.0 : 0.0)
+    onActiveChanged: if (!active) controller.midiMapping().sendFeedback(mappingID, marked ? 1.0 : 0.0)
 
     mouseOverEnabled: true
     Rectangle {
@@ -14,7 +18,7 @@ Button {
     }
 
     Rectangle {
-        color: marked ? "yellow" : Qt.rgba(0.3, 0.5, 1, 0.7)
+        color: marked ? Style.primaryHighlightColor : Style.primaryActionColor
         height: parent.height - 8*dp
         width: 2*dp
         x: 0
@@ -23,7 +27,7 @@ Button {
 
     Rectangle {
         property real ratio: parent.active ? 1 : 0
-        color: "yellow"
+        color: Style.primaryHighlightColor
         height: 1*dp
         width: (parent.width - 16*dp) * ratio
         x: 8*dp + (1 - ratio) * (parent.width / 2 - 8*dp)

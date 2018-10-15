@@ -8,10 +8,6 @@ It can also convert MIDI Note-, Program- and Control-Change-Messages to OSC comm
 
 It is designed for touch interaction and runs on Windows, Mac, Android and iOS.
 
-## Project State
-
-This project is in beta state. Some bugs are still to be expected but the software is already usable.
-
 ## About this ETCLabs Project
 Luminosus (ETC Eos Edition) is open-source software designed to interact with Electronic Theatre Controls products. This is not official ETC software.
 ETC Support is not familiar with this software and will not be able to assist if issues arise.

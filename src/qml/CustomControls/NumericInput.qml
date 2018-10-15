@@ -1,5 +1,6 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
+import CustomStyle 1.0
 import CustomElements 1.0
 
 import "../CustomBasics"
@@ -11,6 +12,8 @@ Item {
 	id: root
 	height: 30*dp
 	implicitWidth: -1
+
+    Component.onDestruction: if (numBlockItem) numBlockItem.destroy()
 
 	// ------------------------- Public Properties ------------------
 	property real value: 0.0
@@ -49,7 +52,7 @@ Item {
 	}
 
 	Rectangle {  // thin blue line under text
-        color: numBlockItem ? "yellow" : (root.enabled ? Qt.rgba(0.3, 0.5, 1, 0.7) : "#555")
+        color: numBlockItem ? Style.primaryHighlightColor : (root.enabled ? Style.primaryActionColor : "#555")
 		height: 1*dp
 		anchors.left: parent.left
 		anchors.right: parent.right
@@ -67,7 +70,7 @@ Item {
 		if (isNaN(val)) val = 0.0
 		val = Math.max(minimumValue, Math.min(val, maximumValue))
 		val = Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals)
-		controller.setPropertyWithoutChangingBindings(this, "value", val)
+        guiManager.setPropertyWithoutChangingBindings(this, "value", val)
 	}
 
 
@@ -81,12 +84,15 @@ Item {
         onClick: {
             // check if NumBlock is open:
             if (numBlockItem) {
+                controller.playClickUpSound()
                 // it is open -> destroy it:
                 numBlockItem.destroy()
                 return
             }
             // don't change anything if not enabled:
             if (!root.enabled) return
+
+            controller.playClickSound()
 
 			// ------------------ Set Preferred Local Coordinates -------------------
 			// preffered horizontal position is centered above the middle of the NumericInput:

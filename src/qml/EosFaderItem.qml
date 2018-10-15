@@ -34,6 +34,14 @@ StretchColumn {
             }
         }
         showLed: false
+        mappingID: block.getUid() + "load" + modelData
+        onExternalInputChanged: {
+            if (externalInput > 0.) {
+                block.sendLoadEvent(index, true)
+            } else {
+                block.sendLoadEvent(index, false)
+            }
+        }
     }
     Slider {
         implicitHeight: -1
@@ -43,12 +51,14 @@ StretchColumn {
                 block.setFaderLevelFromGui(index, value)
             }
         }
+        mappingID: block.getUid() + "fader" + modelData
     }
     PushButton {
         implicitHeight: 0  // do not stretch
         height: 40*dp
         onActiveChanged: block.sendStopEvent(index, active)
         showLed: false
+        mappingID: block.getUid() + "stop" + modelData
         Image {
             width: 12*dp
             height: 12*dp
@@ -62,6 +72,7 @@ StretchColumn {
         height: 40*dp
         onActiveChanged: block.sendFireEvent(index, active)
         showLed: false
+        mappingID: block.getUid() + "go" + modelData
         Image {
             width: 15*dp
             height: 15*dp

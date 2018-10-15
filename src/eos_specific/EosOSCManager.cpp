@@ -1,7 +1,7 @@
 #include "EosOSCManager.h"
 
-#include "MainController.h"
-#include <time.h>
+#include "core/MainController.h"
+#include <QUuid>
 
 
 EosOSCManager::EosOSCManager(MainController* controller)
@@ -13,13 +13,15 @@ EosOSCManager::EosOSCManager(MainController* controller)
     , m_live(true)
     , m_activeCuePercentComplete(0.0)
     , m_latency(-1)
-    , m_instanceId(QString::number(time(0)))
-    , m_consoleVersion("-")
+    , m_instanceId(QUuid::createUuid().toString())
+    , m_consoleVersion("")
     , m_faderBankCount(0)
+    , m_timeouts(0)
+    , m_discoveryClient(this)
 {
-    connect(m_controller->eosConnection(), SIGNAL(isConnectedChanged()),
+    connect(m_controller->lightingConsole(), SIGNAL(isConnectedChanged()),
             this, SLOT(onConnectionChanged()));
-    connect(m_controller->eosConnection(), SIGNAL(messageReceived(OSCMessage)),
+    connect(m_controller->lightingConsole(), SIGNAL(messageReceived(OSCMessage)),
             this, SLOT(onIncomingMessage(OSCMessage)));
 
     m_startTime = HighResTime::now();
@@ -30,7 +32,21 @@ EosOSCManager::EosOSCManager(MainController* controller)
     m_latencyCheckTimer.start(EosOSCManagerConstants::latencyCheckInterval);
 }
 
+void EosOSCManager::OSCDiscoveryClientClient_Found(const OSCDiscoveryClient::sDiscoveryServer& server) {
+    for (QJsonValueRef ref: m_discoveredConsoles) {
+        QJsonObject console = ref.toObject();
+        if (console["ip"] == server.hostAddress.toString()) return;
+    }
+    QJsonObject obj;
+    obj["name"] = server.name;
+    obj["ip"] = server.hostAddress.toString();
+    obj["port"] = server.port;
+    m_discoveredConsoles.append(obj);
+    emit discoveredConsolesChanged();
+}
+
 void EosOSCManager::onIncomingMessage(const OSCMessage& msg) {
+    if (m_controller->lightingConsole()->getCurrentType() != OscConnectionType::Eos) return;
     // all Eos message start with /eos/out/ except fader feedback messages:
     if (!msg.pathStartsWith("/eos/out/") && !msg.pathStartsWith("/eos/fader/")) {
         // this is not an Eos message, ignore it:
@@ -75,7 +91,7 @@ void EosOSCManager::onIncomingEosMessage(const EosOSCMessage& msg) {
     }
     if (msg.path().isEmpty()) return;
     if (msg.pathPart(0) == "user") {
-        setOscUserId(msg.numericValue());
+        setOscUserId(int(msg.numericValue()));
     } else if (msg.pathPart(0) == "cmd") {
         if (msg.userIdProvided()) {
             setCmdText(msg.userId(), msg.stringValue());
@@ -83,12 +99,12 @@ void EosOSCManager::onIncomingEosMessage(const EosOSCMessage& msg) {
     } else if (msg.pathPart(0) == "show" && msg.pathPart(1) == "name") {
         setShowTitle(msg.stringValue());
     } else if (msg.pathPart(2) == "loaded" && msg.pathPart(1) == "show" && msg.pathPart(0) == "event") {
-        m_controller->eosConnection()->sendMessage("/eos/reset");
-        m_controller->eosConnection()->sendMessage("/eos/subscribe=1");
-        m_controller->eosConnection()->sendMessage("/eos/get/version");
+        m_controller->lightingConsole()->sendMessage("/eos/reset");
+        m_controller->lightingConsole()->sendMessage("/eos/subscribe=1");
+        m_controller->lightingConsole()->sendMessage("/eos/get/version");
         emit connectionReset();
     } else if (msg.pathPart(0) == "event" && msg.pathPart(1) == "state") {
-        setLive(msg.numericValue() != 0);
+        setLive(msg.numericValue() != 0.0);
     } else if (msg.pathPart(0) == "ping") {
         if (msg.arguments().size() == 2) {
             if (msg.arguments()[0] != m_instanceId) {
@@ -146,49 +162,58 @@ void EosOSCManager::onIncomingEosMessage(const EosOSCMessage& msg) {
 }
 
 void EosOSCManager::onConnectionChanged() {
-    if (!m_controller->eosConnection()->isConnected()) {
+    if (!m_controller->lightingConsole()->isConnected()
+            || m_controller->lightingConsole()->getCurrentType() != OscConnectionType::Eos) {
         return;
     }
     // new connection was established, send initial messsages:
     updateLatency();
     // sending reset results in information sent twice?
     //m_controller->eosConnection()->sendMessage("/eos/reset");
-    m_controller->eosConnection()->sendMessage("/eos/subscribe=1");
-    m_controller->eosConnection()->sendMessage("/eos/get/version");
+    m_controller->lightingConsole()->sendMessage("/eos/subscribe=1");
+    m_controller->lightingConsole()->sendMessage("/eos/get/version");
     emit connectionEstablished();
 }
 
 void EosOSCManager::updateLatency() {
     // check if TCP socket is connected:
-    if (m_controller->eosConnection()->isConnected()) {
+    if (m_controller->lightingConsole()->isConnected()
+            && m_controller->lightingConsole()->getCurrentType() == OscConnectionType::Eos) {
         // it is, check latency:
         // calculate current time stamp (milliseconds since program start):
         // (possible overflow with int32 at around 600h runtime)
-        long timestamp = HighResTime::elapsedSecSince(m_startTime) * 1000;
+        long timestamp = long(HighResTime::elapsedSecSince(m_startTime) * 1000);
         // send ping with current time stamp:
-        m_controller->eosConnection()->sendMessage("/eos/ping", m_instanceId, QString::number(timestamp));
+        m_controller->lightingConsole()->sendMessage("/eos/ping", m_instanceId, QString::number(timestamp));
         // start timeout timer:
         m_latencyTimeout.start();
     } else {
         // it is not, reset connection infos:
         setLatency(-1);
-        setConsoleVersion("-");
+        setConsoleVersion("");
     }
 }
 
 void EosOSCManager::onPingReceived(int timestamp) {
     // cancel latency timeout:
     m_latencyTimeout.stop();
+    m_timeouts = 0;
     // calculate current time stamp (milliseconds since program start):
-    long now = HighResTime::elapsedSecSince(m_startTime) * 1000;
+    long now = long(HighResTime::elapsedSecSince(m_startTime) * 1000);
     // update latency value:
     setLatency(int(now - timestamp));
 }
 
 void EosOSCManager::onLatencyTimeout() {
     setLatency(-1);
-    setConsoleVersion("-");
-    qWarning() << "Eos Connection timed out.";
+    setConsoleVersion("");
+    ++m_timeouts;
+    if (m_timeouts > 1) {
+        qWarning() << "Eos Connection timed out.";
+    }
+    if (m_timeouts < 3 && m_controller->lightingConsole()->getCurrentType() == OscConnectionType::Eos) {
+        m_controller->lightingConsole()->reconnect();
+    }
 }
 
 void EosOSCManager::setCmdText(int userId, QString value) {
@@ -240,4 +265,12 @@ bool EosOSCManager::cueIsPending(const EosCueNumber& cueNumber) const {
 int EosOSCManager::getNewFaderBankNumber() {
     ++m_faderBankCount;
     return m_faderBankCount;
+}
+
+void EosOSCManager::startDiscovery() {
+    m_discoveryClient.Initialize(*this, "Luminosus");
+}
+
+void EosOSCManager::stopDiscovery() {
+    m_discoveryClient.Shutdown();
 }

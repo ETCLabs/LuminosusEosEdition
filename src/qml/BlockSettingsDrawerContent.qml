@@ -1,15 +1,16 @@
 import QtQuick 2.5
-
 import CustomElements 1.0
 import "CustomControls"
 import "CustomBasics"
 
 VerticalScrollView {
-	contentItem: root
+    contentItem: root
+    anchors.topMargin: 10*dp
+
     StretchColumn {
-		id: root
+        id: root
 		width: parent.width
-		height: implicitHeight
+        height: implicitHeight
         defaultSize: 30*dp
 		Text {
 			width: parent.width
@@ -33,9 +34,7 @@ VerticalScrollView {
             font.pixelSize: 18*dp
         }
 		Loader {
-			height: 40*dp  // inital height
-			anchors.left: parent.left
-			anchors.right: parent.right
+            height: 40*dp  // inital height
 			id: blockSettings
 			Component.onCompleted: updateComponent()
 			onVisibleChanged: if (visible) updateComponent()
@@ -46,7 +45,7 @@ VerticalScrollView {
 					blockSettings.sourceComponent = focusedBlock.getSettingsComponent()
                     blockTypeLabel.text = focusedBlock.getBlockName()
                     labelRow.visible = true
-                    labelInput.text = focusedBlock.label
+                    labelInput.text = focusedBlock.attr("label").val
 				} else {
 					blockSettings.sourceComponent = noFocusedBlockDummy;
                     blockTypeLabel.text = ""
@@ -104,8 +103,8 @@ VerticalScrollView {
                 onDisplayTextChanged: {
                     var focusedBlock = controller.blockManager().getFocusedBlock()
                     if (focusedBlock) {
-                        if (focusedBlock.label !== displayText) {
-                            focusedBlock.label = displayText
+                        if (focusedBlock.attr("label").val !== displayText) {
+                            focusedBlock.attr("label").val = displayText
                         }
                     }
                 }
@@ -125,46 +124,49 @@ VerticalScrollView {
 			font.family: "Quicksand"
 			font.pixelSize: 22*dp
 		}
-		Text {
-			id: helpText
-			anchors.left: parent.left
-			anchors.right: parent.right
-			anchors.leftMargin: 8*dp
-			anchors.rightMargin: 2*dp
-			height: implicitHeight
-			text: "No help available."
-			color: "#bbb"
-			horizontalAlignment: Text.AlignLeft
-			font.family: "Tahoma" //"Quicksand"
-			font.pixelSize: 13*dp
-			font.letterSpacing: 1*dp
-			font.weight: Font.Normal
-			wrapMode: Text.Wrap
-            textFormat: Text.AutoText
-            // HTML Links:
-            linkColor: "lightblue"
-            onLinkActivated: Qt.openUrlExternally(link)
+        Item {
+            height: helpText.height
+            Text {
+                id: helpText
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 8*dp
+                anchors.rightMargin: 2*dp
+                height: implicitHeight
+                text: "No help available."
+                color: "#bbb"
+                horizontalAlignment: Text.AlignLeft
+                font.family: "Tahoma" //"Quicksand"
+                font.pixelSize: 13*dp
+                font.letterSpacing: 1*dp
+                font.weight: Font.Normal
+                wrapMode: Text.Wrap
+                textFormat: Text.AutoText
+                // HTML Links:
+                linkColor: "lightblue"
+                onLinkActivated: Qt.openUrlExternally(link)
 
-			Component.onCompleted: updateHelp()
-			onVisibleChanged: if (visible) updateHelp()
+                Component.onCompleted: updateHelp()
+                onVisibleChanged: if (visible) updateHelp()
 
-			function updateHelp() {
-				var focusedBlock = controller.blockManager().getFocusedBlock()
-				if (focusedBlock) {
-					text = focusedBlock.getHelpText()
-					if (!text) {
-						text = "No help available."
-					}
-				} else {
-					text = "No help available."
-				}
-			}
+                function updateHelp() {
+                    var focusedBlock = controller.blockManager().getFocusedBlock()
+                    if (focusedBlock) {
+                        text = focusedBlock.getHelpText()
+                        if (!text) {
+                            text = "No help available."
+                        }
+                    } else {
+                        text = "No help available."
+                    }
+                }
 
-			Connections {
-				target: controller.blockManager()
-				onFocusChanged: if (root.visible) helpText.updateHelp()
-			}
-		}  // end helpText
+                Connections {
+                    target: controller.blockManager()
+                    onFocusChanged: if (root.visible) helpText.updateHelp()
+                }
+            }  // end helpText
+        }
 	}  // end main Column
 }  // end ScrollView
 

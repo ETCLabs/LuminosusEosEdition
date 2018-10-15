@@ -84,6 +84,7 @@ class EosCue : public QObject
     Q_PROPERTY(bool isActive READ getIsActive NOTIFY activeStatusChanged)
     Q_PROPERTY(bool isPending READ getIsPending NOTIFY activeStatusChanged)
     Q_PROPERTY(QString notes READ getNotes WRITE setNotes NOTIFY dataChanged)
+    Q_PROPERTY(QString scene READ getScene NOTIFY dataChanged)
 
 public:
     /**
@@ -208,6 +209,12 @@ public slots:
      * @param value new notes string
      */
     void setNotes(QString value);
+
+    /**
+     * @brief getScene returns the scene name of this cue
+     * @return scene name or empty string if not the start of a scene
+     */
+    QString getScene() const { return m_scene; }
 
 protected:
     /**

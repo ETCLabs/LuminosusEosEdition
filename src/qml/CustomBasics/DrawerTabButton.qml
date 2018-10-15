@@ -1,4 +1,5 @@
 import QtQuick 2.5
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -15,7 +16,7 @@ CustomTouchArea {
 
 	Rectangle {
 		anchors.fill: parent
-		color: Qt.rgba(0.5, 0.7, 1, 1)
+        color: Style.primaryActionColor
 		opacity: 0.3
 		visible: marked
 	}
@@ -35,7 +36,7 @@ CustomTouchArea {
 	}
 
 	onTouchDown: {
-		controller.checkForExternalInputConnection(uid)
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
 		if (toggle) {
 			active= !active
 		} else {
@@ -52,10 +53,10 @@ CustomTouchArea {
 		}
 	}
 
-	property string uid: ""
+	property string mappingID: ""
 	property real externalInput: 0
-	Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
 	onExternalInputChanged: {
 		if (externalInput > 0.) {
 			active = true

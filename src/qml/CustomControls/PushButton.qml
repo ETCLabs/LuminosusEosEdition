@@ -98,7 +98,8 @@ CustomTouchArea {
 	// ------------------------- Touch Handling -------------------------
 
 	onTouchDown: {
-		controller.checkForExternalInputConnection(uid)
+        controller.playClickSound()
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
 		handleTouchDown()
 	}
 
@@ -116,6 +117,7 @@ CustomTouchArea {
 
 	onTouchUp: {
         if (!getFirstTouch().isValid) {
+            controller.playClickUpSound()
             handleTouchUp()
         }
 	}
@@ -129,16 +131,16 @@ CustomTouchArea {
 
 	// ------------------------- External Input ------------------------
 
-	property string uid: ""
-	property real externalInput: 0
-	Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
+	property string mappingID: ""
+    property real externalInput: -1
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
 	onExternalInputChanged: {
 		if (externalInput > 0.) {
 			handleTouchDown()
 		} else {
 			handleTouchUp()
 		}
-	}
-
+    }
+    onActiveChanged: controller.midiMapping().sendFeedback(mappingID, active ? 1.0 : 0.0)
 }

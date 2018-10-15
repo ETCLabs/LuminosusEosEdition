@@ -1,6 +1,6 @@
 #include "EosCueList.h"
 
-#include "MainController.h"
+#include "core/MainController.h"
 
 #include <QDebug>
 
@@ -9,6 +9,15 @@ EosCueList::EosCueList(MainController* controller)
     : QObject(0)
     , m_controller(controller)
     , m_isValid(false)
+    , m_index(-1)
+    , m_independent(false)
+    , m_htp(false)
+    , m_assert(false)
+    , m_block(false)
+    , m_background(false)
+    , m_soloMode(false)
+    , m_timecodeList(-1)
+    , m_oosSync(false)
 {
 
 }
@@ -17,6 +26,15 @@ EosCueList::EosCueList(MainController* controller, const EosOSCMessage& msg)
     : QObject(0)
     , m_controller(controller)
     , m_isValid(false)
+    , m_index(-1)
+    , m_independent(false)
+    , m_htp(false)
+    , m_assert(false)
+    , m_block(false)
+    , m_background(false)
+    , m_soloMode(false)
+    , m_timecodeList(-1)
+    , m_oosSync(false)
 {
     m_cueList = msg.pathPart(2);
 
@@ -29,7 +47,7 @@ EosCueList::EosCueList(MainController* controller, const EosOSCMessage& msg)
     update(msg);
 
     QString message = "/eos/get/cue/" + m_cueList + "/count";
-    m_controller->eosConnection()->sendMessage(message);
+    m_controller->lightingConsole()->sendMessage(message);
 }
 
 void EosCueList::update(const EosOSCMessage& msg) {
@@ -87,14 +105,15 @@ void EosCueList::onIncomingEosMessage(const EosOSCMessage& msg) {
             // request details for each cue:
             for (int i=0; i<cueCount; ++i) {
                 QString message = "/eos/get/cue/" + m_cueList + "/index/" + QString::number(i);
-                m_controller->eosConnection()->sendMessage(message);
+                m_controller->lightingConsole()->sendMessage(message);
             }
         } else if (msg.path().size() <= 5) {
             // this message contains detailed information about a cue
             EosCueNumber cueNumber = EosCueNumber(msg.pathPart(2), msg.pathPart(3), msg.pathPart(4));
             if (m_cues.contains(cueNumber)) {
+                if (!m_cues[cueNumber]) return;
                 m_cues[cueNumber]->update(msg);
-            } else {
+            } else if (!msg.arguments().isEmpty()) {
                 EosCue* newCue = new EosCue(m_controller, msg);
                 connect(newCue, SIGNAL(deleted(EosCueNumber)), this, SLOT(deleteCue(EosCueNumber)));
                 m_cues[cueNumber] = newCue;
@@ -179,14 +198,14 @@ double EosCueList::getActiveCueIndex() const {
 
 void EosCueList::onNotifyCueChanged(QString changedCue) {
     QString message = "/eos/get/cue/" + m_cueList + "/" + changedCue;
-    m_controller->eosConnection()->sendMessage(message);
+    m_controller->lightingConsole()->sendMessage(message);
     // this message could also mean a part of that cue
     // -> request details for all parts:
     for (const EosCueNumber& cueNumber: m_cues.keys()) {
         if (cueNumber.number == changedCue && cueNumber.part != 0) {
             QString part = QString::number(cueNumber.part);
             QString message = "/eos/get/cue/" + m_cueList + "/" + changedCue + "/" + part;
-            m_controller->eosConnection()->sendMessage(message);
+            m_controller->lightingConsole()->sendMessage(message);
         }
     }
 }

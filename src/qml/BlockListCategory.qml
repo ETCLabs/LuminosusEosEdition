@@ -86,11 +86,16 @@ StretchColumn {
 			visible: level > 0
 		}
 
-		onTouchUp: {
+        onTouchUp: {
 			if (!canceled) {
+                if (collapsed) {
+                    controller.playClickSound()
+                } else {
+                    controller.playClickUpSound()
+                }
 				collapsed = !collapsed
 			}
-		}
+        }
 	}
 
 	StretchColumn {  // indented content

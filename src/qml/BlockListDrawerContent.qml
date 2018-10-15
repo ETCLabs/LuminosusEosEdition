@@ -8,12 +8,64 @@ import "CustomBasics"
 StretchColumn {
 	anchors.fill: parent
 
+    property bool showCombinations: false
+
+    function saveCombination() {
+        Qt.inputMethod.commit()
+        controller.projectManager().saveCombination(combinationNameInput.text)
+        combinationNameInput.text = ""
+    }
+
+    BlockRow {
+        height: 40*dp
+        implicitHeight: 0  // do not stretch
+
+        CustomTouchArea {
+            implicitWidth: -1
+            onClick: showCombinations = false
+            Rectangle {
+                anchors.fill: parent
+                color: !showCombinations ? Qt.hsva(0, 0, 1, 0.1) : "transparent"
+                Text {
+                    anchors.centerIn: parent
+                    text: "Blocks"
+                }
+            }
+        }
+        Rectangle {
+            width: 1
+            color: "#aaa"
+        }
+        CustomTouchArea {
+            implicitWidth: -1
+            onClick: showCombinations = true
+            Rectangle {
+                anchors.fill: parent
+                color: showCombinations ? Qt.hsva(0, 0, 1, 0.1) : "transparent"
+                Text {
+                    anchors.centerIn: parent
+                    text: "Combinations"
+                }
+            }
+        }
+    }
+
+    Rectangle {
+        height: 1
+        width: parent.width
+        color: "#aaa"
+    }
+    Item {
+        height: 10*dp
+    }
+
 	// ---------------- Search ------------
 
 	BlockRow {
 		height: 30*dp
 		implicitHeight: 0  // do not stretch
 		leftMargin: 10*dp
+        visible: !showCombinations
 		Item {
 			implicitWidth: -1
 			TextInput {
@@ -35,13 +87,13 @@ StretchColumn {
 					repeat: false
 					interval: 300
 					onTriggered: {
-						var searchResult = controller.blockManager().blockList().getSearchResult(searchField.displayText)
+                        var searchResult = controller.blockManager().blockList().getSearchResult(searchField.displayText)
 						searchResult = JSON.parse(searchResult)
 						blockListContainer.showBlockModel(searchResult, false)
 					}
 				}
 			}
-		}
+        }
 		IconFontButton {
 			width: 30*dp
 			iconSymbol: ""
@@ -52,15 +104,17 @@ StretchColumn {
 	}
 
 	Item {  // spacer between serch field and list
+        visible: !showCombinations
 		height: 10*dp
 	}
 
-	// -------------- Accordion View ----------
+    // -------------- Blocks Tree View ----------
 
 	Flickable {
 		implicitHeight: -1  // stretch to fill height
 		contentHeight: blockListContainer.implicitHeight + 20*dp
         clip: true
+        visible: !showCombinations
 
 		StretchColumn {
 			id: blockListContainer
@@ -72,8 +126,13 @@ StretchColumn {
 				showAllBlocks()
 			}
 
+            Connections {
+                target: controller
+                onDeveloperModeChanged: blockListContainer.showAllBlocks()
+            }
+
 			function showAllBlocks() {
-				var blockModel = JSON.parse(controller.blockManager().blockList().getJsonBlockModel())
+                var blockModel = JSON.parse(controller.blockManager().blockList().getJsonBlockModel())
 				showBlockModel(blockModel, true)
 			}
 
@@ -125,5 +184,63 @@ StretchColumn {
 			}
 		}
 	}
+
+    // --------------------- Combinations ------------------------
+
+    Text {
+        visible: showCombinations
+        text: "Save all blocks in current\ngroup as combination:"
+        font.pixelSize: 14*dp
+        color: "#aaa"
+        horizontalAlignment: Text.AlignHCenter
+        height: 50*dp
+    }
+
+    BlockRow {
+        height: 30*dp
+        implicitHeight: 0  // do not stretch
+        leftMargin: 10*dp
+        visible: showCombinations
+        Item {
+            implicitWidth: -1
+            TextInput {
+                id: combinationNameInput
+                anchors.fill: parent
+                hintText: "New Combination"
+                onAccepted: saveCombination()
+            }
+        }
+        IconButton {
+            width: 30*dp
+            height: 30*dp
+            iconName: "plus_icon"
+            onPress: saveCombination()
+        }
+    }
+
+    Item {
+        visible: showCombinations
+        height: 30*dp
+
+        Rectangle {
+            anchors.centerIn: parent
+            height: 1
+            width: parent.width
+            color: "#aaa"
+        }
+    }
+
+    ListView {
+        id: listView
+        implicitHeight: -1  // stretch to fill height
+        clip: true
+        visible: showCombinations
+        model: controller.projectManager().combinations
+
+        delegate: CombinationEntry {
+            width: listView.width
+        }
+    }
+
 }
 

@@ -58,5 +58,63 @@
         <file>qml/main.qml</file>
         <file>qml/CustomBasics/WidthResizeAreaLeft.qml</file>
         <file>qml/CustomControls/PlayPauseButton.qml</file>
+        <file>qml/CustomControls/DotSlider.qml</file>
+        <file>qml/CustomControls/SliderHorizontal.qml</file>
+        <file>qml/DefaultStyle.qml</file>
+        <file>qml/CustomBasics/Overlay.qml</file>
+        <file>qml/CustomControls/AttributeSlider.qml</file>
+        <file>qml/CustomControls/AttributeNumericInput.qml</file>
+        <file>qml/CustomControls/AttributeCheckbox.qml</file>
+        <file>qml/CustomControls/AttributeCombobox.qml</file>
+        <file>qml/CustomControls/AttributeDotSlider.qml</file>
+        <file>qml/CustomControls/AttributeDoubleSlider.qml</file>
+        <file>qml/CustomControls/AttributeSliderHorizontal.qml</file>
+        <file>qml/CustomControls/AttributePanSlider.qml</file>
+        <file>qml/CustomBasics/CenteredSvgImage.qml</file>
+        <file>qml/SettingsComponents/MidiSettings.qml</file>
+        <file>qml/SettingsComponents/SettingsCategory.qml</file>
+        <file>qml/SettingsComponents/EosSettings.qml</file>
+        <file>qml/SettingsComponents/OscSettings.qml</file>
+        <file>qml/SettingsComponents/X32Settings.qml</file>
+        <file>qml/SettingsComponents/GuiSettings.qml</file>
+        <file>qml/SettingsComponents/AboutSection.qml</file>
+        <file>qml/SettingsComponents/ArtnetSettings.qml</file>
+        <file>qml/CueListEntry.qml</file>
+        <file>qml/CustomControls/BrightnessSlider.qml</file>
+        <file>qml/CustomControls/DotColorPicker.qml</file>
+        <file>qml/CustomControls/AttributeDotColorPicker.qml</file>
+        <file>qml/CustomControls/SaturationSlider.qml</file>
+        <file>qml/CustomControls/DotBrightnessSlider.qml</file>
+        <file>qml/FallbackBlockGui.qml</file>
+        <file>qml/SpeechAnimation.qml</file>
+        <file>qml/Conversation/SafeLock.qml</file>
+        <file>qml/Conversation/HealthData.qml</file>
+        <file>qml/Conversation/Mantra.qml</file>
+        <file>qml/CustomBasics/InputNodeRect.qml</file>
+        <file>qml/CustomBasics/OutputNodeRect.qml</file>
+        <file>qml/CustomBasics/BlockOptionButton.qml</file>
+        <file>qml/SettingsComponents/OscPresetArea.qml</file>
+        <file>qml/SettingsComponents/NewOscPresetArea.qml</file>
+        <file>qml/SettingsComponents/OscConnectionArea.qml</file>
+        <file>qml/SettingsComponents/MidiMappingSettings.qml</file>
+        <file>qml/Tutorial/TutorialView.qml</file>
+        <file>qml/Tutorial/TutorialStackView.qml</file>
+        <file>qml/Tutorial/MainOptions.qml</file>
+        <file>qml/Tutorial/TutorialList.qml</file>
+        <file>qml/Tutorial/SlideShow.qml</file>
+        <file>qml/Tutorial/content.js</file>
+        <file>qml/Tutorial/EosIp.qml</file>
+        <file>qml/Tutorial/SelectConsole.qml</file>
+        <file>qml/Tutorial/EosOscVersion.qml</file>
+        <file>qml/Tutorial/EosShowSettings.qml</file>
+        <file>qml/Tutorial/EosName.qml</file>
+        <file>qml/Tutorial/ConnectionName.qml</file>
+        <file>qml/Tutorial/EosStatus.qml</file>
+        <file>qml/Tutorial/HogIp.qml</file>
+        <file>qml/Tutorial/HogSettings.qml</file>
+        <file>qml/Tutorial/HogStatus.qml</file>
+        <file>qml/Tutorial/HogName.qml</file>
+        <file>qml/Tutorial/EosDiscovery.qml</file>
+        <file>qml/CombinationEntry.qml</file>
     </qresource>
 </RCC>

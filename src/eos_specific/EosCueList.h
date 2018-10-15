@@ -28,7 +28,7 @@ public:
      * @brief EosCueList used to construt an empty dummy cue list
      * @param controller pointer to MainController
      */
-    EosCueList(MainController* controller);
+    explicit EosCueList(MainController* controller);
     /**
      * @brief EosCueList creates an EosCueList object from an OSC message
      * @param controller a pointer to the main controller

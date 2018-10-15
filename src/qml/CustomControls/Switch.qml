@@ -1,4 +1,5 @@
 import QtQuick 2.5
+import CustomStyle 1.0
 import CustomElements 1.0
 import "../CustomBasics"
 
@@ -25,6 +26,7 @@ CustomTouchArea {
         width: 14*dp
         height: 14*dp
         radius: 7*dp
+        antialiasing: dp <= 1
         border.width: 2*dp
         border.color: "lightgrey"
         color: "transparent"
@@ -35,7 +37,7 @@ CustomTouchArea {
     Rectangle {
         width: 2*dp
         height: 14*dp
-        color: "#2C89E1"
+        color: Style.primaryActionColor
         x: (parent.width / 2) + 14*dp
         y: (parent.height / 2) - (height / 2)
     }
@@ -44,7 +46,8 @@ CustomTouchArea {
         width: 30*dp
         height: 24*dp
         radius: 5*dp
-        border.color: active ? "#2C89E1" : "lightgrey"
+        antialiasing: dp <= 1
+        border.color: active ? Style.primaryActionColor : "lightgrey"
         Behavior on border.color {
             ColorAnimation {}
         }
@@ -56,15 +59,18 @@ CustomTouchArea {
     }
 
     onClick: {
-        controller.checkForExternalInputConnection(uid)
+        controller.playClickSound()
+        controller.midiMapping().guiControlHasBeenTouched(mappingID)
         active = !active
     }
 
-    property string uid: ""
+    // ------------------------- External Input ------------------------
+
+    property string mappingID: ""
     property real externalInput: 0
     property real lastExternalInput: 0
-    Component.onCompleted: controller.registerGuiControl(this)
-    Component.onDestruction: if (controller) controller.unregisterGuiControl(this)
+    Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
+    Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
     onExternalInputChanged: {
         if ((lastExternalInput < 0.5) && (externalInput > 0.5)) {
             active = !active
@@ -72,5 +78,6 @@ CustomTouchArea {
         touchFeedbackEffect.start()
         lastExternalInput = externalInput
     }
+    onActiveChanged: controller.midiMapping().sendFeedback(mappingID, active ? 1.0 : 0.0)
 }
 

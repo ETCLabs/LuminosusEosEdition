@@ -10,10 +10,10 @@ VerticalScrollView {
 
 	StretchColumn {
 		id: root
-		width: parent.width
-		leftMargin: 15*dp
-        rightMargin: 15*dp
-        height: parent.height
+        anchors.fill: parent
+        anchors.topMargin: 10*dp
+        anchors.leftMargin: 15*dp
+        anchors.rightMargin: 15*dp
 
         Text {
             height: 30*dp
@@ -162,13 +162,13 @@ VerticalScrollView {
             ButtonBottomLine {
                 text: "Clear"
                 clickDurationEnabled: true
-                onShortClick: controller.showToast("Long Click to Delete All Blocks")
+                onShortClick: guiManager.showToast("Long Click to Delete All Blocks")
                 onLongClick: controller.blockManager().deleteAllBlocks()
             }
         }
 
 		Spacer {
-			height: 20*dp
+            height: 20*dp
 		}
 
         ListView {
@@ -177,6 +177,7 @@ VerticalScrollView {
             model: controller.projectManager().projectList
             // prevent async buffering that can cause segfaults:
             cacheBuffer: 0
+            clip: controller.output().luminosusInstances.length > 0
 			delegate: Row {
 				width: parent.width
 				height: 30*dp
@@ -206,12 +207,12 @@ VerticalScrollView {
 					height: 30*dp
 					iconName: "trash_icon"
                     clickDurationEnabled: true
-                    onShortClick: controller.showToast("Long Click to Delete Project")
+                    onShortClick: guiManager.showToast("Long Click to Delete Project")
                     onLongClick: controller.projectManager().deleteProject(modelData)
 				}
 
 			}
-		}
+        }
 	}  // end main Column
 }  // end ScrollView
 

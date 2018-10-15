@@ -11,5 +11,7 @@
         <file>fonts/BPmono.ttf</file>
         <file>fonts/BPmonoBold.ttf</file>
         <file>fonts/BPmonoItalics.ttf</file>
+        <file>fonts/lato.hairline-italic.ttf</file>
+        <file>fonts/lato.hairline.ttf</file>
     </qresource>
 </RCC>

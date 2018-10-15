@@ -21,7 +21,7 @@
 #ifndef EOSOSCMESSAGE_H
 #define EOSOSCMESSAGE_H
 
-#include "OSCMessage.h"
+#include "osc/OSCMessage.h"
 
 #include <QtGlobal>
 #include <QVector>
@@ -46,7 +46,7 @@ public:
      * @brief EosOSCMessage creates an EosOSCMessage object from a normal OSC message.
      * @param msg a normal OSC message from an Eos console
      */
-    EosOSCMessage(const OSCMessage& msg);
+    explicit EosOSCMessage(const OSCMessage& msg);
 
     /**
      * @brief add tries to complete an uncomplete OSC List Convention message with another message

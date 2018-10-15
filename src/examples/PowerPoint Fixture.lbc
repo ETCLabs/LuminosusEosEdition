@@ -1,0 +1,71 @@
+{
+    "blocks": [
+        {
+            "focused": true,
+            "height": 180,
+            "internalState": {
+                "channel": 1,
+                "group": "15361411631782",
+                "guiItemHidden": false,
+                "label": "",
+                "numChannels": 5,
+                "sceneGroup": 0,
+                "universe": 1,
+                "value": 0
+            },
+            "name": "Virtual Fixture",
+            "nodeMergeModes": {
+            },
+            "posX": -335.7692307692307,
+            "posY": -116.15384615384613,
+            "uid": "15361411858123",
+            "width": 140
+        },
+        {
+            "focused": false,
+            "height": 150,
+            "internalState": {
+                "group": "15361411631782",
+                "guiItemHidden": false,
+                "label": "",
+                "sceneGroup": 0
+            },
+            "name": "Presentation Remote Control",
+            "nodeMergeModes": {
+                "0": true,
+                "1": true,
+                "2": true,
+                "3": true
+            },
+            "posX": -135,
+            "posY": -85.38461538461536,
+            "uid": "15361412617067",
+            "width": 120
+        },
+        {
+            "focused": false,
+            "height": 60,
+            "internalState": {
+                "group": "15361411631782",
+                "guiItemHidden": false,
+                "label": "",
+                "sceneGroup": 0
+            },
+            "name": "Presentation Slide DMX Control",
+            "nodeMergeModes": {
+                "0": true
+            },
+            "posX": -135,
+            "posY": -158.46153846153845,
+            "uid": "15361413419069",
+            "width": 120
+        }
+    ],
+    "connections": [
+        "15361411858123|0->15361413419069|0",
+        "15361411858123|1->15361412617067|0",
+        "15361411858123|2->15361412617067|1",
+        "15361411858123|3->15361412617067|2",
+        "15361411858123|4->15361412617067|3"
+    ]
+}

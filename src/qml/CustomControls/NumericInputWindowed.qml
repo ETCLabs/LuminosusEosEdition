@@ -67,7 +67,7 @@ Item {
         if (isNaN(val)) val = 0.0
         val = Math.max(minimumValue, Math.min(val, maximumValue))
         val = Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals)
-        controller.setPropertyWithoutChangingBindings(this, "value", val)
+        guiManager.setPropertyWithoutChangingBindings(this, "value", val)
     }
 
 
@@ -92,7 +92,7 @@ Item {
 
             // ---------- Translate Local Coordinates to Screen Coordiantes -----------
             var windowCoords = root.mapToItem(null, preferredLocalX, prefferedLocalY)
-            var windowGeometry = controller.getWindowGeometryOfItem(root)
+            var windowGeometry = guiManager.getWindowGeometryOfItem(root)
             var screenX = windowGeometry.x + windowCoords.x
             var screenY = windowGeometry.y + windowCoords.y
 

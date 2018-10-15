@@ -1,0 +1,27 @@
+#:kivy 1.0
+
+<MediaPlayerGui>:
+    video_container: video_container
+    canvas:
+        Color:
+            rgb: 0, 0, 0
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    FloatLayout:
+        id: video_container
+        size_hint: 1, 1
+    # force 2:1 video ratio:
+    FloatLayout:
+        size_hint: 1, 1
+        canvas:
+            Color:
+                rgb: 0, 0, 0
+            Rectangle:
+                pos: self.pos
+                size: self.width, (self.height - self.width / 2) / 2
+            Rectangle:
+                pos: self.x, self.top - (self.height - self.width / 2) / 2
+                size: self.width, (self.height - self.width / 2) / 2
+            
+        

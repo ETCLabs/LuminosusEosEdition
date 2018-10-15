@@ -20,10 +20,10 @@ Button {
 
     // ------------------- Touch Feedback Effect ------------------------------
 
-    RippleEffect {
-        id: rippleEffect
-        anchors.fill: parent
-    }
-    onTouchDown: rippleEffect.touchStart(touch.itemX, touch.itemY)
-    onTouchUp: rippleEffect.touchEnd()
+//    RippleEffect { -> disabled due to CPU consumption bug
+//        id: rippleEffect
+//        anchors.fill: parent
+//    }
+//    onTouchDown: rippleEffect.touchStart(touch.itemX, touch.itemY)
+//    onTouchUp: rippleEffect.touchEnd()
 }

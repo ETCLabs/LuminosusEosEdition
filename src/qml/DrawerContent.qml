@@ -1,13 +1,13 @@
 import QtQuick 2.5
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
+import QtQuick.Window 2.2
 import CustomElements 1.0
 
 import "CustomControls"
 import "CustomBasics"
 
-Rectangle {
-    color: Qt.rgba(0, 0, 0, 0)
+Item {
 
     BorderImage {
         anchors.fill: parent
@@ -26,6 +26,9 @@ Rectangle {
         id: tabs
         width: parent.width
         height: 40*dp
+        // leave a margin at the top for iPhone X:
+        y: Qt.platform.os === "ios" ? parent.height - Screen.desktopAvailableHeight : 0
+
 		StretchRow {
 			anchors.fill: parent
 			DrawerTabButton {
@@ -59,14 +62,17 @@ Rectangle {
 
 	TabView {
 		id: tabView
-		width: parent.width
-		height: parent.height - tabs.height - 10*dp
-		y: tabs.height + 10*dp
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.top: tabs.bottom
 		tabsVisible: false
-		style: TabViewStyle {
-					 frame: Rectangle { color: "transparent" }
-				 }
-		currentIndex: 0
+        style: TabViewStyle {
+                     frame: Item { }
+                     tab: Item {}
+                 }
+        currentIndex: 0
+
 		Tab {
 			id: blocksTab
 			title: "Blocks"
@@ -90,7 +96,7 @@ Rectangle {
     }
 
     Connections {
-        target: controller
+        target: guiManager
         onOpenBlockSettings: {
             if (tabView.currentIndex !== 1) {
                 tabView.currentIndex = 1

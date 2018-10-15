@@ -79,5 +79,26 @@
         <file>images/bg/blueprint_tiled.jpg</file>
         <file>images/bg/gradient_grey.jpg</file>
         <file>images/bg/solid_grey.jpg</file>
+        <file>images/svg/pause.svg</file>
+        <file>images/svg/play_pause.svg</file>
+        <file>images/svg/play.svg</file>
+        <file>images/svg/record.svg</file>
+        <file>images/svg/stop.svg</file>
+        <file>images/svg/record_fancy.svg</file>
+        <file>images/svg/up_arrow_slim.svg</file>
+        <file>images/hue_sat_circle.png</file>
+        <file>images/svg/push_to_benches.svg</file>
+        <file>images/svg/save_benches.svg</file>
+        <file>images/svg/save_mix.svg</file>
+        <file>images/bench_arrows.png</file>
+        <file>images/svg/eye_crossed.svg</file>
+        <file>images/svg/eye.svg</file>
+        <file>images/bg/solid_black.jpg</file>
+        <file>images/node_rect_blue.png</file>
+        <file>images/node_rect_blue@2x.png</file>
+        <file>images/node_rect_cyan.png</file>
+        <file>images/node_rect_cyan@2x.png</file>
+        <file>images/node_rect_red.png</file>
+        <file>images/node_rect_red@2x.png</file>
     </qresource>
 </RCC>
