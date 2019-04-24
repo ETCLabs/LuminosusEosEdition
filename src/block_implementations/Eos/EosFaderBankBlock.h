@@ -90,6 +90,7 @@ protected:
     QVector<qreal> m_externalLevels;
     QVector<bool> m_externalLevelsValid;
     QVector<bool> m_faderSync;
+    QVector<bool> m_feedbackValid;
 
     BoolAttribute m_catchFaders;
     QTime m_lastExtTime;

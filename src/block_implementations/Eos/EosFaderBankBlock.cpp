@@ -13,6 +13,7 @@ EosFaderBankBlock::EosFaderBankBlock(MainController* controller, QString uid)
     , m_externalLevels(10)
     , m_externalLevelsValid(10, false)
     , m_faderSync(10, false)
+    , m_feedbackValid(10, true)
     , m_catchFaders(this, "catchFaders", true)
 {
     connect(m_controller->eosManager(), SIGNAL(connectionEstablished()),
@@ -47,6 +48,10 @@ void EosFaderBankBlock::setPageFromGui(int value) {
 void EosFaderBankBlock::setFaderLabelFromOsc(int faderIndex, QString label) {
     if (faderIndex < 0 || faderIndex > 9) return;
     m_faderLabels[faderIndex] = label;
+    if (label == "Global FX" || label == "Man Time")
+        m_feedbackValid[faderIndex] = false;
+    else
+        m_feedbackValid[faderIndex] = true;
     emit faderLabelsChanged();
 }
 
@@ -95,6 +100,8 @@ void EosFaderBankBlock::setFaderLevelFromExt(int faderIndex, qreal value) {
 
 void EosFaderBankBlock::setFaderLevelFromOsc(int faderIndex, qreal value){
     if (faderIndex < 0 || faderIndex > 9) return;
+    if (!m_feedbackValid[faderIndex]) return;
+
     m_faderLevels[faderIndex] = limit(0, value, 1);
 
     // asynchronous osc feedback can break sync so give it some time
