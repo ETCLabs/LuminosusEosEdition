@@ -10,6 +10,7 @@ CustomTouchArea {
     // public attributes:
     property int padding: 20*dp
     property real value: 0.0
+    property real externalValue: 0.0
 	property real indicator: 0.0
     property bool useIndicator: false
     property bool midiMappingEnabled: true
@@ -92,7 +93,7 @@ CustomTouchArea {
     Component.onCompleted: controller.midiMapping().registerGuiControl(this, mappingID)
     Component.onDestruction: if (controller) controller.midiMapping().unregisterGuiControl(mappingID)
     onExternalInputChanged: {
-        guiManager.setPropertyWithoutChangingBindings(this, "value", externalInput)
+        guiManager.setPropertyWithoutChangingBindings(this, "externalValue", externalInput)
     }
     onValueChanged: controller.midiMapping().sendFeedback(mappingID, value)
 }

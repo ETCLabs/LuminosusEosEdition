@@ -56,7 +56,9 @@ public slots:
     void setFaderLabelFromOsc(int faderIndex, QString label);
 
     QList<qreal> getFaderLevels() const { return m_faderLevels.toList(); }
+    void setFaderLevel(int faderIndex, qreal value);
     void setFaderLevelFromGui(int faderIndex, qreal value);
+    void setFaderLevelFromExt(int faderIndex, qreal value);
     void setFaderLevelFromOsc(int faderIndex, qreal value);
 
     void sendLoadEvent(int faderIndex, bool value);
@@ -84,6 +86,11 @@ protected:
 
     QVector<QString> m_faderLabels;
     QVector<qreal> m_faderLevels;
+    QVector<qreal> m_externalLevels;
+    QVector<bool> m_externalLevelsValid;
+    QVector<bool> m_faderSync;
+
+    BoolAttribute m_catchFaders;
 };
 
 #endif // EOSFADERBANKBLOCK_H

@@ -8,6 +8,8 @@ BlockBase {
     id: root
     width: 90*10*dp
     height: 400*dp
+    settingsComponent: settings
+
 
     StretchColumn {
         anchors.fill: parent
@@ -62,4 +64,24 @@ BlockBase {
         }
 
     }  // end main Column
+
+    Component {
+        id: settings
+        StretchColumn {
+            leftMargin: 15*dp
+            rightMargin: 15*dp
+            defaultSize: 30*dp
+
+            BlockRow {
+                Text {
+                    text: "Catch external faders:"
+                    width: parent.width - 30*dp
+                }
+                AttributeCheckbox {
+                    width: 30*dp
+                    attr: block.attr("catchFaders")
+                }
+            }
+        }
+    }  // end Settings Component
 }

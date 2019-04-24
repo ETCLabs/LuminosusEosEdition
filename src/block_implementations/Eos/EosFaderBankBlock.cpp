@@ -10,6 +10,10 @@ EosFaderBankBlock::EosFaderBankBlock(MainController* controller, QString uid)
     , m_bankLabel("")
     , m_faderLabels(10)
     , m_faderLevels(10)
+    , m_externalLevels(10)
+    , m_externalLevelsValid(10, false)
+    , m_faderSync(10, false)
+    , m_catchFaders(this, "catchFaders", true)
 {
     connect(m_controller->eosManager(), SIGNAL(connectionEstablished()),
             this, SLOT(onEosConnectionEstablished()));
@@ -33,6 +37,7 @@ void EosFaderBankBlock::setPageFromGui(int value) {
     if (value == m_page) return;
     m_page = limit(1, value, getMaxFaderPage());
     m_faderLevels.fill(0.0);
+    m_faderSync.fill(false);
     emit faderLevelsChanged();
     sendConfigMessage();
     emit pageChanged();
@@ -44,22 +49,53 @@ void EosFaderBankBlock::setFaderLabelFromOsc(int faderIndex, QString label) {
     emit faderLabelsChanged();
 }
 
-void EosFaderBankBlock::setFaderLevelFromGui(int faderIndex, qreal value) {
+void EosFaderBankBlock::setFaderLevel(int faderIndex, qreal value) {
     if (faderIndex < 0 || faderIndex > 9) return;
     value = limit(0, value, 1);
+
     m_faderLevels[faderIndex] = value;
-    // emitting faderLevelsChanged() not actually neccessary
-    // because value in GUI is already up-to-date?
-    emit faderLevelsChanged();
 
     QString message = "/eos/user/1/fader/%1/%2";
     message = message.arg(m_bankIndex, QString::number(faderIndex + 1));
     m_controller->lightingConsole()->sendMessage(message, value);
 }
 
+void EosFaderBankBlock::setFaderLevelFromGui(int faderIndex, qreal value) {
+    m_faderSync[faderIndex] = false;
+    setFaderLevel(faderIndex, value);
+
+    // emitting faderLevelsChanged() not actually neccessary
+    // because value in GUI is already up-to-date?
+}
+
+void EosFaderBankBlock::setFaderLevelFromExt(int faderIndex, qreal value) {
+    if (m_catchFaders) {
+        if (!m_faderSync[faderIndex]) {
+            if (m_externalLevelsValid[faderIndex]) {
+                if ((m_externalLevels[faderIndex] <= m_faderLevels[faderIndex] && (value + 0.01) >= m_faderLevels[faderIndex])
+                        || (m_externalLevels[faderIndex] >= m_faderLevels[faderIndex] && (value - 0.01) <= m_faderLevels[faderIndex]))
+                    m_faderSync[faderIndex] = true;
+            } else if (abs(value - m_faderLevels[faderIndex]) < 0.02) {
+                m_faderSync[faderIndex] = true;
+            }
+        }
+        m_externalLevels[faderIndex] = value;
+        m_externalLevelsValid[faderIndex] = true;
+
+        if (!m_faderSync[faderIndex])
+            return;
+    }
+
+    setFaderLevel(faderIndex, value);
+    emit faderLevelsChanged();
+}
+
 void EosFaderBankBlock::setFaderLevelFromOsc(int faderIndex, qreal value){
     if (faderIndex < 0 || faderIndex > 9) return;
     m_faderLevels[faderIndex] = limit(0, value, 1);
+    if (abs(value - m_externalLevels[faderIndex]) > 0.04)
+        m_faderSync[faderIndex] = false;
+
     emit faderLevelsChanged();
 }
 

@@ -51,6 +51,11 @@ StretchColumn {
                 block.setFaderLevelFromGui(index, value)
             }
         }
+        onExternalValueChanged: {
+            if (externalValue !== block.faderLevels[index]) {
+                block.setFaderLevelFromExt(index, externalValue)
+            }
+        }
         mappingID: block.getUid() + "fader" + modelData
     }
     PushButton {
