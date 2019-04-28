@@ -22,6 +22,7 @@ EosFaderBankBlock::EosFaderBankBlock(MainController* controller, QString uid)
     connect(controller->eosManager(), SIGNAL(connectionReset()),
             this, SLOT(onConnectionReset()));
 
+    m_lastExtTime.start();
     sendConfigMessage();
 }
 
@@ -75,7 +76,8 @@ void EosFaderBankBlock::setFaderLevelFromExt(int faderIndex, qreal value) {
                 if ((m_externalLevels[faderIndex] <= m_faderLevels[faderIndex] && (value + 0.01) >= m_faderLevels[faderIndex])
                         || (m_externalLevels[faderIndex] >= m_faderLevels[faderIndex] && (value - 0.01) <= m_faderLevels[faderIndex]))
                     m_faderSync[faderIndex] = true;
-            } else if (abs(value - m_faderLevels[faderIndex]) < 0.02) {
+            }
+            if (abs(value - m_faderLevels[faderIndex]) < 0.02) {
                 m_faderSync[faderIndex] = true;
             }
         }
@@ -87,13 +89,16 @@ void EosFaderBankBlock::setFaderLevelFromExt(int faderIndex, qreal value) {
     }
 
     setFaderLevel(faderIndex, value);
+    m_lastExtTime.restart();
     emit faderLevelsChanged();
 }
 
 void EosFaderBankBlock::setFaderLevelFromOsc(int faderIndex, qreal value){
     if (faderIndex < 0 || faderIndex > 9) return;
     m_faderLevels[faderIndex] = limit(0, value, 1);
-    if (abs(value - m_externalLevels[faderIndex]) > 0.04)
+
+    // asynchronous osc feedback can break sync so give it some time
+    if (abs(value - m_externalLevels[faderIndex]) > 0.04 && m_lastExtTime.elapsed() > 200)
         m_faderSync[faderIndex] = false;
 
     emit faderLevelsChanged();

@@ -1,6 +1,7 @@
 #ifndef EOSFADERBANKBLOCK_H
 #define EOSFADERBANKBLOCK_H
 
+#include <QDateTime>
 #include "core/block_data/BlockBase.h"
 #include "eos_specific/EosOSCMessage.h"
 #include "utils.h"
@@ -91,6 +92,7 @@ protected:
     QVector<bool> m_faderSync;
 
     BoolAttribute m_catchFaders;
+    QTime m_lastExtTime;
 };
 
 #endif // EOSFADERBANKBLOCK_H
