@@ -4,10 +4,11 @@
 #include <QDateTime>
 #include "core/block_data/BlockBase.h"
 #include "eos_specific/EosOSCMessage.h"
+#include "core/block_data/OneOutputBlock.h"
 #include "utils.h"
 
 
-class EosFaderBankBlock: public BlockBase
+class EosFaderBankBlock: public OneOutputBlock
 {
     Q_OBJECT
 

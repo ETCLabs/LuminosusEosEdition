@@ -34,6 +34,7 @@ BlockBase {
                 width: 140*dp
                 height: 30*dp
                 anchors.right: parent.right
+                anchors.rightMargin: 15*dp
                 Text {
                     width: 60*dp
                     text: "Page:"
@@ -61,6 +62,10 @@ BlockBase {
                     onPress: block.sendPagePlusEvent()
                     mappingID: block.getUid() + "pagePlus"
                 }
+            }
+
+            OutputNode {
+                node: block.node("outputNode")
             }
         }
 
