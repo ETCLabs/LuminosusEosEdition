@@ -239,6 +239,8 @@ class MidiManager : public QObject {
     Q_PROPERTY(QStringList inputNames READ getInputNames NOTIFY portNamesChanged)
     Q_PROPERTY(QStringList outputNames READ getOutputNames NOTIFY portNamesChanged)
 
+    Q_PROPERTY(bool autoRefresh READ getAutoRefresh WRITE setAutoRefresh NOTIFY autoRefreshChanged)
+
 public:
 	/**
 	 * @brief MidiManager creates a MidiManager that creates MidiInputDevice objects for each Midi device
@@ -257,6 +259,10 @@ public:
 	 * @param state Json object
 	 */
 	void setState(QJsonObject state);
+
+    bool getAutoRefresh() const { return m_autoRefresh; }
+
+    void setAutoRefresh(bool v) { m_autoRefresh = v; emit autoRefreshChanged(); }
 
 signals:
 	/**
@@ -291,6 +297,8 @@ signals:
      * @brief inputNamesChanged emitted when an input was added or removed
      */
     void portNamesChanged();
+
+    void autoRefreshChanged();
 
 public slots:
 
@@ -420,6 +428,8 @@ public slots:
 	 */
 	void clearLog() const { m_log.clear(); emit logChanged(); }
 
+    void switchAutoRefresh();
+
 private:
 	/**
 	 * @brief initializeInputs is called by ctor and creates MidiInputDevice objects for each Midi device
@@ -536,6 +546,12 @@ protected:
      * to prevent the log being updated to often
      */
     mutable QTimer m_logChangedSignalDelay;
+
+    bool m_autoRefresh;
+    int m_hiddenInputPorts;
+    int m_hiddenOutputPorts;
+
+    QTimer m_autoRefreshTimer;
 
 };
 

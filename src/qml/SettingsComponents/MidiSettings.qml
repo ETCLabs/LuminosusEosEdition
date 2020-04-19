@@ -16,6 +16,22 @@ StretchColumn {
 
     BlockRow {
         StretchText {
+            text: "Auto refresh:"
+        }
+        CheckBox {
+            width: 30*dp
+            active: controller.midi().autoRefresh
+            onActiveChanged: {
+                if (active !== controller.midi().autoRefresh) {
+                    controller.midi().autoRefresh = active
+                }
+            }
+        }
+    }
+
+    BlockRow {
+        visible: !controller.midi().autoRefresh
+        StretchText {
             text: "Devices:   " + controller.midi().inputNames.length
         }
         ButtonBottomLine {

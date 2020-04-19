@@ -138,12 +138,17 @@ MidiManager::MidiManager(MainController *controller)
     , m_defaultOutputChannel(1)
 	, m_log()
 	, m_logInput(true)
-	, m_logOutput(true)
+    , m_logOutput(true)
+    , m_autoRefresh(false)
+    , m_hiddenInputPorts(0)
+    , m_hiddenOutputPorts(0)
 {
     // prepare log changed signal:
     m_logChangedSignalDelay.setSingleShot(true);
     m_logChangedSignalDelay.setInterval(100);
     connect(&m_logChangedSignalDelay, SIGNAL(timeout()), this, SIGNAL(logChanged()));
+    connect(this, SIGNAL(autoRefreshChanged()), this, SLOT(switchAutoRefresh()));
+    connect(&m_autoRefreshTimer, SIGNAL(timeout()), this, SLOT(refreshDevices()));
 
     // prepare Port Blacklist:
     m_portNameBlacklist << "Microsoft GS Wavetable Synth"
@@ -151,13 +156,16 @@ MidiManager::MidiManager(MainController *controller)
                         << "Luminosus Out"
                         << "RtMidi"
                         << "X18/XR18"
-                        << "Midi Through ";
+                        << "Midi Through";
 	m_toneNames = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 	// Register ExternalInputEvent as Qt Meta Type to be able to store it in QVariants etc.:
 	qRegisterMetaType<MidiEvent>("MidiEvent");
-	// initialize:
-	initializeInputs();
-	initializeOutputs();
+
+    // initialize:
+    initializeInputs();
+    initializeOutputs();
+
+    emit autoRefreshChanged();
 }
 
 MidiManager::~MidiManager() {
@@ -177,29 +185,33 @@ MidiManager::~MidiManager() {
 
 void MidiManager::initializeInputs() {
 #ifdef RT_MIDI_AVAILABLE
-    refreshInputs();
-
 #ifndef Q_OS_WIN  // virtual Midi Ports aren't possible with Windows and RtMidi
 	// create virtual input port:
 	MidiInputDevice* virtualInput = new MidiInputDevice(this);
 	m_inputs.push_back(virtualInput);
 	connect(virtualInput, SIGNAL(eventReceived(MidiEvent)), this, SLOT(onExternalEvent(MidiEvent)));
+    m_hiddenInputPorts++;
 #endif  // Q_OS_WIN
+
+    refreshInputs();
+
 #endif  // RT_MIDI_AVAILABLE
 }
 
 void MidiManager::initializeOutputs() {
 #ifdef RT_MIDI_AVAILABLE
-    refreshOutputs();
-
 #ifndef Q_OS_WIN  // virtual Midi Ports aren't possible with Windows and RtMidi
 	// create virtual output port:
 	RtMidiOut* output = new RtMidiOut();
 	if (output) {
 		output->openVirtualPort("Luminosus Out");
 		m_outputs.push_back(output);
+        m_hiddenOutputPorts++;
 	}
 #endif  // Q_OS_WIN
+
+    refreshOutputs();
+
 #endif  // RT_MIDI_AVAILABLE
 }
 
@@ -217,6 +229,8 @@ void MidiManager::refreshInputs() {
         qWarning() << "Could not create RtMidiIn object.";
         return;
     }
+    QVector<QString> availablePorts;
+    QVector<unsigned int> portIdx;
     unsigned int numberOfPorts = midiin->getPortCount();
     for ( unsigned int i=0; i<numberOfPorts; i++ ) {
         QString portName = QString::fromStdString(midiin->getPortName(i));
@@ -231,11 +245,32 @@ void MidiManager::refreshInputs() {
         }
         if (blacklisted) continue;
 
+        availablePorts.push_back(portName);
+        portIdx.push_back(i);
+    }
+    QVector<unsigned int> toDelete;
+    for (int i = 0; i < m_inputPortNames.size(); i++) {
+        if (!availablePorts.contains(m_inputPortNames[i])) {
+            toDelete.push_back((unsigned int) i);
+        }
+    }
+    for (auto idx = toDelete.size() - 1; idx >=0; idx--) {
+        unsigned int i = toDelete[idx];
+            if (m_inputs.size() > i + m_hiddenInputPorts) {
+                disconnect(m_inputs[i + m_hiddenInputPorts], SIGNAL(eventReceived(MidiEvent)), this, SLOT(onExternalEvent(MidiEvent)));
+                delete m_inputs[i + m_hiddenInputPorts];
+                m_inputs.erase(m_inputs.begin() + i  + m_hiddenInputPorts);
+                m_inputPortNames.remove((int) i);
+            }
+    }
+    for (int i = 0; i < availablePorts.size(); i++) {
+        QString portName = availablePorts[i];
+
         // check if port is already opened:
         if (m_inputPortNames.contains(portName)) {
             continue;
         }
-        MidiInputDevice* input = new MidiInputDevice(i, this);
+        MidiInputDevice* input = new MidiInputDevice(portIdx[i], this);
         m_inputs.push_back(input);
         m_inputPortNames.push_back(portName);
         connect(input, SIGNAL(eventReceived(MidiEvent)), this, SLOT(onExternalEvent(MidiEvent)));
@@ -259,6 +294,8 @@ void MidiManager::refreshOutputs() {
         qCritical() << "Could not create RtMidiOut object.";
         return;
     }
+    QVector<QString> availablePorts;
+    QVector<unsigned int> portIdx;
     unsigned int numberOfPorts = midiout->getPortCount();
     for (unsigned int i=0; i<numberOfPorts; ++i) {
         QString portName = QString::fromStdString(midiout->getPortName(i));
@@ -273,6 +310,27 @@ void MidiManager::refreshOutputs() {
         }
         if (blacklisted) continue;
 
+        availablePorts.push_back(portName);
+        portIdx.push_back(i);
+    }
+    QVector<unsigned int> toDelete;
+    for (int i = 0; i < m_outputPortNames.size(); i++) {
+        if (!availablePorts.contains(m_outputPortNames[i])) {
+            toDelete.push_back((unsigned int) i);
+        }
+    }
+    for (auto idx = toDelete.size() - 1; idx >=0; idx--) {
+        unsigned int i = toDelete[idx];
+            if (m_outputs.size() > i + m_hiddenOutputPorts) {
+                m_outputs[i + m_hiddenOutputPorts]->closePort();
+                delete m_outputs[i + m_hiddenOutputPorts];
+                m_outputs.erase(m_outputs.begin() + i  + m_hiddenOutputPorts);
+                m_outputPortNames.remove((int) i);
+            }
+    }
+    for (int i = 0; i < availablePorts.size(); i++) {
+        QString portName = availablePorts[i];
+
         // check if port is already opened:
         if (m_outputPortNames.contains(portName)) {
             continue;
@@ -282,7 +340,7 @@ void MidiManager::refreshOutputs() {
         if (!output) continue;
 
         try {
-            output->openPort(i);
+            output->openPort(portIdx[i]);
         } catch ( RtMidiError &error ) {
             qCritical() << "An error occured while opening RtMidiOut port:";
             error.printMessage();
@@ -295,6 +353,14 @@ void MidiManager::refreshOutputs() {
     emit portNamesChanged();
     delete midiout;
 #endif  // RT_MIDI_AVAILABLE
+}
+
+void MidiManager::switchAutoRefresh() {
+    if (m_autoRefresh) {
+        m_autoRefreshTimer.setSingleShot(false);
+        m_autoRefreshTimer.start(500);
+    } else
+        m_autoRefreshTimer.stop();
 }
 
 void MidiManager::addToLog(bool out, QString text) const {
@@ -352,6 +418,7 @@ QJsonObject MidiManager::getState() const {
 	state["defaultOutputChannel"] = getDefaultOutputChannel();
 	state["logInput"] = getLogInput();
 	state["logOutput"] = getLogOutput();
+    state["autoRefresh"] = getAutoRefresh();
 	return state;
 }
 
@@ -360,6 +427,7 @@ void MidiManager::setState(QJsonObject state) {
 	setDefaultOutputChannel(state["defaultOutputChannel"].toInt());
 	setLogInput(state["logInput"].toBool());
 	setLogOutput(state["logOutput"].toBool());
+    setAutoRefresh(state["autoRefresh"].toBool());
 }
 
 void MidiManager::registerForNextEvent(QString id, const MidiConstants::NextEventCallback& callback) {
@@ -386,13 +454,14 @@ void MidiManager::refreshDevices() {
 
 void MidiManager::sendChannelVoiceMessage(unsigned char type, unsigned char channel, unsigned char target, double value) {
 #ifdef RT_MIDI_AVAILABLE
-	std::vector<unsigned char> message(3);
+    static std::vector<unsigned char> message(3);
 	message[0] = (type << 4) | (channel - 1);
 	message[1] = target;
     message[2] = static_cast<unsigned char>(value * 127);
 	for (RtMidiOut* output: m_outputs) {
         try {
             output->sendMessage(&message);
+//            std::cout << "M" << message[2] << std::endl;
         } catch ( RtMidiError& ) {
             qWarning("MIDI device not available (probably disconnect).");
             output->closePort();
