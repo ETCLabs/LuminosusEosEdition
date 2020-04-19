@@ -180,13 +180,44 @@ StretchColumn {
                 text: "OSC Version:"
             }
             ComboBox2 {
-                id: eosUseOsc11Combobox
+                id: eosProtocolComboBox
                 width: 90*dp
                 implicitWidth: 0
                 height: 30*dp
-                values: [false, true]
-                texts: ["1.0", "1.1"]
-                currentIndex: preset.protocol === "TCP 1.1" ? 1 : 0
+                values: controller.lightingConsole().getProtocolNames()
+                currentIndex: Math.max(values.indexOf(preset.protocol), 0)
+            }
+        }
+        StretchRow {
+            height: 30*dp
+            visible: eosProtocolComboBox.currentIndex === 0
+            Text {
+                text: "Tx Port"
+                width: parent.width / 2
+                verticalAlignment: Text.AlignVCenter
+            }
+            NumericInput {
+                id: eosUdpTxInput
+                width: parent.width / 2
+                minimumValue: 0
+                maximumValue: 65535
+                value: preset.udpTxPort || 8001
+            }
+        }
+        StretchRow {
+            height: 30*dp
+            visible: eosProtocolComboBox.currentIndex === 0
+            Text {
+                text: "Rx Port"
+                width: parent.width / 2
+                verticalAlignment: Text.AlignVCenter
+            }
+            NumericInput {
+                id: eosUdpRxInput
+                width: parent.width / 2
+                minimumValue: 0
+                maximumValue: 65535
+                value: preset.udpRxPort || 8000
             }
         }
         StretchRow {
@@ -226,9 +257,9 @@ StretchColumn {
                     Qt.inputMethod.commit()
                     var name = presetNameInput.text
                     var ip = ipInput.text
-                    var protocol = eosUseOsc11Combobox.getValue() ? "TCP 1.1" : "TCP 1.0"
-                    var udpTxPort = 8001
-                    var udpRxPort = 8001
+                    var udpTxPort = eosUdpTxInput.value
+                    var udpRxPort = eosUdpRxInput.value
+                    var protocol = eosProtocolComboBox.getValue()
                     var tcpPort = 3032
                     oscManager.createAndLoadPreset("Eos", name, protocol, ip, udpTxPort, udpRxPort, tcpPort, originalPresetId)
                     closed()
