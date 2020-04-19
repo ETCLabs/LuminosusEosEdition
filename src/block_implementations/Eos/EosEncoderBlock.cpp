@@ -12,8 +12,14 @@ EosEncoderBlock::EosEncoderBlock(MainController* controller, QString uid)
     , m_learning(false)
     , m_parameterName(this, "parameterName", "pan")
     , m_fineMode(this, "fineMode", false, /*persistent*/ false)
+    , m_active(this, "active", false, true)
+    , m_accelerate(this, "accelerate", true, true)
+    , m_feedbackEnabled(this, "feedback", true, true)
 {
     connect(m_controller->midi(), SIGNAL(messageReceived(MidiEvent)), this, SLOT(onMidiMessage(MidiEvent)));
+    connect(&m_feedbackEnabled, SIGNAL(valueChanged()), this, SLOT(onFeedbackEnabledChanged()));
+
+    emit(m_feedbackEnabled.valueChanged());
 }
 
 void EosEncoderBlock::getAdditionalState(QJsonObject& state) const {
@@ -44,8 +50,15 @@ void EosEncoderBlock::onMidiMessage(MidiEvent event) {
                 relativeValue -= 128;
             }
             // accelerate:
-            relativeValue = (qAbs(relativeValue) > 1) ? relativeValue * 2 : relativeValue;
-            QString message = m_fineMode ? "/eos/user/1/wheel/fine/%1" : "/eos/user/1/wheel/coarse/%1";
+            if (m_accelerate)
+                relativeValue = (qAbs(relativeValue) > 1) ? relativeValue * 2 : relativeValue;
+
+            QString message;
+            if (!m_active)
+                message = m_fineMode ? "/eos/user/1/wheel/fine/%1" : "/eos/user/1/wheel/coarse/%1";
+            else
+                message = m_fineMode ? "/eos/active/wheel/fine/%1" : "/eos/active/wheel/coarse/%1";
+
             message = message.arg(m_parameterName);
             m_controller->lightingConsole()->sendMessage(message, relativeValue);
             emit validMessageReceived();
@@ -80,3 +93,28 @@ void EosEncoderBlock::checkIfEventFits(MidiEvent event) {
     emit validMessageReceived();
 }
 
+void EosEncoderBlock::onIncomingEosMessage(const EosOSCMessage& msg) {
+    if (msg.pathPart(0) != "active" && msg.pathPart(1) != "wheel") return;
+
+    int wheelIndex = msg.pathPart(2).toInt();
+    if (wheelIndex != m_parameterName.getValue().toInt()) return;
+    QStringList arg = msg.stringValue().split("  [");
+    QString label;
+    int value = 0;
+    if (arg.size() == 2) {
+        label = arg[0];
+        value = arg[1].remove("]").toInt();
+
+        m_controller->midi()->sendChannelVoiceMessage(MidiConstants::CONTROL_CHANGE,
+                                                      m_channel, m_target, (double) value / 100);
+    }
+}
+
+void EosEncoderBlock::onFeedbackEnabledChanged() {
+    if (m_feedbackEnabled)
+        connect(m_controller->eosManager(), SIGNAL(eosMessageReceived(EosOSCMessage)),
+                this, SLOT(onIncomingEosMessage(EosOSCMessage)));
+    else
+        disconnect(m_controller->eosManager(), SIGNAL(eosMessageReceived(EosOSCMessage)),
+                this, SLOT(onIncomingEosMessage(EosOSCMessage)));
+}

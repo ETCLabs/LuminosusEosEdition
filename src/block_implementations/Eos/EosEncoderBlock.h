@@ -3,6 +3,7 @@
 
 #include "core/block_data/BlockBase.h"
 #include "core/SmartAttribute.h"
+#include "eos_specific/EosOSCMessage.h"
 #include "midi/MidiManager.h"
 
 
@@ -30,9 +31,12 @@ public:
                         "turn encoder 1 (TYPE) till 'CC' appears and "
                         "encoder 6 (MODE) till 'rel1' appears.<br><br>"
                         "2. Enter the name of the parameter to control in the Block "
-                        "(i.e. 'pan' or 'tilt').<br><br>"
+                        "(it can be 'pan' or 'tilt' or set 'active' option in configuration and "
+                        "use a number (1, 2, ...) of active wheel).<br><br>"
                         "3. At last click 'Learn' above and turn the encoder.<br><br>"
                         "4. (optional) Map a MIDI button to the 'Coarse / Fine' button.<br><br><br>"
+                        "'feedback' checkbox in configuration can be used to control led ring "
+                        "e.g. on Behringer x-touch.<br><br><br>"
                         "This block uses Eos OSC user 1.";
         info.qmlFile = "qrc:/qml/Blocks/Eos/EosEncoderBlock.qml";
         info.complete<EosEncoderBlock>();
@@ -62,6 +66,9 @@ public slots:
     void startLearning();
     void checkIfEventFits(MidiEvent event);
 
+    void onIncomingEosMessage(const EosOSCMessage& msg);
+    void onFeedbackEnabledChanged();
+
     // ------------------------- Getter + Setter -----------------------------
 
     int getTarget() const { return m_target; }
@@ -84,6 +91,9 @@ protected:
 
     StringAttribute m_parameterName;
     BoolAttribute m_fineMode;
+    BoolAttribute m_active;
+    BoolAttribute m_accelerate;
+    BoolAttribute m_feedbackEnabled;
 };
 
 #endif // EOSENCODERBLOCK_H

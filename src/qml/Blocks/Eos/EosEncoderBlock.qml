@@ -91,6 +91,42 @@ BlockBase {
                     onPress: block.startLearning()
                 }
             }
+
+            BlockRow {
+                Text {
+                    text: "accelerate:"
+                    width: parent.width - 30*dp
+                }
+                AttributeCheckbox {
+                    width: 30*dp
+                    attr: block.attr("accelerate")
+                }
+            }
+
+            BlockRow {
+                Text {
+                    text: "active:"
+                    width: parent.width - 30*dp
+                }
+                AttributeCheckbox {
+                    width: 30*dp
+                    attr: block.attr("active")
+                }
+            }
+
+            BlockRow {
+                visible: block.attr("active").val === true
+                Text {
+                    text: "feedback:"
+                    width: parent.width - 30*dp
+                }
+                AttributeCheckbox {
+                    width: 30*dp
+                    attr: block.attr("feedback")
+                }
+            }
+
+
         }
     }  // end Settings Component
 }
