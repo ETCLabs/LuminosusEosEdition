@@ -27,6 +27,9 @@ BlockBase {
 					block.value = value;
 				}
 			}
+            onExternalValueChanged: {
+                value = externalValue;
+            }
         }
 
         DragArea {

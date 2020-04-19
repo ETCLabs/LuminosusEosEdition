@@ -54,6 +54,9 @@ BlockBase {
                     block.setFaderLevelFromGui(value)
                 }
             }
+            onExternalValueChanged: {
+                value = externalValue;
+            }
             mappingID: block.getUid() + "fader"
         }
         PushButton {
