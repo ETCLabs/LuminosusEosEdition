@@ -476,6 +476,10 @@ linux_specific {
 win32:LIBS += -lwinmm
 win64:LIBS += -lwinmm
 
+# msvc needs it
+win32:LIBS += -luser32
+win64:LIBS += -luser32
+
 #include CoreMIDI framework on Mac for RtMidi
 macx:LIBS += -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
 
