@@ -31,13 +31,22 @@ BlockBase {
             text: "Fader Bank"
 
             StretchRow {
-                width: 140*dp
+                width: 180*dp
                 height: 30*dp
                 anchors.right: parent.right
                 anchors.rightMargin: 15*dp
-                Text {
-                    width: 60*dp
+
+                ButtonBottomLine {
+                    width: 80*dp
                     text: "Page:"
+                    onActiveChanged: {
+                        if (active) {
+                            block.attr("pageChangeMode").val = true
+                        } else {
+                            block.attr("pageChangeMode").val = false
+                        }
+                    }
+                    mappingID: block.getUid() + "pageChange"
                 }
                 ButtonBottomLine {
                     width: 30*dp

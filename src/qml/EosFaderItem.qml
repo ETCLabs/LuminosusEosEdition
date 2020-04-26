@@ -61,7 +61,17 @@ StretchColumn {
     PushButton {
         implicitHeight: 0  // do not stretch
         height: 40*dp
-        onActiveChanged: block.sendStopEvent(index, active)
+        onActiveChanged: {
+            if (block.attr("pageChangeMode").val === true) {
+                if (active)
+                    block.setPageFromGui(index + 1)
+            }
+            else {
+                block.sendStopEvent(index, active)
+            }
+
+        }
+
         showLed: false
         mappingID: block.getUid() + "stop" + modelData
         Image {
