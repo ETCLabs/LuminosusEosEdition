@@ -483,7 +483,13 @@ macx:LIBS += -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
 !mobile_platform {
     DEFINES += RT_MIDI_AVAILABLE
     SOURCES += RtMidi/RtMidi.cpp
+    SOURCES += RtMidi/rtmidi_c.cpp
     HEADERS += RtMidi/RtMidi.h
+    HEADERS += RtMidi/rtmidi_c.h
+    win32:DEFINES += RTMIDI_EXPORT
+    win32:DEFINES += __WINDOWS_MM__
+    win64:DEFINES += RTMIDI_EXPORT
+    win64:DEFINES += __WINDOWS_MM__
 }
 
 # Android specific files:
