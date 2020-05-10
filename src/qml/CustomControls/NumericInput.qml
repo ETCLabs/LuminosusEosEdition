@@ -65,7 +65,7 @@ Item {
 
 	// ------------------------- Setter --------------------------
 
-	function setValueFromString(str) {
+    function setValueFromString(str) {
 		var val = parseFloat(str)
 		if (isNaN(val)) val = 0.0
 		val = Math.max(minimumValue, Math.min(val, maximumValue))

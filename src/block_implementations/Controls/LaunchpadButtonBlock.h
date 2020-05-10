@@ -49,16 +49,11 @@ public:
 public slots:
     virtual BlockInfo getBlockInfo() const override { return info(); }
 
-    int getLowValue() const { return m_lowValue; }
-    void setLowValue(int value);
-    int getHighValue() const { return m_highValue; }
-    void setHighValue(int value);
-
 protected:
     BoolAttribute m_toggleMode;
     StringAttribute m_labelText;
-    int m_lowValue;
-    int m_highValue;
+    IntegerAttribute m_lowValue;
+    IntegerAttribute m_highValue;
 };
 
 #endif // LAUNCHPADBUTTONBLOCK

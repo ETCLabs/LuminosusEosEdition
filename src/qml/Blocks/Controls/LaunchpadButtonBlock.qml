@@ -15,11 +15,13 @@ BlockBase {
         height: parent.height + 8*dp
         width: parent.width
 
-        PushButton {
+        LaunchpadPushButton {
             mappingID: block.getUid() + "launchpadbutton"
             toggle: block.attr("toggleMode").val
             text: block.attr("labelText").val
 			onActiveChanged: root.block.value = (active ? 1 : 0)
+            low: block.attr("lowValue").val
+            high: block.attr("highValue").val
         }
 
         DragArea {
@@ -63,11 +65,15 @@ BlockBase {
                 NumericInput {
                     width: 120*dp
                     implicitWidth: 0
-                    minimumValue: 1
+                    minimumValue: 0
                     maximumValue: 127
-                    value: 0
                     decimals: 0
-                    //value: root.block.bpm
+                    value: block.attr("lowValue").val
+                    onValueChanged: {
+                        if(value !== block.attr("lowValue").val) {
+                            block.attr("lowValue").val = value
+                        }
+                    }
                 }
             }
 
@@ -78,11 +84,15 @@ BlockBase {
                 NumericInput {
                     width: 120*dp
                     implicitWidth: 0
-                    minimumValue: 1
+                    minimumValue: 0
                     maximumValue: 127
-                    value: 127
                     decimals: 0
-                    //value: root.block.bpm
+                    value: block.attr("highValue").val
+                    onValueChanged: {
+                        if(value !== block.attr("highValue").val) {
+                            block.attr("highValue").val = value
+                        }
+                    }
                 }
             }
 

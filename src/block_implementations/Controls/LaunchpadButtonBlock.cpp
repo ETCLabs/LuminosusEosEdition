@@ -27,14 +27,8 @@ LaunchpadButtonBlock::LaunchpadButtonBlock(MainController* controller, QString u
 	: OneOutputBlock(controller, uid)
     , m_toggleMode(this, "toggleMode", false)
     , m_labelText(this, "labelText")
+    , m_lowValue(this, "lowValue", 0, 0, 127)
+    , m_highValue(this, "highValue", 127, 0, 127)
 {
     m_widthIsResizable = true;
-}
-
-void LaunchpadButtonBlock::setLowValue(int value) {
-
-}
-
-void LaunchpadButtonBlock::setHighValue(int value) {
-
 }

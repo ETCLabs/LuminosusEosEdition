@@ -116,5 +116,6 @@
         <file>qml/Tutorial/HogName.qml</file>
         <file>qml/Tutorial/EosDiscovery.qml</file>
         <file>qml/CombinationEntry.qml</file>
+        <file>qml/CustomControls/LaunchpadPushButton.qml</file>
     </qresource>
 </RCC>
