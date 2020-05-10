@@ -103,5 +103,6 @@
         <file>qml/Blocks/Logic/PresentationSlideDmxBlock.qml</file>
         <file>qml/Blocks/sACN/VirtualFixtureBlock.qml</file>
         <file>qml/Blocks/Hog4/Hog4FaderBlock.qml</file>
+        <file>qml/Blocks/Controls/LaunchpadButtonBlock.qml</file>
     </qresource>
 </RCC>

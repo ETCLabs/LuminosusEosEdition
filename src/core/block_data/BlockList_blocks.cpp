@@ -8,6 +8,7 @@
 #include "block_implementations/Audio/AudioStreamingBlock.h"
 #include "block_implementations/Controls/SwitchBlock.h"
 #include "block_implementations/Controls/ButtonBlock.h"
+#include "block_implementations/Controls/LaunchpadButtonBlock.h"
 #include "block_implementations/Controls/SliderBlock.h"
 #include "block_implementations/Controls/ColorwheelBlock.h"
 #include "block_implementations/Controls/PixelControlBlock.h"
@@ -110,6 +111,7 @@ void BlockList::addAllBlocks() {
     // Controls
     addBlock(SliderBlock::info());
     addBlock(ButtonBlock::info());
+    addBlock(LaunchpadButtonBlock::info());
     addBlock(SwitchBlock::info());
     addBlock(PixelControlBlock::info());
     addBlock(ColorwheelBlock::info());

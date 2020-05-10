@@ -45,6 +45,7 @@ SOURCES += main.cpp \
     block_implementations/Audio/BeatDetectionBlock.cpp \
     block_implementations/Audio/BpmBlock.cpp \
     block_implementations/Controls/ButtonBlock.cpp \
+    block_implementations/Controls/LaunchpadButtonBlock.cpp \
     block_implementations/Controls/ColorwheelBlock.cpp \
     block_implementations/Controls/PixelControlBlock.cpp \
     block_implementations/Controls/SliderBlock.cpp \
@@ -220,6 +221,7 @@ HEADERS += \
     block_implementations/Audio/BeatDetectionBlock.h \
     block_implementations/Audio/BpmBlock.h \
     block_implementations/Controls/ButtonBlock.h \
+    block_implementations/Controls/LaunchpadButtonBlock.h \
     block_implementations/Controls/ColorwheelBlock.h \
     block_implementations/Controls/PixelControlBlock.h \
     block_implementations/Controls/SliderBlock.h \
