@@ -35,7 +35,7 @@ public:
 		static BlockInfo info;
         info.typeName = "LaunchpadButton";
         info.category << "General" << "Controls";
-        info.helpText = "A simple launchpad button.\n"
+        info.helpText = "A simple Launchpad button.\n"
                         "Outputs 1 if pressed and 0 if not.\n"
                         "User can set custom values for MIDI feedback\n"
                         "(e. g. for using Launchpad colors)";
