@@ -23,6 +23,7 @@ BlockBase {
 
                 EosFaderItem {
                     index: modelData
+                    feedbackEnabled: block.attr("feedbackEnabled").val
                 }
             }
         }
@@ -105,6 +106,16 @@ BlockBase {
                     width:  55*dp
                     implicitWidth: 0
                     attr: block.attr("numFaders")
+                }
+            }
+            BlockRow {
+                Text {
+                    text: "Feedback enabled:"
+                    width: parent.width - 30*dp
+                }
+                AttributeCheckbox {
+                    width: 30*dp
+                    attr: block.attr("feedbackEnabled")
                 }
             }
         }

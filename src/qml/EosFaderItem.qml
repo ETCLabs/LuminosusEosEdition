@@ -9,6 +9,7 @@ StretchColumn {
     rightMargin: 5*dp
 
     property int index
+    property bool feedbackEnabled: true
 
     Text {
         height: 40*dp
@@ -57,6 +58,7 @@ StretchColumn {
             }
         }
         mappingID: block.getUid() + "fader" + modelData
+        feedbackEnabled: parent.feedbackEnabled
     }
     PushButton {
         implicitHeight: 0  // do not stretch

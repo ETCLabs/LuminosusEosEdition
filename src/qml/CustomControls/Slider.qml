@@ -14,6 +14,7 @@ CustomTouchArea {
 	property real indicator: 0.0
     property bool useIndicator: false
     property bool midiMappingEnabled: true
+    property bool feedbackEnabled: true
 
 
     Rectangle {  // grey BG line
@@ -95,5 +96,5 @@ CustomTouchArea {
     onExternalInputChanged: {
         guiManager.setPropertyWithoutChangingBindings(this, "externalValue", externalInput)
     }
-    onValueChanged: controller.midiMapping().sendFeedback(mappingID, value)
+    onValueChanged: if (feedbackEnabled) controller.midiMapping().sendFeedback(mappingID, value)
 }
