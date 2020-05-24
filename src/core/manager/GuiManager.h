@@ -51,6 +51,8 @@ signals:
     void overrideGuiScalingChanged();
     void overrideGraphicsLevelChanged();
     void snapToGridChanged();
+    void closeTutorialView();
+    void openTutorialView();
 
 public slots:
 

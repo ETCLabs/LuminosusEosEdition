@@ -62,6 +62,7 @@ class MainController : public QObject
     Q_PROPERTY(bool developerMode READ getDeveloperMode WRITE setDeveloperMode NOTIFY developerModeChanged)
     Q_PROPERTY(bool clickSounds READ getClickSounds WRITE setClickSounds NOTIFY clickSoundsChanged)
     Q_PROPERTY(QString templateFileToImport READ getTemplateFileBaseName NOTIFY templateFileToImportChanged)
+    Q_PROPERTY(bool forceImport READ getForceImport NOTIFY forceImportChanged)
 
 public:
 
@@ -70,7 +71,8 @@ public:
      * @param qmlEngine is the QML enigne to use to create the GUI
      * @param parent the QObject parent
      */
-    explicit MainController(QQmlApplicationEngine& qmlEngine, QString templateFile, QObject *parent = nullptr);
+    explicit MainController(QQmlApplicationEngine& qmlEngine, QString templateFile,
+                            bool forceImport = false, QObject *parent = nullptr);
 
 
 signals:
@@ -84,6 +86,8 @@ signals:
     void clickSoundsChanged();
 
     void templateFileToImportChanged();
+
+    void forceImportChanged();
 
 
 public slots:
@@ -278,6 +282,8 @@ public slots:
     bool getClickSounds() const { return m_clickSounds; }
     void setClickSounds(bool value) { m_clickSounds = value; emit clickSoundsChanged(); }
 
+    bool getForceImport() const { return m_forceImport; }
+
     QString getTemplateFileBaseName() const;
     void requestTemplateImport(QString filename);
     void onImportTemplateFileAccepted();
@@ -361,6 +367,7 @@ protected:
      */
     QString m_templateFileToImport;
 
+    bool m_forceImport;
 };
 
 #endif // MAINCONTROLLER_H

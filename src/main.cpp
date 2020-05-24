@@ -114,8 +114,13 @@ int main(int argc, char* argv[]) {
 
     QCommandLineParser parser;
     parser.addPositionalArgument("template", "Template to import");
+    parser.addOptions({
+                         {{"f", "force"}, "force import (no warning dialog)"}
+                      });
+    parser.addHelpOption();
     parser.process(app);
     QString templateFile = parser.positionalArguments().size() >= 1 ? parser.positionalArguments().at(0) : "";
+    bool forceImport = parser.isSet("force");
 
     // prepare QML engine:
     qmlRegisterSingletonType(QUrl("qrc:/qml/DefaultStyle.qml"), "CustomStyle", 1, 0, "Style");
@@ -140,7 +145,7 @@ int main(int argc, char* argv[]) {
 	engine.rootContext()->setContextProperty("GRAPHICAL_EFFECTS_LEVEL", GRAPHICAL_EFFECTS_LEVEL);
 
 	// MainController will take care of initalizing GUI, output etc.:
-    MainController controller(engine, templateFile);
+    MainController controller(engine, templateFile, forceImport);
 	QObject::connect(&app, SIGNAL(aboutToQuit()), &controller, SLOT(onExit()));
     QObject::connect(&engine, SIGNAL(quit()), &app, SLOT(quit())); // to make Qt.quit() to work
 

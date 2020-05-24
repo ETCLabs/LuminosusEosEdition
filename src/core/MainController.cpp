@@ -15,7 +15,7 @@
 
 #include <string>
 
-MainController::MainController(QQmlApplicationEngine& qmlEngine, QString templateFile, QObject* parent)
+MainController::MainController(QQmlApplicationEngine& qmlEngine, QString templateFile, bool forceImport, QObject* parent)
     : QObject(parent)
     , m_guiManager(this, qmlEngine)
     , m_logManager(this)
@@ -44,6 +44,7 @@ MainController::MainController(QQmlApplicationEngine& qmlEngine, QString templat
     , m_developerMode(false)
     , m_clickSounds(false)
     , m_templateFileToImport(templateFile)
+    , m_forceImport(forceImport)
 {
     // print Qt Version to verify that the right library is loaded:
     qInfo() << "Compiled with Qt Version" << QT_VERSION_STR;
@@ -179,7 +180,7 @@ void MainController::restoreApp() {
     setClickSounds(appState["clickSounds"].toBool());
     m_output.setState(appState["outputManager"].toObject());
 #ifndef Q_OS_ANDROID
-    if (lockExisted) {
+    if (lockExisted && !m_forceImport) {
 #else
     if (false) {
 #endif
@@ -193,9 +194,16 @@ void MainController::restoreApp() {
         m_projectManager.setCurrentProject("empty", /*createIfNotExist*/ true);
     } else if (appState["version"].toDouble() < 0.3) {
         onFirstStart();
-    } else {
+    } else if (m_templateFileToImport.length() > 0 && m_forceImport) {
+        m_projectManager.importProjectFile(m_templateFileToImport, true);
+        m_guiManager.closeTutorialView();
+    }
+    else {
         m_projectManager.setCurrentProject(appState["currentProject"].toString());
     }
+
+    if (m_forceImport)
+        m_guiManager.closeTutorialView();
 }
 
 void MainController::onExit() {

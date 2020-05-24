@@ -479,6 +479,20 @@ Window {
                 visible: parent.mouseOver
             }
         }
+
+        Connections {
+            target: guiManager
+
+            onOpenTutorialView: {
+                if (!tutorialView.open)
+                    tutorialView.open = true
+            }
+            onCloseTutorialView: {
+                if (tutorialView.open)
+                    tutorialView.open = false
+            }
+        }
+
     }
 
     // -------------------------------- Template Import Dialog ---------------------------------
@@ -487,7 +501,7 @@ Window {
         id: templateImportDialog
         title: "Import Template"
         standardButtons: Dialog.Open | Dialog.Cancel
-        visible: controller.templateFileToImport
+        visible: controller.templateFileToImport && !controller.forceImport
 
         onAccepted: {
             controller.onImportTemplateFileAccepted()
