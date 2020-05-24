@@ -30,7 +30,7 @@ namespace LuminosusVersionInfo {
 	/**
 	 * @brief VERSION_STRING is the version number of this software
 	 */
-	static const QString VERSION_STRING = "1.3.0";
+    static const QString VERSION_STRING = "1.3.1";
 }
 
 #endif // VERSION_H
