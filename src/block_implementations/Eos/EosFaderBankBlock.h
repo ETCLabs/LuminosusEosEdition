@@ -24,7 +24,14 @@ public:
         info.typeName = "Eos Fader Bank";
         info.nameInUi = "Fader Bank";
         info.category << "ETC Consoles" << "Eos";
-        info.helpText = "A bank of 10 faders.\n\n"
+        info.helpText = "A bank of N faders. N can be set in block settings\n\n"
+                        "'Catch external faders' option will prevent jumping "
+                        "when value gets not synchronized with fader (e.g. on page change)\n\n"
+                        "'Feedback enabled' option controls midi feedback for faders\n\n"
+                        "'Page button' in lower right corner can be mapped to any midi button. "
+                        "Holding the button down and pressing fader stop button jumps to page "
+                        "equal to fader index. With 10 faders you have quick access to 10 pages.\n\n"
+                        "Output node can be used to signal current page to another block.\n\n"
                         "This block uses Eos OSC user 1.";
         info.qmlFile = "qrc:/qml/Blocks/Eos/EosFaderBankBlock.qml";
         info.complete<EosFaderBankBlock>();
